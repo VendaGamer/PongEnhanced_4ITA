@@ -1,20 +1,15 @@
-use bevy::prelude::*;
-use bevy::prelude::KeyCode::{KeyD, KeyS, KeyW};
-use bevy::render::camera;
-use bevy::text::FontFamily::Name;
-use bevy::window::WindowEvent::WindowResized;
-
 mod game;
 
-// bring Paddle into scope
+use bevy::prelude::*;
+use bevy::prelude::KeyCode::*;
+use bevy::render::camera;
 use game::paddle::Paddle;
+
 
 fn main() {
     App::new()
         .add_systems(Startup, setup)
-        .add_systems(Update, (
-            move_paddle
-            )) // <-- don’t forget to register your system
+        .add_systems(Update, move_paddle)
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .run();
 }
@@ -22,15 +17,18 @@ fn main() {
 fn move_paddle(
     mut commands: Commands,
     input: Res<ButtonInput<KeyCode>>,
-    mut query: Query<&mut Transform, With<Paddle>>, // query paddle entities
+    mut query: Query<&mut Transform, With<Paddle>>,
+    time: Res<Time>
 ) {
+    let move_amount = time.delta_secs() * 200.0;
+
     if input.pressed(KeyW) {
         for mut transform in &mut query {
-            transform.translation.y += 5.0; // move paddle up
+            transform.translation.y += move_amount;
         }
     }else if input.pressed(KeyS) {
         for mut transform in &mut query {
-            transform.translation.y -= 5.0; // move paddle up
+            transform.translation.y -= move_amount;
         }
     }
 }
@@ -56,11 +54,10 @@ fn setup(
 
     let paddle_mesh = meshes.add(Rectangle::new(paddle_width, paddle_height));
 
-    // Spawn paddle
     commands.spawn((
         Mesh2d(paddle_mesh),
         MeshMaterial2d(white),
-        Transform::from_translation(Vec3::new(640.0, 360.0, 0.0)),
+        Transform::from_translation(Vec3::new(0.0, 360.0, 0.0)),
         Paddle,
     ));
 }
