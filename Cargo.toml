@@ -4,5 +4,5 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-bevy = {version = "0.16.1", features = ["default", "bevy_sprite"]}
-bevy_rapier2d = {version = "0.31.0", features = ["default", "async-collider"]}
+bevy = "0.16.1"
+bevy_rapier2d = "0.31.0"
