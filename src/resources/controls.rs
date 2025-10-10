@@ -1,4 +1,3 @@
-use crate::components::Player;
 use crate::resources::PlayerControls;
 
 pub struct Controls{
