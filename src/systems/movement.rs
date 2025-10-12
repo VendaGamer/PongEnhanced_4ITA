@@ -1,8 +1,6 @@
-use bevy::prelude::*;
-use bevy::prelude::KeyCode::*;
-use bevy_rapier2d::dynamics::Velocity;
-use crate::Ball;
 use crate::components::Player;
+use bevy::prelude::KeyCode::*;
+use bevy::prelude::*;
 
 pub fn move_paddle(
     input: Res<ButtonInput<KeyCode>>,
@@ -19,13 +17,5 @@ pub fn move_paddle(
         for mut transform in &mut query {
             transform.translation.y -= move_amount;
         }
-    }
-}
-
-pub fn move_ball(
-    mut query: Query<&mut Velocity, With<Ball>>
-){
-    for mut ball in &mut query {
-        ball.linvel += Vec2::new(-0.1, 0.0);
     }
 }
