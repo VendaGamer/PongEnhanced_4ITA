@@ -1,4 +1,3 @@
 pub mod controls;
-pub mod player_controls;
 
-pub use player_controls::PlayerControls;
+pub use crate::components::player_controls::PlayerControls;

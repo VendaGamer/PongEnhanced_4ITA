@@ -8,7 +8,7 @@ pub fn move_paddle(
     time: Res<Time>
 ) {
     let move_amount = time.delta_secs() * 200.0;
-
+    
     if input.pressed(KeyW) {
         for mut transform in &mut query {
             transform.translation.y += move_amount;

@@ -8,7 +8,7 @@ use crate::plugins::GameCorePlugin;
 use bevy::prelude::*;
 use bevy::window::PresentMode;
 use bevy_rapier2d::prelude::*;
-pub use components::*;
+use components::*;
 
 fn main() {
     App::new()

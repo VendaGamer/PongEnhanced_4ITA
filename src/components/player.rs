@@ -1,4 +1,7 @@
 use bevy::prelude::Component;
+use crate::components::PlayerControls;
 
-#[derive(Component, Default)]
-pub struct Player;
+#[derive(Component)]
+pub struct Player{
+    pub player_controls: PlayerControls
+}
