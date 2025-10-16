@@ -1,10 +1,10 @@
-use crate::components::Player;
+use crate::components::{Paddle};
 use bevy::prelude::KeyCode::*;
 use bevy::prelude::*;
 
 pub fn move_paddle(
     input: Res<ButtonInput<KeyCode>>,
-    mut query: Query<&mut Transform, With<Player>>,
+    mut query: Query<&mut Transform, With<Paddle>>,
     time: Res<Time>
 ) {
     let move_amount = time.delta_secs() * 200.0;

@@ -41,7 +41,7 @@ impl BallBundle {
                 angvel: 0.0,
             },
             collider: Collider::ball(25.0),
-            restitution: Restitution{
+            restitution: Restitution {
                 coefficient: 1.0,
                 combine_rule: CoefficientCombineRule::Max
             }, // Perfect bounce
