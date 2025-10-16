@@ -1,9 +1,9 @@
-use bevy::prelude::*;
 use crate::bundles::*;
-use crate::Player;
 use crate::resources::controls::Controls;
 use crate::resources::PlayerControls;
 use crate::systems::*;
+use bevy::prelude::*;
+use std::sync::Arc;
 
 pub struct GameCorePlugin;
 
@@ -16,30 +16,30 @@ impl Plugin for GameCorePlugin {
             ))
             .insert_resource(
                 Controls{
-                    player1: PlayerControls{
+                    player1: Arc::new(PlayerControls{
                         up: KeyCode::KeyW,
                         down: KeyCode::KeyS,
                         dash: KeyCode::ShiftLeft,
                         push: KeyCode::Space
-                    },
-                    player2: PlayerControls {
+                    }),
+                    player2: Arc::new(PlayerControls {
                         up: KeyCode::ArrowUp,
                         down: KeyCode::ArrowDown,
                         dash: KeyCode::ShiftRight,
                         push: KeyCode::ControlRight
-                    },
-                    player3: PlayerControls {
+                    }),
+                    player3: Arc::new(PlayerControls {
                         up: KeyCode::KeyI,
                         down: KeyCode::KeyK,
                         dash: KeyCode::KeyJ,
                         push: KeyCode::KeyL
-                    },
-                    player4: PlayerControls {
+                    }),
+                    player4: Arc::new(PlayerControls {
                         up: KeyCode::Numpad8,
                         down: KeyCode::Numpad5,
                         dash: KeyCode::Numpad9,
                         push: KeyCode::Numpad0
-                    },
+                    }),
                 }
             )
             .add_systems(Startup, setup);
@@ -52,13 +52,13 @@ fn setup(
     mut materials: ResMut<Assets<ColorMaterial>>,
     controls: Res<Controls>
 ) {
+    
     commands.spawn(CameraBundle::default());
     commands.spawn((
         PaddleBundle::new(
             &mut meshes,
             &mut materials,
             Vec3::new(-600.0, 0.0, 0.0),
-            controls.player1.clone()
         ),
     ));
 
