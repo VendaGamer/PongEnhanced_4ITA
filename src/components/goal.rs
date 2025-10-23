@@ -1,4 +1,6 @@
 use bevy::prelude::Component;
 
 #[derive(Component)]
-pub struct Paddle;
+pub struct Goal {
+    pub team_id: u8,
+}

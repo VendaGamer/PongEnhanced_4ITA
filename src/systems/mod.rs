@@ -1,4 +1,7 @@
 pub mod movement;
-mod handle_gamepads;
+pub mod handle_gamepads;
+pub mod handle_scoring;
 
 pub use movement::*;
+pub use handle_scoring::*;
+pub use handle_gamepads::*;

@@ -1,19 +1,21 @@
-pub mod components;
-pub mod resources;
-pub mod systems;
-pub mod bundles;
-pub mod plugins;
+mod components;
+mod resources;
+mod systems;
+mod bundles;
+mod plugins;
+mod utils;
 
-use bevy::dev_tools::fps_overlay::FpsOverlayPlugin;
 use crate::plugins::GameCorePlugin;
+use crate::resources::controls::PlayerAction;
+use bevy::dev_tools::fps_overlay::FpsOverlayPlugin;
 use bevy::prelude::*;
 use bevy::window::PresentMode;
 use bevy_rapier2d::prelude::*;
-use leafwing_input_manager::plugin::InputManagerPlugin;
 use components::*;
-use crate::resources::controls::Controls;
+use leafwing_input_manager::plugin::InputManagerPlugin;
 
 fn main() {
+
     App::new()
         .add_plugins((
             DefaultPlugins.set(
@@ -31,7 +33,7 @@ fn main() {
             RapierPhysicsPlugin::<NoUserData>::default(),
             GameCorePlugin,
             FpsOverlayPlugin::default(),
-            InputManagerPlugin::<Controls>::default(),
+            InputManagerPlugin::<PlayerAction>::default(),
         ))
         .insert_resource(TimestepMode::Fixed {
             dt: 1.0 / 60.0,

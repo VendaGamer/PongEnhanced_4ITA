@@ -1,11 +1,6 @@
-use std::sync::Arc;
+use crate::Paddle;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use leafwing_input_manager::prelude::InputMap;
-use crate::components::*;
-use crate::Paddle;
-use crate::resources::controls::Controls;
-use crate::resources::PlayerControls;
 
 #[derive(Bundle)]
 pub struct PaddleBundle {
@@ -23,12 +18,9 @@ impl PaddleBundle {
         meshes: &mut Assets<Mesh>,
         materials: &mut Assets<ColorMaterial>,
         position: Vec3,
-        controls: InputMap<Controls>,
     ) -> Self {
         Self {
-            paddle: Paddle{
-                player_controls: controls
-            },
+            paddle: Paddle,
             mesh: Mesh2d(meshes.add(Rectangle::new(25.0, 200.0))),
             material: MeshMaterial2d(materials.add(Color::WHITE)),
             transform: Transform::from_translation(position),
