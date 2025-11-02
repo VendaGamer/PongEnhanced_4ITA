@@ -1,6 +1,7 @@
+use bevy::camera;
 use bevy::color::Color;
 use bevy::prelude::*;
-use bevy::render::camera::ScalingMode;
+use crate::ScalingMode;
 use crate::utils::FIXED_DIMENSIONS;
 
 #[derive(Bundle)]
@@ -19,7 +20,7 @@ impl Default for CameraBundle {
                 ..default()
             },
             projection: Projection::from(OrthographicProjection {
-                scaling_mode: ScalingMode::Fixed {
+                scaling_mode: camera::ScalingMode::Fixed {
                     width: FIXED_DIMENSIONS.x,
                     height: FIXED_DIMENSIONS.y,
                 },

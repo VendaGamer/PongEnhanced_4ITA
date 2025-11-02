@@ -7,7 +7,7 @@ mod utils;
 
 use crate::plugins::GameCorePlugin;
 use crate::resources::controls::PlayerAction;
-use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
+use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig};
 use bevy::prelude::*;
 use bevy::render::RenderPlugin;
 use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
@@ -44,6 +44,10 @@ fn main() {
                 config: FpsOverlayConfig{
                     enabled: true,
                     text_color: Srgba::rgb(1.0, 0.73, 0.23).into(),
+                    frame_time_graph_config: FrameTimeGraphConfig{
+                        enabled: false,
+                        ..default()
+                    },
                     ..default()
                 },
             },
