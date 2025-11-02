@@ -1,6 +1,6 @@
 use crate::Paddle;
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
+use avian2d::prelude::*;
 
 #[derive(Bundle)]
 pub struct PaddleBundle {
@@ -10,7 +10,7 @@ pub struct PaddleBundle {
     pub transform: Transform,
     pub rigid_body: RigidBody,
     pub collider: Collider,
-    pub mass: ColliderMassProperties,
+    pub restitution: Restitution,
 }
 
 impl PaddleBundle {
@@ -24,9 +24,9 @@ impl PaddleBundle {
             mesh: Mesh2d(meshes.add(Rectangle::new(25.0, 200.0))),
             material: MeshMaterial2d(materials.add(Color::WHITE)),
             transform: Transform::from_translation(position),
-            rigid_body: RigidBody::KinematicPositionBased,
-            collider: Collider::cuboid(12.5, 100.0),
-            mass: ColliderMassProperties::Density(100.0)
+            rigid_body: RigidBody::Kinematic,
+            collider: Collider::rectangle(25.0, 200.0),
+            restitution: Restitution::new(1.0),
         }
     }
 }

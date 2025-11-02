@@ -7,9 +7,11 @@ pub mod wall;
 pub mod side;
 pub mod area_shape;
 pub mod goal;
+pub mod controlled_paddle;
 
 pub use ball::*;
 pub use paddle::*;
 pub use player::*;
 pub use team::*;
 pub use goal::*;
+pub use controlled_paddle::*;

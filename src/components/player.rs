@@ -9,9 +9,6 @@ pub struct Player {
     pub name: String,
 }
 
-#[derive(Component)]
-pub struct ControlledPaddle(pub Entity);
-
 impl Player{
     pub fn get_default_input_map(player : &Self) -> InputMap<PlayerAction> {
         match player.id {

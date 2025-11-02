@@ -7,15 +7,16 @@ mod utils;
 
 use crate::plugins::GameCorePlugin;
 use crate::resources::controls::PlayerAction;
-use bevy::dev_tools::fps_overlay::FpsOverlayPlugin;
+use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin};
 use bevy::prelude::*;
+use bevy::render::RenderPlugin;
+use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
 use bevy::window::PresentMode;
-use bevy_rapier2d::prelude::*;
+use avian2d::prelude::*;
 use components::*;
 use leafwing_input_manager::plugin::InputManagerPlugin;
 
 fn main() {
-
     App::new()
         .add_plugins((
             DefaultPlugins.set(
@@ -28,16 +29,25 @@ fn main() {
                     ..default()
                 }
             )
-            .set(ImagePlugin::default_nearest()),
+            .set(ImagePlugin::default_nearest())
+            .set(RenderPlugin {
+                render_creation: RenderCreation::Automatic(WgpuSettings {
+                    backends: Some(Backends::all()),
+                    ..default()
+                }),
+                ..default()
+            }),
 
-            RapierPhysicsPlugin::<NoUserData>::default(),
+            PhysicsPlugins::default(),
             GameCorePlugin,
-            FpsOverlayPlugin::default(),
+            FpsOverlayPlugin{
+                config: FpsOverlayConfig{
+                    enabled: true,
+                    text_color: Srgba::rgb(1.0, 0.73, 0.23).into(),
+                    ..default()
+                },
+            },
             InputManagerPlugin::<PlayerAction>::default(),
         ))
-        .insert_resource(TimestepMode::Fixed {
-            dt: 1.0 / 60.0,
-            substeps: 1,
-        })
         .run();
 }

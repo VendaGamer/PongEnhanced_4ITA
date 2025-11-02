@@ -4,8 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-bevy = { version = "0.16.1", features = ["bevy_winit", "bevy_render", "bevy_core_pipeline", "bevy_dev_tools"] }
-bevy_rapier2d = "0.31.0"
-leafwing-input-manager = "0.17.1"
-serde = { version = "1.0.228", features = ["derive"] }
-wgpu = { version = "27.0.1", features = ["gles"] }
+bevy = { version = "0.17.2", features = ["bevy_winit", "bevy_render", "bevy_core_pipeline", "bevy_dev_tools", "x11", "wayland"] }
+avian2d = "0.4.1"
+leafwing-input-manager = "0.18.0"
