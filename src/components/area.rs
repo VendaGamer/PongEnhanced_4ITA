@@ -1,6 +1,5 @@
-use bevy::prelude::Component;
 use crate::components::area_shape::AreaShape;
-use crate::components::team::Team;
+use bevy::prelude::Component;
 
 #[derive(Component)]
 pub struct Area{

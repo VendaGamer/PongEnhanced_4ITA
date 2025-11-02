@@ -6,6 +6,7 @@ use crate::components::side::Side;
 use crate::components::wall::Wall;
 use crate::systems::*;
 use crate::utils::FIXED_DIMENSIONS;
+use crate::utils::screen::PADDLE_SIZE;
 
 pub struct GameCorePlugin;
 
@@ -51,6 +52,7 @@ fn setup(
             &mut meshes,
             &mut materials,
             Vec3::new(-600.0, 0.0, 0.0),
+            PADDLE_SIZE
         )
     ).id();
 
@@ -69,6 +71,7 @@ fn setup(
             &mut meshes,
             &mut materials,
             Vec3::new(600.0, 0.0, 0.0),
+            PADDLE_SIZE
         )
     ).id();
 
