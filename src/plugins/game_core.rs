@@ -17,7 +17,6 @@ impl Plugin for GameCorePlugin {
             (
                 move_paddle,
                 check_connection,
-                handle_scoring,
                 maintain_ball_speed,
                 paddle_hit_dynamics,
             ))
@@ -32,21 +31,17 @@ fn setup(
 ) {
     commands.spawn(CameraBundle::default());
 
-    // === SPAWN TEAMS ===
     let team1 = commands.spawn(Team {
-        id: 0,
         name: "Team Left".into(),
         current_score: 0,
     }).id();
 
     let team2 = commands.spawn(Team {
-        id: 1,
         name: "Team Right".into(),
         current_score: 0,
     }).id();
 
-    // === SPAWN PLAYERS AND PADDLES ===
-    // Player 1 (Left side)
+
     let paddle1 = commands.spawn(
         PaddleBundle::new(
             &mut meshes,
@@ -65,7 +60,7 @@ fn setup(
         paddle1
     ));
 
-    // Player 2 (Right side)
+
     let paddle2 = commands.spawn(
         PaddleBundle::new(
             &mut meshes,
@@ -84,16 +79,15 @@ fn setup(
         paddle2
     ));
 
-    // === SPAWN BALL ===
+
     commands.spawn(BallBundle::new(
         &mut meshes,
         &mut materials,
         Vec3::ZERO,
         Vec2::new(-300.0, 300.0),
         BALL_RADIUS
-    ));
-
-    // === SPAWN AREA BOUNDARIES (Walls) ===
+    )).observe(handle_scoring);
+    
     let wall_thickness = 20.0;
     let half_width = FIXED_DIMENSIONS.x / 2.0;
     let half_height = FIXED_DIMENSIONS.y / 2.0;
@@ -118,21 +112,26 @@ fn setup(
         Collider::rectangle(FIXED_DIMENSIONS.x, wall_thickness),
     ));
 
-    // === SPAWN GOALS ===
+
     let goal_height = 300.0;
 
-    // Left Goal (Team 1 defends, Team 2 scores here)
     commands.spawn((
-        Goal { team_id: 1 },
+        Goal{
+            team: team1,
+            side: Side::Left,
+        },
         Sensor,
         Collider::rectangle(20.0, goal_height),
         Transform::from_xyz(-half_width, 0.0, 0.0),
         CollisionLayers::default(),
     ));
 
-    // Right Goal (Team 2 defends, Team 1 scores here)
+
     commands.spawn((
-        Goal { team_id: 0 },
+        Goal{
+            team: team2,
+            side: Side::Right,
+        },
         Sensor,
         Collider::rectangle(20.0, goal_height),
         Transform::from_xyz(half_width, 0.0, 0.0),

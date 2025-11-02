@@ -3,6 +3,7 @@ pub mod ball;
 pub mod camera;
 pub mod area;
 pub mod player;
+mod goal;
 
 pub use ball::*;
 pub use paddle::*;

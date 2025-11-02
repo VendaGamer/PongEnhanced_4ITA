@@ -21,6 +21,7 @@ pub struct BallBundle {
     pub damping: LinearDamping,
     pub collision_layers: CollisionLayers,
     pub gravity_scale: GravityScale,
+    pub collision_events_enabled: CollisionEventsEnabled,
     pub ccd: SweptCcd,
 }
 
@@ -48,6 +49,7 @@ impl BallBundle {
             damping: ZERO_DAMPING,
             collision_layers: CollisionLayers::default(),
             gravity_scale: GravityScale(0.0),
+            collision_events_enabled: CollisionEventsEnabled,
             ccd: SweptCcd::default(),
         }
     }

@@ -1,6 +1,8 @@
-use bevy::prelude::Component;
+use bevy::prelude::{Component, Entity};
+use crate::components::side::Side;
 
 #[derive(Component)]
 pub struct Goal {
-    pub team_id: u8,
+    pub team: Entity,
+    pub side: Side
 }
