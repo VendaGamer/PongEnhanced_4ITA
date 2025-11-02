@@ -30,18 +30,19 @@ impl BallBundle {
         materials: &mut Assets<ColorMaterial>,
         position: Vec3,
         initial_velocity: Vec2,
+        radius: f32,
     ) -> Self {
         Self {
             ball: Ball{
                 initial_velocity
             },
-            mesh: Mesh2d(meshes.add(Circle::new(25.0))),
+            mesh: Mesh2d(meshes.add(Circle::new(radius))),
             material: MeshMaterial2d(materials.add(Color::WHITE)),
             transform: Transform::from_translation(position),
             rigid_body: RigidBody::Dynamic,
             linear_velocity: LinearVelocity(initial_velocity),
             angular_velocity: AngularVelocity(0.0),
-            collider: Collider::circle(25.0),
+            collider: Collider::circle(radius),
             restitution: Restitution::new(1.0),
             friction: Friction::new(0.0),
             damping: ZERO_DAMPING,

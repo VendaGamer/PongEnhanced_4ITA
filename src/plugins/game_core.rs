@@ -6,7 +6,7 @@ use crate::components::side::Side;
 use crate::components::wall::Wall;
 use crate::systems::*;
 use crate::utils::FIXED_DIMENSIONS;
-use crate::utils::screen::PADDLE_SIZE;
+use crate::utils::screen::{BALL_RADIUS, PADDLE_SIZE};
 
 pub struct GameCorePlugin;
 
@@ -89,7 +89,8 @@ fn setup(
         &mut meshes,
         &mut materials,
         Vec3::ZERO,
-        Vec2::new(-300.0, 300.0)
+        Vec2::new(-300.0, 300.0),
+        BALL_RADIUS
     ));
 
     // === SPAWN AREA BOUNDARIES (Walls) ===

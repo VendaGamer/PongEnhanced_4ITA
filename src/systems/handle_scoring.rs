@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use avian2d::prelude::*;
 use crate::bundles::BallBundle;
 use crate::components::*;
+use crate::utils::screen::BALL_RADIUS;
 
 pub fn handle_scoring(
     mut commands: Commands,
@@ -40,7 +41,8 @@ pub fn handle_scoring(
                 &mut meshes,
                 &mut materials,
                 Vec3::ZERO,
-                Vec2::new(100.0, 0.0),
+                Vec2::new(-400.0, -400.0),
+                BALL_RADIUS
             ));
         }
     }

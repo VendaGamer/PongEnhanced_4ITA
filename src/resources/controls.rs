@@ -7,6 +7,8 @@ pub enum PlayerAction {
     Down,
     Left,
     Right,
+    Speedup,
     Dash,
     Push,
+    Pause
 }
