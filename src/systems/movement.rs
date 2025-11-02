@@ -9,12 +9,16 @@ pub fn move_paddle(
     player_query: Query<(&ActionState<PlayerAction>, &ControlledPaddle), With<Player>>,
     mut paddle_query: Query<&mut Transform, With<Paddle>>,
 ) {
-    let move_amount = time.delta_secs() * 400.0;
-
     for (action_state, controlled_paddle) in player_query.iter() {
         let paddle_entity = controlled_paddle.paddle;
 
         if let Ok(mut paddle_transform) = paddle_query.get_mut(paddle_entity) {
+
+            let mut move_amount = time.delta_secs() * 400.0;
+            if(action_state.pressed(&PlayerAction::Speedup)){
+                move_amount *= 2.0;
+            }
+
             if action_state.pressed(&PlayerAction::Up) {
                 paddle_transform.translation.y += move_amount;
             }
