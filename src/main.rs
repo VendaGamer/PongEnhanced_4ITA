@@ -4,6 +4,7 @@ mod systems;
 mod bundles;
 mod plugins;
 mod utils;
+mod events;
 
 use crate::plugins::GameCorePlugin;
 use crate::resources::controls::PlayerAction;

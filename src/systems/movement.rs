@@ -6,16 +6,13 @@ use crate::resources::controls::*;
 
 pub fn move_paddle(
     time: Res<Time>,
-    player_query: Query<(&ActionState<PlayerAction>, &ControlledPaddle), With<Player>>,
-    mut paddle_query: Query<&mut Transform, With<Paddle>>,
+    player_query: Query<&ActionState<PlayerAction>, With<Player>>,
+    mut paddle_query: Query<(&mut Transform, &Paddle)>,
 ) {
-    for (action_state, controlled_paddle) in player_query.iter() {
-        let paddle_entity = controlled_paddle.paddle;
-
-        if let Ok(mut paddle_transform) = paddle_query.get_mut(paddle_entity) {
-
+    for (mut paddle_transform, paddle) in paddle_query.iter_mut() {
+        if let Ok(action_state) = player_query.get(paddle.player) {
             let mut move_amount = time.delta_secs() * 400.0;
-            if(action_state.pressed(&PlayerAction::Speedup)){
+            if action_state.pressed(&PlayerAction::Speedup) {
                 move_amount *= 2.0;
             }
 

@@ -1,4 +1,6 @@
 use bevy::prelude::*;
 
-#[derive(Component)]
-pub struct Paddle;
+#[derive(Component, Copy, Clone)]
+pub struct Paddle{
+    pub player: Entity
+}

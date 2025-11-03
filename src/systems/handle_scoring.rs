@@ -16,18 +16,23 @@ pub fn handle_scoring(
     let other = collision.collider2;
 
     if let Ok(goal) = goals.get(other){
+
         if let Ok(mut team) = teams.get_mut(goal.team) {
             team.current_score += 1;
+
+            commands.entity(ball).despawn();
+
+            commands.spawn(BallBundle::new(
+                &mut meshes,
+                &mut materials,
+                Vec3::ZERO,
+                Vec2::new(-300.0, 300.0),
+                BALL_RADIUS
+            )).observe(handle_scoring);
         }
+
+
     }
 
-    commands.entity(ball).despawn();
 
-    commands.spawn(BallBundle::new(
-        &mut meshes,
-        &mut materials,
-        Vec3::ZERO,
-        Vec2::new(-300.0, 300.0),
-        BALL_RADIUS
-    ));
 }

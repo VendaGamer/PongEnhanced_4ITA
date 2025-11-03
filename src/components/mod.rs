@@ -3,15 +3,22 @@ pub mod ball;
 pub mod team;
 pub mod player;
 pub mod area;
-pub mod wall;
 pub mod side;
-pub mod area_shape;
 pub mod goal;
-pub mod controlled_paddle;
+pub mod wall;
+pub mod area_shape;
+pub mod game_mode;
+pub mod score_text;
+pub mod division_line;
 
+
+pub use division_line::*;
 pub use ball::*;
 pub use paddle::*;
 pub use player::*;
 pub use team::*;
 pub use goal::*;
-pub use controlled_paddle::*;
+pub use area_shape::*;
+pub use area::*;
+pub use game_mode::*;
+pub use score_text::*;

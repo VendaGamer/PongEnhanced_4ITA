@@ -1,12 +1,9 @@
-use avian2d::prelude::*;
 use crate::bundles::player::PlayerBundle;
 use crate::bundles::*;
+use crate::bundles::area::AreaBundle;
 use crate::components::*;
-use crate::components::side::Side;
-use crate::components::wall::Wall;
 use crate::systems::*;
-use crate::utils::FIXED_DIMENSIONS;
-use crate::utils::screen::{BALL_RADIUS, PADDLE_SIZE};
+use crate::utils::screen::{BALL_RADIUS, HALF_WIDTH, PADDLE_SIZE, PADDLE_WALL_PADDING};
 
 pub struct GameCorePlugin;
 
@@ -19,8 +16,11 @@ impl Plugin for GameCorePlugin {
                 check_connection,
                 maintain_ball_speed,
                 paddle_hit_dynamics,
+                update_score_ui
             ))
-            .add_systems(Startup, setup);
+            .add_systems(Startup, (
+                setup,
+            ));
     }
 }
 
@@ -29,8 +29,6 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    commands.spawn(CameraBundle::default());
-
     let team1 = commands.spawn(Team {
         name: "Team Left".into(),
         current_score: 0,
@@ -41,43 +39,73 @@ fn setup(
         current_score: 0,
     }).id();
 
+    commands.spawn(Node {
+        width: Val::Percent(100.0),
+        height: Val::Percent(100.0),
+        justify_content: JustifyContent::SpaceBetween,
+        align_items: AlignItems::Start,
+        padding: UiRect::all(Val::Px(50.0)),
+        ..default()
+    }).with_children(|parent| {
+
+
+            parent.spawn((
+                Text::new("0"),
+                TextFont {
+                    font_size: 72.0,
+                    ..default()
+                },
+                TextColor(Color::srgba(1.0, 1.0, 1.0, 0.8)),
+                ScoreText { team: team2 },
+            ));
+
+
+            parent.spawn((
+                Text::new("0"),
+                TextFont {
+                    font_size: 72.0,
+                    ..default()
+                },
+                TextColor(Color::srgba(1.0, 1.0, 1.0, 0.8)),
+                ScoreText { team: team1 },
+            ));
+    });
+
+    let player1=commands.spawn(PlayerBundle::new(
+        Player {
+            id: 1,
+            team: team1,
+            name: "Player 1".into(),
+        }
+    )).id();
+
+    let player2 = commands.spawn(PlayerBundle::new(
+        Player {
+            id: 2,
+            team: team2,
+            name: "Player 2".into(),
+        }
+    )).id();
 
     let paddle1 = commands.spawn(
         PaddleBundle::new(
             &mut meshes,
             &mut materials,
-            Vec3::new(-600.0, 0.0, 0.0),
-            PADDLE_SIZE
+            Vec3::new(-HALF_WIDTH + PADDLE_WALL_PADDING, 0.0, 0.0),
+            PADDLE_SIZE,
+            player1
         )
     ).id();
-
-    commands.spawn(PlayerBundle::new(
-        Player {
-            id: 1,
-            team: team1,
-            name: "Player 1".into(),
-        },
-        paddle1
-    ));
-
 
     let paddle2 = commands.spawn(
         PaddleBundle::new(
             &mut meshes,
             &mut materials,
-            Vec3::new(600.0, 0.0, 0.0),
-            PADDLE_SIZE
+            Vec3::new(HALF_WIDTH - PADDLE_WALL_PADDING, 0.0, 0.0),
+            PADDLE_SIZE,
+            player2
         )
     ).id();
-
-    commands.spawn(PlayerBundle::new(
-        Player {
-            id: 2,
-            team: team2,
-            name: "Player 2".into(),
-        },
-        paddle2
-    ));
 
 
     commands.spawn(BallBundle::new(
@@ -87,54 +115,32 @@ fn setup(
         Vec2::new(-300.0, 300.0),
         BALL_RADIUS
     )).observe(handle_scoring);
-    
-    let wall_thickness = 20.0;
-    let half_width = FIXED_DIMENSIONS.x / 2.0;
-    let half_height = FIXED_DIMENSIONS.y / 2.0;
 
-    // Top Wall
-    commands.spawn((
-        Wall { side: Side::Top },
-        Mesh2d(meshes.add(Rectangle::new(FIXED_DIMENSIONS.x, wall_thickness))),
-        MeshMaterial2d(materials.add(Color::srgb(0.3, 0.3, 0.3))),
-        Transform::from_xyz(0.0, half_height + wall_thickness / 2.0, 0.0),
-        RigidBody::Static,
-        Collider::rectangle(FIXED_DIMENSIONS.x, wall_thickness),
-    ));
+    commands.spawn(CameraBundle::default());
 
-    // Bottom Wall
-    commands.spawn((
-        Wall { side: Side::Bottom },
-        Mesh2d(meshes.add(Rectangle::new(FIXED_DIMENSIONS.x, wall_thickness))),
-        MeshMaterial2d(materials.add(Color::srgb(0.3, 0.3, 0.3))),
-        Transform::from_xyz(0.0, -half_height - wall_thickness / 2.0, 0.0),
-        RigidBody::Static,
-        Collider::rectangle(FIXED_DIMENSIONS.x, wall_thickness),
-    ));
+    let teams = [team1, team2];
+    AreaBundle::spawn(AreaShape::TwoSide, &mut commands, &teams);
+
+    const SEGMENT_HEIGHT: f32 = 20.0;
+    const GAP_HEIGHT: f32 = 15.0;
+    const HALF_HEIGHT: f32 = 360.0;
+
+    let mut y_pos = -HALF_HEIGHT + SEGMENT_HEIGHT / 2.0;
+    while y_pos < HALF_HEIGHT {
+        commands.spawn(DivisionLineBundle::new(&mut meshes, &mut materials))
+            .insert(Transform::from_translation(Vec3::new(0.0, y_pos, 0.0)));
+        y_pos += SEGMENT_HEIGHT + GAP_HEIGHT;
+    }
+}
 
 
-    let goal_height = 300.0;
-
-    commands.spawn((
-        Goal{
-            team: team1,
-            side: Side::Left,
-        },
-        Sensor,
-        Collider::rectangle(20.0, goal_height),
-        Transform::from_xyz(-half_width, 0.0, 0.0),
-        CollisionLayers::default(),
-    ));
-
-
-    commands.spawn((
-        Goal{
-            team: team2,
-            side: Side::Right,
-        },
-        Sensor,
-        Collider::rectangle(20.0, goal_height),
-        Transform::from_xyz(half_width, 0.0, 0.0),
-        CollisionLayers::default(),
-    ));
+fn update_score_ui(
+    teams: Query<&Team>,
+    mut score_texts: Query<(&mut Text, &ScoreText)>,
+) {
+    for (mut text, score_text) in score_texts.iter_mut() {
+        if let Ok(team) = teams.get(score_text.team) {
+            text.0 = team.current_score.to_string();
+        }
+    }
 }
