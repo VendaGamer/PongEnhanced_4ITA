@@ -19,9 +19,57 @@ impl Plugin for GameCorePlugin {
                 update_score_ui
             ))
             .add_systems(Startup, (
-                setup,
+                //setup,
+                setup_common,
+                setup_menu
             ));
     }
+}
+
+fn setup_menu(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+
+}
+
+fn setup_common(
+    mut commands: Commands,
+) {
+    commands.spawn(CameraBundle::default());
+
+    commands.spawn(PlayerBundle::new(
+        Player {
+            id: 1,
+            team: None,
+            name: "Player 1".into(),
+        }
+    ));
+
+    commands.spawn(PlayerBundle::new(
+        Player {
+            id: 2,
+            team: None,
+            name: "Player 2".into(),
+        }
+    ));
+
+    commands.spawn(PlayerBundle::new(
+        Player {
+            id: 3,
+            team: None,
+            name: "Player 3".into(),
+        }
+    ));
+
+    commands.spawn(PlayerBundle::new(
+        Player {
+            id: 4,
+            team: None,
+            name: "Player 4".into(),
+        }
+    ));
 }
 
 fn setup(
@@ -71,41 +119,7 @@ fn setup(
             ));
     });
 
-    let player1=commands.spawn(PlayerBundle::new(
-        Player {
-            id: 1,
-            team: team1,
-            name: "Player 1".into(),
-        }
-    )).id();
 
-    let player2 = commands.spawn(PlayerBundle::new(
-        Player {
-            id: 2,
-            team: team2,
-            name: "Player 2".into(),
-        }
-    )).id();
-
-    let paddle1 = commands.spawn(
-        PaddleBundle::new(
-            &mut meshes,
-            &mut materials,
-            Vec3::new(-HALF_WIDTH + PADDLE_WALL_PADDING, 0.0, 0.0),
-            PADDLE_SIZE,
-            player1
-        )
-    ).id();
-
-    let paddle2 = commands.spawn(
-        PaddleBundle::new(
-            &mut meshes,
-            &mut materials,
-            Vec3::new(HALF_WIDTH - PADDLE_WALL_PADDING, 0.0, 0.0),
-            PADDLE_SIZE,
-            player2
-        )
-    ).id();
 
 
     commands.spawn(BallBundle::new(
@@ -115,8 +129,6 @@ fn setup(
         Vec2::new(-300.0, 300.0),
         BALL_RADIUS
     )).observe(handle_scoring);
-
-    commands.spawn(CameraBundle::default());
 
     let teams = [team1, team2];
     AreaBundle::spawn(AreaShape::TwoSide, &mut commands, &teams);

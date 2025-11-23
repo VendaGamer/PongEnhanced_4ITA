@@ -5,7 +5,7 @@ use leafwing_input_manager::prelude::InputMap;
 #[derive(Component)]
 pub struct Player {
     pub id: u8,
-    pub team: Entity,
+    pub team: Option<Entity>,
     pub name: String,
 }
 
