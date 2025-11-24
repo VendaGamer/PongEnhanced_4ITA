@@ -1,11 +1,12 @@
+use crate::bundles::{AlignItems, Bundle, FlexDirection, JustifyContent, Val};
+use crate::components::ui::{MainMenu, MenuButton};
 use bevy::color::Color;
-use bevy::image::DataFormat::Rgba;
-use bevy::prelude::children;
+use bevy::prelude::*;
+use bevy::prelude::Commands;
 use bevy::ui::{BackgroundColor, Node};
 use bevy::utils::default;
-use crate::bundles::{AlignItems, Bundle, ColorMaterial, FlexDirection, JustifyContent, Mesh2d, MeshMaterial2d, Transform, Val};
-use crate::components::DivisionLine;
-use crate::components::ui::MainMenu;
+use crate::bundles::ui::ButtonBundle;
+use crate::bundles::ui::container::Container;
 
 #[derive(Bundle)]
 pub struct MainMenuBundle {
@@ -14,14 +15,9 @@ pub struct MainMenuBundle {
     background_color: BackgroundColor,
 }
 
-#[derive(Bundle)]
-struct ButtonsContainer{
-
-}
-
-impl MainMenuBundle {
-    fn new()-> Self{
-        MainMenuBundle{
+impl Default for MainMenuBundle{
+    fn default() -> Self {
+        Self{
             menu: MainMenu,
             container: Node{
                 width: Val::Percent(100.0),
@@ -33,5 +29,23 @@ impl MainMenuBundle {
             },
             background_color: BackgroundColor(Color::srgb(0.05, 0.05, 0.1))
         }
+    }
+}
+
+impl MainMenuBundle {
+    fn spawn(commands: &mut Commands)-> Entity{
+        commands.spawn(MainMenuBundle::default())
+            .with_children(|menuParent| {
+
+                menuParent.spawn(Container::buttons())
+                    .with_children(|containerParent|{
+                        containerParent.spawn(ButtonBundle::main_menu(Color::srgb(0.5, 0.1, 0.1)));
+                        containerParent.spawn(ButtonBundle::main_menu(Color::srgb(0.5, 0.1, 0.1)));
+                        containerParent.spawn(ButtonBundle::main_menu(Color::srgb(0.5, 0.1, 0.1)));
+                    })
+
+
+            })
+            .id()
     }
 }

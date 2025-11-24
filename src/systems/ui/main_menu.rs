@@ -105,18 +105,7 @@ fn spawn_menu_button<E: EntityEvent, B: Bundle, M>(
 ) {
     parent
         .spawn((
-            Button,
-            button_type,
-            Node {
-                width: Val::Px(350.0),
-                height: Val::Px(70.0),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                ..default()
-            },
-            BackgroundColor(color),
-            BorderRadius::all(Val::Px(8.0)),
-            BorderColor::from(Color::WHITE.with_alpha(0.3)),
+            
         )).observe(observer)
         .with_children(|button| {
             button.spawn((
@@ -128,24 +117,4 @@ fn spawn_menu_button<E: EntityEvent, B: Bundle, M>(
                 TextColor(Color::WHITE),
             ));
         });
-}
-
-
-fn lighten_color(color: Color, amount: f32) -> Color {
-    let [r, g, b, a] = color.to_srgba().to_f32_array();
-    Color::srgba(
-        (r + amount).min(1.0),
-        (g + amount).min(1.0),
-        (b + amount).min(1.0),
-        a,
-    )
-}
-
-pub fn despawn_main_menu(
-    mut commands: Commands,
-    query: Query<Entity, With<MainMenu>>,
-) {
-    for entity in &query {
-        commands.entity(entity).despawn();
-    }
 }
