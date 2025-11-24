@@ -1,4 +1,4 @@
-use avian2d::prelude::{Collider, RigidBody};
+use avian2d::prelude::{Collider, Restitution, RigidBody};
 use bevy::prelude::Transform;
 use crate::bundles::Bundle;
 use crate::components::side::Side;
@@ -9,7 +9,8 @@ pub struct WallBundle {
     pub wall: Wall,
     pub collider: Collider,
     pub transform: Transform,
-    pub rigid_body: RigidBody
+    pub rigid_body: RigidBody,
+    pub restitution: Restitution
 }
 
 impl WallBundle {
@@ -23,7 +24,8 @@ impl WallBundle {
             },
             collider,
             transform,
-            rigid_body: RigidBody::Static
+            rigid_body: RigidBody::Static,
+            restitution: Restitution::new(0.0)
         }
     }
 }

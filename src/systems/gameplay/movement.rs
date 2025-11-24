@@ -3,6 +3,9 @@ use avian2d::prelude::*;
 use leafwing_input_manager::prelude::*;
 use crate::components::*;
 use crate::resources::controls::*;
+use crate::utils::screen::PADDLE_SIZE;
+
+const BALL_SPEED: f32 = 600.0;
 
 pub fn move_paddle(
     time: Res<Time>,
@@ -29,7 +32,7 @@ pub fn move_paddle(
 pub fn maintain_ball_speed(
     mut ball_query: Query<&mut LinearVelocity, With<Ball>>,
 ) {
-    const BALL_SPEED: f32 = 400.0;
+
 
     for mut velocity in ball_query.iter_mut() {
         let current_speed = velocity.length();
@@ -65,11 +68,10 @@ pub fn paddle_hit_dynamics(
              ball_transform_query.get(ball_entity)) {
 
             // Calculate hit offset from paddle center (-1.0 to 1.0)
-            let paddle_half_height = 100.0;
+            let paddle_half_height = PADDLE_SIZE.y/2.0;
             let offset = (ball_transform.translation.y - paddle_transform.translation.y)
                 / paddle_half_height;
-
-            // Influence vertical velocity based on hit position
+            
             let speed = ball_vel.length();
             let new_y_vel = offset * speed * 0.75;
 

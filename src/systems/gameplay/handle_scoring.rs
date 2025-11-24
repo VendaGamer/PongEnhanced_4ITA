@@ -30,9 +30,5 @@ pub fn handle_scoring(
                 BALL_RADIUS
             )).observe(handle_scoring);
         }
-
-
     }
-
-
 }

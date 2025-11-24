@@ -1,5 +1,4 @@
-use crate::bundles::Entity;
-use crate::components::{Paddle, Player};
+use crate::components::Player;
 use crate::resources::controls::PlayerAction;
 use bevy::prelude::Bundle;
 use leafwing_input_manager::input_map::InputMap;

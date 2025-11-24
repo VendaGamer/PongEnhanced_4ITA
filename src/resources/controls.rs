@@ -12,3 +12,10 @@ pub enum PlayerAction {
     Push,
     Pause
 }
+
+#[derive(Actionlike, Clone, Copy, Debug, Reflect, PartialEq, Eq, Hash)]
+pub enum MenuAction {
+    Confirm,
+    Cancel,
+    Navigate,
+}

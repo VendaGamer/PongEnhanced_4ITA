@@ -1,7 +1,9 @@
+use leafwing_input_manager::prelude::{ActionState, InputMap};
 use crate::bundles::player::PlayerBundle;
 use crate::bundles::*;
 use crate::bundles::area::AreaBundle;
 use crate::components::*;
+use crate::resources::controls::MenuAction;
 use crate::systems::*;
 use crate::utils::screen::{BALL_RADIUS, HALF_WIDTH, PADDLE_SIZE, PADDLE_WALL_PADDING};
 
@@ -16,22 +18,14 @@ impl Plugin for GameCorePlugin {
                 check_connection,
                 maintain_ball_speed,
                 paddle_hit_dynamics,
-                update_score_ui
+                update_score_ui,
+                detect_button_press
             ))
             .add_systems(Startup, (
                 //setup,
-                setup_common,
-                setup_menu
+                setup_common
             ));
     }
-}
-
-fn setup_menu(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
-
 }
 
 fn setup_common(
@@ -70,6 +64,19 @@ fn setup_common(
             name: "Player 4".into(),
         }
     ));
+
+    commands.spawn(
+        InputMap::default()
+            .with(MenuAction::Confirm, KeyCode::Enter)
+            .with(MenuAction::Confirm, MouseButton::Left)
+            .with(MenuAction::Confirm, KeyCode::Space)
+            .with(MenuAction::Confirm, GamepadButton::South)
+            .with(MenuAction::Cancel, KeyCode::Escape)
+            .with(MenuAction::Cancel, GamepadButton::East)
+    );
+
+
+    spawn_main_menu(&mut commands);
 }
 
 fn setup(
