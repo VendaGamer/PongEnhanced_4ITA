@@ -1,9 +1,10 @@
-use bevy::ecs::relationship::RelatedSpawnerCommands;
 use crate::bundles::ui::LabelBundle;
+use crate::components::ui::navigation::UINavSlot;
+use crate::components::ui::HoverLight;
+use crate::systems::ButtonPressed;
+use bevy::ecs::relationship::RelatedSpawnerCommands;
 use bevy::ecs::spawn::SpawnRelatedBundle;
 use bevy::prelude::*;
-use bevy::window::AppLifecycle;
-use crate::systems::ButtonPressed;
 
 #[derive(Bundle)]
 pub struct ButtonBundle {
@@ -12,12 +13,14 @@ pub struct ButtonBundle {
     background_color: BackgroundColor,
     border_radius: BorderRadius,
     border_color: BorderColor,
+    hover_light: HoverLight,
+    navigation_slot: UINavSlot
 }
 
 pub type MenuButton = (ButtonBundle, SpawnRelatedBundle<ChildOf, Spawn<LabelBundle>>);
 
 impl ButtonBundle{
-    pub fn menu_button(color: Color, text: &str) -> MenuButton {
+    pub fn menu_button(color: Color, text: &str, slot: UINavSlot) -> MenuButton {
         (
             Self{
                 button: Button,
@@ -32,6 +35,13 @@ impl ButtonBundle{
                 background_color: BackgroundColor(color),
                 border_radius: BorderRadius::all(Val::Px(8.0)),
                 border_color: BorderColor::from(Color::WHITE.with_alpha(0.3)),
+                hover_light: HoverLight {
+                    amount: 0.0,
+                    max: 0.3,
+                    speed: 2.0,
+                    base: color,
+                },
+                navigation_slot: slot,
             },
             children![LabelBundle::button_label(text)]
         )
@@ -49,16 +59,20 @@ impl ButtonBundle{
         ))
             .with_children(|parent|{
 
-                parent.spawn(ButtonBundle::menu_button(Color::srgb(0.2, 0.6, 0.9), "Offline Play"))
+                parent.spawn(ButtonBundle::menu_button(Color::srgb(0.2, 0.6, 0.9),
+                               "Offline Play", UINavSlot::row(0)))
                     .observe(on_offline);
 
-                parent.spawn(ButtonBundle::menu_button(Color::srgb(0.6, 0.3, 0.9), "Online Play"))
+                parent.spawn(ButtonBundle::menu_button(Color::srgb(0.6, 0.3, 0.9),
+                               "Online Play", UINavSlot::row(1)))
                     .observe(on_offline);
 
-                parent.spawn(ButtonBundle::menu_button(Color::srgb(0.5, 0.5, 0.5), "Settings"))
+                parent.spawn(ButtonBundle::menu_button(Color::srgb(0.5, 0.5, 0.5),
+                               "Settings", UINavSlot::row(2)))
                     .observe(on_settings);
 
-                parent.spawn(ButtonBundle::menu_button(Color::srgb(0.8, 0.2, 0.2), "Exit"))
+                parent.spawn(ButtonBundle::menu_button(Color::srgb(0.8, 0.2, 0.2),
+                               "Exit", UINavSlot::row(3)))
                     .observe(on_exit);
             });
     }

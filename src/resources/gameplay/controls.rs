@@ -17,5 +17,6 @@ pub enum PlayerAction {
 pub enum MenuAction {
     Confirm,
     Cancel,
-    Navigate,
+    NavigateY,
+    NavigateX,
 }

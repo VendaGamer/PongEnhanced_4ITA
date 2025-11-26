@@ -1,11 +1,10 @@
-use bevy::prelude::*;
-use leafwing_input_manager::prelude::*;
-use crate::bundles::ButtonBundle;
-use crate::resources::controls::MenuAction;
+use crate::components::ui::HoverLight;
 use crate::utils::text::lighten_color;
+use bevy::prelude::*;
 
 #[derive(EntityEvent)]
 pub struct ButtonPressed(Entity);
+
 
 pub fn detect_button_press(
     button_query: Query<Entity, (With<Button>, With<Interaction>)>,
@@ -23,18 +22,31 @@ pub fn detect_button_press(
     }
 }
 
-pub fn lighten_buttons_on_hover(
-    button_query: Query<(Entity, &mut BackgroundColor), With<Button>>,
-    interaction_query: Query<&Interaction>
-){
-    for (entity, color) in &button_query {
+pub fn animate_button_light(
+    time: Res<Time>,
+    mut query: Query<(&Interaction, &mut BackgroundColor, &mut HoverLight)>,
+) {
+    for (interaction, mut bg, mut hover) in &mut query {
+        let dt = time.delta_secs();
 
-        if let Ok(interaction) = interaction_query.get(entity) {
-            if *interaction == Interaction::Hovered {
+        let target = match *interaction {
+            Interaction::Hovered => hover.max,
+            _ => 0.0,
+        };
 
-                color = BackgroundColor::from(lighten_color(color.0));
 
-            }
-        }
+        hover.amount = move_towards(hover.amount, target, hover.speed * dt);
+        bg.0 = lighten_color(hover.base, hover.amount);
+    }
+}
+
+
+fn move_towards(current: f32, target: f32, max_delta: f32) -> f32 {
+    if (target - current).abs() <= max_delta {
+        target
+    } else if current < target {
+        current + max_delta
+    } else {
+        current - max_delta
     }
 }

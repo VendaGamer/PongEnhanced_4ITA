@@ -1,11 +1,13 @@
-use leafwing_input_manager::prelude::{ActionState, InputMap};
+use crate::bundles::area::AreaBundle;
 use crate::bundles::player::PlayerBundle;
 use crate::bundles::*;
-use crate::bundles::area::AreaBundle;
 use crate::components::*;
 use crate::resources::controls::MenuAction;
 use crate::systems::*;
-use crate::utils::screen::{BALL_RADIUS, HALF_WIDTH, PADDLE_SIZE, PADDLE_WALL_PADDING};
+use crate::utils::screen::BALL_RADIUS;
+use leafwing_input_manager::prelude::InputMap;
+use crate::resources::navigation::UISelection;
+use crate::systems::navigation::{sync_selection_to_ui, ui_navigation};
 
 pub struct GameCorePlugin;
 
@@ -19,12 +21,16 @@ impl Plugin for GameCorePlugin {
                 maintain_ball_speed,
                 paddle_hit_dynamics,
                 update_score_ui,
-                detect_button_press
+                detect_button_press,
+                animate_button_light,
+                ui_navigation,
+                sync_selection_to_ui
             ))
             .add_systems(Startup, (
                 //setup,
-                setup_common
-            ));
+                setup_common,
+            ))
+            .insert_resource(UISelection::default());
     }
 }
 
@@ -65,15 +71,38 @@ fn setup_common(
         }
     ));
 
-    commands.spawn(
-        InputMap::default()
-            .with(MenuAction::Confirm, KeyCode::Enter)
-            .with(MenuAction::Confirm, MouseButton::Left)
-            .with(MenuAction::Confirm, KeyCode::Space)
-            .with(MenuAction::Confirm, GamepadButton::South)
-            .with(MenuAction::Cancel, KeyCode::Escape)
-            .with(MenuAction::Cancel, GamepadButton::East)
-    );
+    commands.spawn({
+            let mut map = InputMap::default();
+
+            map.insert(MenuAction::Confirm, KeyCode::Enter);
+            map.insert(MenuAction::Confirm, KeyCode::Space);
+            map.insert(MenuAction::Confirm, MouseButton::Left);
+            map.insert(MenuAction::Confirm, GamepadButton::South);
+
+            // -------- Cancel --------
+            map.insert(MenuAction::Cancel, KeyCode::Escape);
+            map.insert(MenuAction::Cancel, GamepadButton::East);
+
+            // -------- Vertical Navigation (NavigateY) --------
+            map.insert(MenuAction::NavigateY, KeyCode::ArrowUp);
+            map.insert(MenuAction::NavigateY, KeyCode::ArrowDown);
+            map.insert(MenuAction::NavigateY, KeyCode::KeyW);
+            map.insert(MenuAction::NavigateY, KeyCode::KeyS);
+
+            map.insert(MenuAction::NavigateY, GamepadButton::DPadUp);
+            map.insert(MenuAction::NavigateY, GamepadButton::DPadDown);
+
+            // -------- Horizontal Navigation (NavigateX) --------
+            map.insert(MenuAction::NavigateX, KeyCode::ArrowLeft);
+            map.insert(MenuAction::NavigateX, KeyCode::ArrowRight);
+            map.insert(MenuAction::NavigateX, KeyCode::KeyA);
+            map.insert(MenuAction::NavigateX, KeyCode::KeyD);
+
+            map.insert(MenuAction::NavigateX, GamepadButton::DPadLeft);
+            map.insert(MenuAction::NavigateX, GamepadButton::DPadRight);
+
+            map
+        });
 
     MenuBundle::spawn_main_menu(&mut commands);
 }

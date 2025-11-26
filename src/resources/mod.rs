@@ -1,3 +1,5 @@
-pub mod controls;
-mod game_config;
+pub mod gameplay;
+pub mod ui;
 
+pub use gameplay::*;
+pub use ui::*;
