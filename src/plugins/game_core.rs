@@ -75,8 +75,7 @@ fn setup_common(
             .with(MenuAction::Cancel, GamepadButton::East)
     );
 
-
-    spawn_main_menu(&mut commands);
+    MenuBundle::spawn_main_menu(&mut commands);
 }
 
 fn setup(

@@ -1,15 +1,19 @@
-use crate::bundles::{default, Bundle, Color, Text, TextColor, TextFont};
+use bevy::ecs::spawn::SpawnRelatedBundle;
+use crate::bundles::*;
+use crate::bundles::ui;
+
 const TITLE: &str = "PONG ENHANCED";
 
 #[derive(Bundle)]
-struct Label {
+pub struct LabelBundle {
     text: Text,
     font: TextFont,
     color: TextColor,
 }
+pub type MainMenuLabel = (Node, SpawnRelatedBundle<ChildOf, Spawn<LabelBundle>>);
 
-impl Label {
-    pub fn button(text: &str) -> Self{
+impl LabelBundle {
+    pub fn button_label(text: &str) -> Self{
         Self{
             text: Text::new(text),
             font: TextFont {
@@ -20,14 +24,21 @@ impl Label {
         }
     }
 
-    pub fn game_title() -> Self{
-        Self{
-            text: Text::new(TITLE),
-            font: TextFont {
-                font_size: 72.0,
+    pub fn game_title() -> MainMenuLabel {
+        (
+            Node{
+                margin: UiRect::bottom(Val::Px(50.0)),
                 ..default()
             },
-            color: TextColor(Color::srgb(0.9, 0.9, 1.0)),
-        }
+            children![
+                Self{
+                    text: Text::new(TITLE),
+                    font: TextFont {
+                        font_size: 72.0,
+                        ..default()
+                    },
+                    color: TextColor(Color::srgb(0.9, 0.9, 1.0)),
+                }]
+        )
     }
 }

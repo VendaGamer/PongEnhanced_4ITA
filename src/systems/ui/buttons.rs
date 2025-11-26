@@ -1,22 +1,39 @@
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::*;
+use crate::bundles::ButtonBundle;
 use crate::resources::controls::MenuAction;
+use crate::utils::text::lighten_color;
 
 #[derive(EntityEvent)]
 pub struct ButtonPressed(Entity);
 
 pub fn detect_button_press(
-    action_query: Query<&ActionState<MenuAction>>,
-    button_query: Query<(Entity, &Interaction), (With<Button>, Changed<Interaction>)>,
+    button_query: Query<Entity, (With<Button>, With<Interaction>)>,
+    interaction_query: Query<&Interaction>,
     mut commands: Commands,
 ) {
-    // Keyboard/gamepad confirm
-    for action_state in &action_query {
-        if action_state.just_pressed(&MenuAction::Confirm) {
-            for (entity, interaction) in &button_query {
-                if *interaction == Interaction::Hovered {
-                    commands.trigger(ButtonPressed(entity));
-                }
+    for entity in &button_query {
+        if let Ok(interaction) = interaction_query.get(entity) {
+            if *interaction == Interaction::Pressed {
+                commands.trigger(ButtonPressed(entity));
+                println!("TEST");
+                return;
+            }
+        }
+    }
+}
+
+pub fn lighten_buttons_on_hover(
+    button_query: Query<(Entity, &mut BackgroundColor), With<Button>>,
+    interaction_query: Query<&Interaction>
+){
+    for (entity, color) in &button_query {
+
+        if let Ok(interaction) = interaction_query.get(entity) {
+            if *interaction == Interaction::Hovered {
+
+                color = BackgroundColor::from(lighten_color(color.0));
+
             }
         }
     }

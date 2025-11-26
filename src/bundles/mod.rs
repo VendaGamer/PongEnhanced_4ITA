@@ -1,6 +1,6 @@
 pub mod player;
 pub mod gameplay;
-mod ui;
+pub mod ui;
 
-pub use player::*;
 pub use gameplay::*;
+pub use ui::*;

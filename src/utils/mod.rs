@@ -1,4 +1,4 @@
 pub mod screen;
-mod text;
+pub mod text;
 
-pub use screen::FIXED_DIMENSIONS;
+pub use screen::*;
