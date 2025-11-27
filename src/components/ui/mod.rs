@@ -1,7 +1,9 @@
-
-pub mod main_menu;
-pub mod button;
+pub mod menu;
 pub mod navigation;
+pub mod widgets;
+pub mod in_game;
+pub mod effects;
 
-pub use main_menu::*;
-pub use button::*;
+pub use menu::*;
+pub use widgets::*;
+pub use in_game::*;

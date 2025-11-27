@@ -1,4 +1,4 @@
-use bevy::prelude::Component;
+use crate::bundles::Component;
 
 #[derive(Component)]
 pub struct PlayerHealth{

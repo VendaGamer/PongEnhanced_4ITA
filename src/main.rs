@@ -5,6 +5,7 @@ mod bundles;
 mod plugins;
 mod utils;
 mod events;
+mod models;
 
 use crate::plugins::GameCorePlugin;
 use crate::resources::controls::PlayerAction;
@@ -14,8 +15,10 @@ use bevy::render::RenderPlugin;
 use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
 use bevy::window::PresentMode;
 use avian2d::prelude::*;
+use bevy::ui_widgets::UiWidgetsPlugins;
 use components::*;
 use leafwing_input_manager::plugin::InputManagerPlugin;
+use crate::resources::MenuAction;
 
 fn main() {
     App::new()
@@ -53,6 +56,8 @@ fn main() {
                 },
             },
             InputManagerPlugin::<PlayerAction>::default(),
+            InputManagerPlugin::<MenuAction>::default(),
+            UiWidgetsPlugins
         ))
         .run();
 }

@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use crate::bundles::{Color, Component};
 
 #[derive(Component)]
 pub struct HoverLight {

@@ -9,31 +9,36 @@ pub fn ui_navigation(
     mut sel: ResMut<UISelection>,
     slots: Query<&UINavSlot>,
 ) {
-    if let Ok(input)  = input.single(){
-        let nav_y = input.clamped_value(&MenuAction::NavigateY);
-        let nav_x = input.clamped_value(&MenuAction::NavigateX);
+    for input_state in &input {
+        if input_state.just_pressed(&MenuAction::Navigate) {
 
+            let data = input_state.axis_pair(&MenuAction::Navigate);
+            let axis = data.xy();
 
-        println!("Received input [{},{}]", nav_x, nav_y);
+            dbg!(axis);
 
-        if nav_x.abs() > 0.5 {
-            if nav_x > 0.0 {
-                sel.column += 1;
-            } else {
-                sel.column -= 1;
+            if axis.x.abs() > 0.5 {
+                if axis.x > 0.0 {
+                    sel.column += 1;
+                    println!("Moved right");
+                } else {
+                    sel.column -= 1;
+                    println!("Moved left");
+                }
             }
-        }
 
-
-        if nav_y.abs() > 0.5 {
-            if nav_y > 0.0 {
-                sel.row -= 1;
-            } else {
-                sel.row += 1;
+            if axis.y.abs() > 0.5 {
+                if axis.y > 0.0 {
+                    sel.row -= 1;
+                    println!("Moved up");
+                } else {
+                    sel.row += 1;
+                    println!("Moved down");
+                }
             }
-        }
 
-        clamp_to_existing_slots(&mut sel, &slots);
+            clamp_to_existing_slots(&mut sel, &slots);
+        }
     }
 }
 

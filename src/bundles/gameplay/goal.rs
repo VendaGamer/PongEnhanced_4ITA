@@ -1,5 +1,4 @@
-use crate::components::side::Side;
-use crate::components::Goal;
+use crate::components::{Goal, Side};
 use avian2d::prelude::{Collider, RigidBody};
 use bevy::prelude::{Bundle, Entity, Transform};
 

@@ -1,9 +1,8 @@
 use bevy::prelude::*;
 use crate::components::area::Area;
-use crate::components::AreaShape;
+use crate::components::*;
 use crate::bundles::GoalBundle;
 use crate::bundles::wall::WallBundle;
-use crate::components::side::Side;
 use crate::utils::screen::TRANSFORM_ZERO;
 
 #[derive(Bundle, Clone, Copy)]
@@ -18,7 +17,7 @@ impl AreaBundle {
         area_shape: AreaShape,
         commands: &mut Commands,
         teams: &[Entity],
-    ) -> Entity {
+    ){
 
 
         match area_shape {
@@ -55,6 +54,6 @@ impl AreaBundle {
                 shape: area_shape
             },
             global_transform: GlobalTransform::from(TRANSFORM_ZERO)
-        }).id()
+        });
     }
 }

@@ -1,6 +1,7 @@
-use crate::components::ui::HoverLight;
+use crate::components::ui;
 use crate::utils::text::lighten_color;
 use bevy::prelude::*;
+use crate::components::ui::effects::HoverLight;
 
 #[derive(EntityEvent)]
 pub struct ButtonPressed(Entity);
@@ -22,7 +23,7 @@ pub fn detect_button_press(
     }
 }
 
-pub fn animate_button_light(
+pub fn handle_ui_hover_light(
     time: Res<Time>,
     mut query: Query<(&Interaction, &mut BackgroundColor, &mut HoverLight)>,
 ) {

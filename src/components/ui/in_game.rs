@@ -1,4 +1,4 @@
-use bevy::prelude::{Component, Entity};
+use crate::bundles::{Component, Entity};
 
 #[derive(Component)]
 pub struct ScoreText {

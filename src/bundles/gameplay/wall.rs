@@ -1,8 +1,7 @@
 use avian2d::prelude::{Collider, Restitution, RigidBody};
 use bevy::prelude::Transform;
 use crate::bundles::Bundle;
-use crate::components::side::Side;
-use crate::components::wall::Wall;
+use crate::components::*;
 
 #[derive(Bundle)]
 pub struct WallBundle {

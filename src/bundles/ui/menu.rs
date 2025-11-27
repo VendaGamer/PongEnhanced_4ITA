@@ -1,7 +1,6 @@
-use crate::bundles::ui::*;
 use crate::components::ui::*;
-use bevy::ecs::spawn::SpawnRelatedBundle;
 use bevy::prelude::*;
+use crate::bundles::ui::widgets::{ButtonBundle, LabelBundle};
 
 #[derive(Bundle)]
 pub struct MenuBundle {

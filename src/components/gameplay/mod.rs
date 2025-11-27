@@ -1,22 +1,8 @@
-pub mod paddle;
-pub mod ball;
-pub mod team;
 pub mod area;
-pub mod side;
-pub mod goal;
-pub mod wall;
-pub mod area_shape;
-pub mod game_mode;
-pub mod score_text;
-pub mod division_line;
-pub mod player_health;
+pub mod game;
+pub mod game_modes;
 
-pub use division_line::*;
-pub use ball::*;
-pub use paddle::*;
-pub use team::*;
-pub use goal::*;
-pub use area_shape::*;
+
 pub use area::*;
-pub use game_mode::*;
-pub use score_text::*;
+pub use game::*;
+pub use game_modes::*;
