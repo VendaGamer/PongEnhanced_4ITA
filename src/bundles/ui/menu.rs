@@ -13,7 +13,7 @@ impl Default for MenuBundle {
     fn default() -> Self {
         Self{
             menu: MainMenu,
-            container: Node{
+            container: Node {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
                 justify_content: JustifyContent::Center,

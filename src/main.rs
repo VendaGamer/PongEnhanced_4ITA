@@ -9,20 +9,22 @@ mod models;
 
 use crate::plugins::GameCorePlugin;
 use crate::resources::controls::PlayerAction;
+use crate::resources::MenuAction;
+use crate::utils::DEFAULT_FONT;
+use avian2d::prelude::*;
 use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig};
 use bevy::prelude::*;
-use bevy::render::RenderPlugin;
 use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
-use bevy::window::PresentMode;
-use avian2d::prelude::*;
+use bevy::render::RenderPlugin;
 use bevy::ui_widgets::UiWidgetsPlugins;
+use bevy::window::PresentMode;
 use components::*;
 use leafwing_input_manager::plugin::InputManagerPlugin;
-use crate::resources::MenuAction;
 
 fn main() {
-    App::new()
-        .add_plugins((
+    let mut app = App::new();
+
+    app.add_plugins((
             DefaultPlugins.set(
                 WindowPlugin {
                     primary_window: Some(Window {
@@ -58,6 +60,12 @@ fn main() {
             InputManagerPlugin::<PlayerAction>::default(),
             InputManagerPlugin::<MenuAction>::default(),
             UiWidgetsPlugins
-        ))
-        .run();
+        ));
+
+    app.world_mut().resource_mut::<Assets<_>>()
+        .insert(AssetId::default(), Font::try_from_bytes(DEFAULT_FONT.to_vec())
+        .unwrap())
+        .expect("UNABLE TO LOAD FONT");
+
+    app.run();
 }

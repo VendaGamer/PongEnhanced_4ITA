@@ -58,6 +58,7 @@ pub struct LabelBundle {
     color: TextColor,
 }
 pub type MainMenuLabel = (Node, SpawnRelatedBundle<ChildOf, Spawn<LabelBundle>>);
+pub type StatusLabel = (Node, BackgroundColor, BorderRadius, SpawnRelatedBundle<ChildOf, (Spawn<Text>, Spawn<TextFont>, Spawn<TextColor>)>);
 
 impl LabelBundle {
     pub fn button_label(text: &str) -> Self{
@@ -137,11 +138,13 @@ pub struct ButtonBundle {
     background_color: BackgroundColor,
     border_radius: BorderRadius,
     border_color: BorderColor,
+    outline: Outline,
     hover_light: HoverLight,
     navigation_slot: UINavSlot
 }
 
 pub type MenuButton = (ButtonBundle, SpawnRelatedBundle<ChildOf, Spawn<LabelBundle>>);
+const BUTTON_PADDING: Val = Val::Px(30.0);
 
 impl ButtonBundle{
     pub fn menu_button(color: Color, text: &str, slot: UINavSlot) -> MenuButton {
@@ -153,12 +156,13 @@ impl ButtonBundle{
                     height: Val::Px(70.0),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
-                    margin: UiRect::bottom(Val::Px(50.0)),
+                    margin: UiRect::bottom(BUTTON_PADDING),
                     ..default()
                 },
                 background_color: BackgroundColor(color),
-                border_radius: BorderRadius::all(Val::Px(8.0)),
+                border_radius: BorderRadius::ZERO,
                 border_color: BorderColor::from(Color::WHITE.with_alpha(0.3)),
+                outline: Outline::new(Val::Px(5.0),Val::ZERO, Color::WHITE),
                 hover_light: HoverLight {
                     amount: 0.0,
                     max: 0.3,
@@ -175,29 +179,37 @@ impl ButtonBundle{
         commands.spawn((
             Node {
                 flex_direction: FlexDirection::Column,
-                padding: UiRect::new(Val::Px(50.0),Val::Px(50.0),Val::Px(50.0),Val::ZERO),
+                padding: UiRect::new(BUTTON_PADDING,BUTTON_PADDING,BUTTON_PADDING,Val::ZERO),
                 ..default()
             },
-            BorderRadius::all(Val::Px(10.0)),
+            Outline::new(Val::Px(5.0), Val::ZERO, Color::linear_rgb(0.5,0.5,0.5)),
             BackgroundColor::from(Color::srgb(0.1, 0.1, 0.1)),
         ))
             .with_children(|parent|{
 
-                parent.spawn(ButtonBundle::menu_button(Color::srgb(0.2, 0.6, 0.9),
-                                                       "Offline Play", UINavSlot::row(0)))
-                    .observe(on_offline);
+                parent.spawn(ButtonBundle::menu_button(
+                    Color::srgb(0.2, 0.6, 0.9),
+               "Offline Play",
+                    UINavSlot::row(0))
+                ).observe(on_offline);
 
-                parent.spawn(ButtonBundle::menu_button(Color::srgb(0.6, 0.3, 0.9),
-                                                       "Online Play", UINavSlot::row(1)))
-                    .observe(on_online);
+                parent.spawn(ButtonBundle::menu_button(
+                    Color::srgb(0.6, 0.3, 0.9),
+               "Online Play",
+                    UINavSlot::row(1))
+                ).observe(on_online);
 
-                parent.spawn(ButtonBundle::menu_button(Color::srgb(0.5, 0.5, 0.5),
-                                                       "Settings", UINavSlot::row(2)))
-                    .observe(on_settings);
+                parent.spawn(ButtonBundle::menu_button(
+                    Color::srgb(0.5, 0.5, 0.5),
+               "Settings", UINavSlot::row(2))
+                ).observe(on_settings);
 
-                parent.spawn(ButtonBundle::menu_button(Color::srgb(0.8, 0.2, 0.2),
-                                                       "Exit", UINavSlot::row(3)))
-                    .observe(on_exit);
+                parent.spawn(ButtonBundle::menu_button(
+                    Color::srgb(0.8, 0.2, 0.2),
+               "Exit",
+                    UINavSlot::row(3))
+                ).observe(on_exit);
+
             });
     }
 }

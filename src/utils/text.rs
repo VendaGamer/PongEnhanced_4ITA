@@ -1,6 +1,9 @@
 use bevy::prelude::ColorToComponents;
 use crate::bundles::Color;
 
+
+pub const DEFAULT_FONT: &[u8] = include_bytes!("../../assets/font/jersey10_regular.ttf");
+
 pub fn lighten_color(color: Color, amount: f32) -> Color {
     let [r, g, b, a] = color.to_srgba().to_f32_array();
     Color::srgba(

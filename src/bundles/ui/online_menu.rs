@@ -4,6 +4,7 @@ use crate::systems::ButtonPressed;
 use bevy::prelude::*;
 use crate::bundles::menu_section::MenuSectionBundle;
 use crate::bundles::ui::widgets::ButtonBundle;
+use crate::bundles::widgets::LabelBundle;
 use crate::components::ui::navigation::UINavSlot;
 
 #[derive(Bundle)]
@@ -46,23 +47,6 @@ impl OnlinePlayMenuBundle {
                         ..default()
                     },
                     TextColor(Color::srgb(0.9, 0.9, 1.0)),
-                ));
-
-                // Connection status
-                parent.spawn((
-                    Node {
-                        margin: UiRect::bottom(Val::Px(30.0)),
-                        padding: UiRect::all(Val::Px(15.0)),
-                        ..default()
-                    },
-                    BackgroundColor(Color::srgb(0.15, 0.15, 0.2)),
-                    BorderRadius::all(Val::Px(8.0)),
-                    Text::new("Status: Not Connected"),
-                    TextFont {
-                        font_size: 24.0,
-                        ..default()
-                    },
-                    TextColor(Color::srgb(1.0, 0.7, 0.3)),
                 ));
 
                 // Online options container

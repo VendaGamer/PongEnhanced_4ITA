@@ -20,20 +20,20 @@ pub fn ui_navigation(
             if axis.x.abs() > 0.5 {
                 if axis.x > 0.0 {
                     sel.column += 1;
-                    println!("Moved right");
+                    dbg!("Moved right");
                 } else {
                     sel.column -= 1;
-                    println!("Moved left");
+                    dbg!("Moved left");
                 }
             }
 
             if axis.y.abs() > 0.5 {
                 if axis.y > 0.0 {
                     sel.row -= 1;
-                    println!("Moved up");
+                    dbg!("Moved up");
                 } else {
                     sel.row += 1;
-                    println!("Moved down");
+                    dbg!("Moved down");
                 }
             }
 
