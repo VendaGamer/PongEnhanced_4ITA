@@ -10,6 +10,7 @@ use crate::components::ui::Dropdown;
 use crate::components::ui::effects::HoverLight;
 use crate::components::ui::navigation::{OptionSelector, UINavSlot};
 use crate::models::ui::option::UIOption;
+use crate::systems::ButtonPressed;
 
 #[derive(Bundle)]
 pub struct SliderThumbBundle {
@@ -213,29 +214,7 @@ impl ButtonBundle{
 
     pub fn navigate_button(text: &str) -> ButtonT {
         (
-            Self{
-                button: Button,
-                container: Node{
-                    width: Val::Px(30.0),
-                    height: Val::Px(30.0),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    margin: UiRect::bottom(BUTTON_PADDING),
-                    ..default()
-                },
-                outline: BUTTON_OUTLINE,
-                background_color: Color::linear_rgb(0.2,0.2,0.2).into(),
-                navigation_slot: UINavSlot::row(0),
-                border_color: BorderColor::from(BUTTON_BORDER),
-                hover_light: HoverLight {
-                    amount: 0.0,
-                    max: 0.3,
-                    speed: 2.0,
-                    base: Color::linear_rgb(0.2,0.2,0.2).into(),
-                },
-                border_radius: BorderRadius::ZERO,
-            },
-            children![LabelBundle::button_label(text)]
+           
         )
     }
 
@@ -291,10 +270,13 @@ pub struct OptionSelectorBundle
 
 pub type OptionSelectorT = (OptionSelectorBundle, SpawnRelatedBundle<ChildOf, Spawn<LabelBundle>>);
 
+
+
 impl OptionSelectorBundle{
 
-    pub fn new(options: Vec<UIOption>, selected: usize, slot: UINavSlot, label: &str) -> (Node, SpawnRelatedBundle<ChildOf, (Spawn<ButtonT>, Spawn<OptionSelectorT>, Spawn<ButtonT>)>) {
-        (
+    pub fn spawn_new(commands: &mut RelatedSpawnerCommands<ChildOf>, options: Vec<UIOption>, selected: usize, slot: UINavSlot, label: &str) {
+
+        commands.spawn((
             Node{
                 flex_wrap: FlexWrap::Wrap,
                 flex_direction: FlexDirection::Row,
@@ -303,12 +285,22 @@ impl OptionSelectorBundle{
                 display: Display::Flex,
                 ..default()
             },
-            children![
-                ButtonBundle::navigate_button("<"),
-                OptionSelectorBundle::new_select(options, selected, slot, label),
-                ButtonBundle::navigate_button(">"),
-            ]
-        )
+        ))
+        .with_children(|parent|{
+
+                parent.spawn(ButtonBundle::navigate_button("<"))
+                            .observe(|on_click: On<ButtonPressed>|{
+
+                            });
+
+                let val = parent.spawn(OptionSelectorBundle::new_select(options, selected, slot, label)).id();
+
+                parent.spawn(ButtonBundle::navigate_button("<"))
+                             .observe(|on_click: On<ButtonPressed>|{
+
+                             });
+        });
+
     }
 
     fn new_select(options: Vec<UIOption>, selected: usize, slot: UINavSlot, label: &str) -> OptionSelectorT {
