@@ -7,7 +7,7 @@ pub fn update_selector_text(
 ) {
     for (selector_text, mut text) in &mut texts {
         if let Ok(selector) = selectors.get(selector_text.selector_entity) {
-            text.0 = format!("{}: {}", selector.label, selector.get_current());
+            text.0 = selector.get_current().into();
         }
     }
 }

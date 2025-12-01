@@ -1,10 +1,15 @@
+use bevy::input::keyboard::Key::ScreenModeNext;
 use bevy::prelude::*;
+use bevy::window::WindowMode::BorderlessFullscreen;
 use crate::components::ui::*;
 use crate::bundles::*;
-use crate::bundles::option_selector::OptionSelectorBundle;
 use crate::bundles::ui::menu_section::MenuSectionBundle;
 use crate::bundles::ui::widgets::ButtonBundle;
+use crate::bundles::widgets::{OptionSelectorBundle, SliderBundle};
+use crate::components::GameMode;
 use crate::components::ui::navigation::{SelectorText, UINavSlot};
+use crate::models::game::fullscreen::ScreenMode;
+use crate::models::ui::option::UIOption;
 use crate::systems::ButtonPressed;
 
 #[derive(Bundle)]
@@ -67,35 +72,11 @@ impl SettingsMenuBundle {
                         ));
 
                         // Master Volume selector
-                        section.spawn(OptionSelectorBundle::new(
-                            vec!["0%".into(), "25%".into(), "50%".into(), "75%".into(), "100%".into()],
-                            4,
-                            UINavSlot::new(0, 0),
-                            "Master Volume".into(),
-                        )).with_children(|sel| {
-                            sel.spawn((
-                                Text::new("Master Volume: 100%"),
-                                TextFont { font_size: 24.0, ..default() },
-                                TextColor(Color::WHITE),
-                                SelectorText { selector_entity: sel.target_entity() },
-                            ));
-                        });
+                        section.spawn(SliderBundle::new(0.0, 100.0, 0.0, UINavSlot::row(0)));
 
 
                         // SFX Volume selector
-                        section.spawn(OptionSelectorBundle::new(
-                            vec!["0%".into(), "25%".into(), "50%".into(), "75%".into(), "100%".into()],
-                            4,
-                            UINavSlot::new(1, 0),
-                            "SFX Volume".into(),
-                        )).with_children(|sel| {
-                            sel.spawn((
-                                Text::new("SFX Volume: 100%"),
-                                TextFont { font_size: 24.0, ..default() },
-                                TextColor(Color::WHITE),
-                                SelectorText { selector_entity: sel.target_entity() },
-                            ));
-                        });
+                        section.spawn(SliderBundle::new(0.0, 100.0, 0.0, UINavSlot::row(1)));
 
                         // Graphics Section Header
                         section.spawn((
@@ -113,7 +94,10 @@ impl SettingsMenuBundle {
 
                         // Resolution selector
                         section.spawn(OptionSelectorBundle::new(
-                            vec!["1280x720".into(), "1920x1080".into(), "2560x1440".into()],
+                            vec![
+                                UIOption::screen("Exclusive", ScreenMode::ExclusiveFullScreen),
+
+                            ],
                             0,
                             UINavSlot::new(2, 0),
                             "Resolution".into(),
@@ -126,11 +110,14 @@ impl SettingsMenuBundle {
                             ));
                         });;
 
-
                         // Fullscreen selector
                         section.spawn(OptionSelectorBundle::new(
-                            vec!["Off".into(), "On".into()],
-                            0,
+                    vec![
+                        UIOption::screen("Exclusive", ScreenMode::ExclusiveFullScreen),
+                        UIOption::screen("Exclusive", ScreenMode::ExclusiveFullScreen),
+                        UIOption::screen("Exclusive", ScreenMode::ExclusiveFullScreen),
+                                ],
+                        0,
                             UINavSlot::new(3, 0),
                             "Fullscreen".into(),
                         )).with_children(|sel| {

@@ -1,30 +1,30 @@
-use bevy::prelude::{Component, Entity, Text};
+use crate::models::ui::option::UIOption;
+use bevy::prelude::*;
 
 #[derive(Component, Clone, Copy)]
 pub struct UINavSlot {
-    pub row: i32,
-    pub column: i32,
+    pub row: u32,
+    pub column: u32,
 }
 
 impl UINavSlot {
-    pub fn new(row: i32, column: i32) -> UINavSlot {
+    pub fn new(row: u32, column: u32) -> UINavSlot {
         UINavSlot { row, column }
     }
 
-    pub fn row(row: i32) -> UINavSlot {
+    pub fn row(row: u32) -> UINavSlot {
         UINavSlot { row, column: 0 }
     }
 
-    pub fn column(column: i32) -> UINavSlot {
+    pub fn column(column: u32) -> UINavSlot {
         UINavSlot { row: 0, column }
     }
 }
 
 #[derive(Component)]
 pub struct OptionSelector {
-    pub options: Vec<String>,
+    pub options: Vec<UIOption>,
     pub selected: usize,
-    pub label: String,
 }
 
 impl OptionSelector {
@@ -41,7 +41,21 @@ impl OptionSelector {
     }
 
     pub fn get_current(&self) -> &str {
-        &self.options[self.selected]
+        self.options[self.selected].text
+    }
+
+    pub fn new(options: Vec<UIOption>) -> OptionSelector{
+        OptionSelector{
+            options,
+            selected: 0
+        }
+    }
+
+    pub fn new_selected(options: Vec<UIOption>, selected: usize) -> OptionSelector{
+        OptionSelector{
+            options,
+            selected
+        }
     }
 }
 

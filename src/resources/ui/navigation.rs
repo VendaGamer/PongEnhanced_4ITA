@@ -2,8 +2,8 @@ use bevy::prelude::Resource;
 
 #[derive(Resource)]
 pub struct UISelection {
-    pub row: i32,
-    pub column: i32,
+    pub row: u32,
+    pub column: u32,
 }
 
 impl Default for UISelection{

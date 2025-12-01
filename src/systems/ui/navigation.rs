@@ -65,7 +65,7 @@ fn clamp_to_existing_slots(sel: &mut UISelection, slots: &Query<&UINavSlot>) {
     sel.row = sel.row.clamp(min_row, max_row);
 
 
-    let cols_in_row: Vec<i32> =
+    let cols_in_row: Vec<u32> =
         existing.iter().filter(|s| s.row == sel.row).map(|s| s.column).collect();
 
     if !cols_in_row.is_empty() {

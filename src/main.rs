@@ -16,6 +16,7 @@ use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTime
 use bevy::prelude::*;
 use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
 use bevy::render::RenderPlugin;
+use bevy::text::FontSmoothing;
 use bevy::ui_widgets::UiWidgetsPlugins;
 use bevy::window::PresentMode;
 use components::*;
@@ -61,7 +62,7 @@ fn main() {
             InputManagerPlugin::<MenuAction>::default(),
             UiWidgetsPlugins
         ));
-
+    
     app.world_mut().resource_mut::<Assets<_>>()
         .insert(AssetId::default(), Font::try_from_bytes(DEFAULT_FONT.to_vec())
         .unwrap())

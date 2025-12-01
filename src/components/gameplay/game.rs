@@ -6,12 +6,12 @@ pub struct Ball{
     pub initial_velocity: Vec2
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub enum GameMode {
     Classic,
     UpsideDown,
     Modern,
-    BlackOut,
+    Blackout,
     Twisted,
 }
 

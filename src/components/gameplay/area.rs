@@ -10,7 +10,7 @@ pub struct Area{
 #[derive(Component)]
 pub struct DivisionLine;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub enum AreaShape {
     TwoSide,
     Triangular,

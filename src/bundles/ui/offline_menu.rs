@@ -1,11 +1,13 @@
 use crate::bundles::menu_section::MenuSectionBundle;
-use crate::bundles::option_selector::OptionSelectorBundle;
 use crate::bundles::ui::*;
 use crate::components::ui::navigation::{SelectorText, UINavSlot};
 use crate::components::ui::*;
 use crate::systems::ButtonPressed;
 use bevy::prelude::*;
 use crate::bundles::ui::widgets::ButtonBundle;
+use crate::bundles::widgets::OptionSelectorBundle;
+use crate::components::{AreaShape, GameMode};
+use crate::models::ui::option::UIOption;
 
 #[derive(Bundle)]
 pub struct OfflinePlayMenuBundle {
@@ -64,11 +66,12 @@ impl OfflinePlayMenuBundle {
                             },
                             TextColor(Color::srgb(0.8, 0.8, 0.9)),
                         ));
-
                         // Number of Players
                         section.spawn(OptionSelectorBundle::new(
-                            vec!["2 Players".into(), "3 Players".into(), "4 Players".into()],
-                            0,
+                        vec![UIOption::int("2 Players", 2),
+                                    UIOption::int("3 Players", 3),
+                                    UIOption::int("4 Players", 4)],
+                    0,
                             UINavSlot::new(0, 0),
                             "Number of Players".into(),
                         )).with_children(|sel| {
@@ -82,12 +85,12 @@ impl OfflinePlayMenuBundle {
 
                         // Game Mode
                         section.spawn(OptionSelectorBundle::new(
-                            vec![
-                                "Classic".into(),
-                                "Modern".into(),
-                                "Upside Down".into(),
-                                "Black Out".into(),
-                                "Twisted".into(),
+                    vec![
+                                UIOption::game_mode("Classic", GameMode::Classic),
+                                UIOption::game_mode("Modern", GameMode::Modern),
+                                UIOption::game_mode("Upside Down", GameMode::UpsideDown),
+                                UIOption::game_mode("Blackout", GameMode::Blackout),
+                                UIOption::game_mode("Twisted", GameMode::Twisted),
                             ],
                             0,
                             UINavSlot::new(1, 0),
@@ -103,7 +106,11 @@ impl OfflinePlayMenuBundle {
 
                         // Arena Shape
                         section.spawn(OptionSelectorBundle::new(
-                            vec!["Two Side".into(), "Triangular".into(), "Cuboid".into()],
+                    vec![
+                                UIOption::area("Two Sides", AreaShape::TwoSide),
+                                UIOption::area("Triangular", AreaShape::Triangular),
+                                UIOption::area("Cuboid", AreaShape::Cuboid)
+                            ],
                             0,
                             UINavSlot::new(2, 0),
                             "Arena Shape".into(),
@@ -119,7 +126,12 @@ impl OfflinePlayMenuBundle {
 
                         // Win Score
                         section.spawn(OptionSelectorBundle::new(
-                            vec!["5 Points".into(), "10 Points".into(), "15 Points".into(), "20 Points".into()],
+                    vec![
+                                UIOption::int("5 Points", 5),
+                                UIOption::int("10 Points", 10),
+                                UIOption::int("15 Points", 15),
+                                UIOption::int("20 Points", 20),
+                            ],
                             1,
                             UINavSlot::new(3, 0),
                             "Win Score".into(),
