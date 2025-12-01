@@ -1,6 +1,7 @@
 pub mod buttons;
 pub mod navigation;
 pub mod selectors;
-mod widgets;
+pub mod widgets;
+pub mod menu;
 
 pub use buttons::*;

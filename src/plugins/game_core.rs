@@ -11,6 +11,7 @@ use crate::systems::*;
 use crate::utils::screen::BALL_RADIUS;
 use crate::utils::FIXED_DIMENSIONS;
 use bevy::window::{Monitor, WindowResized};
+use crate::systems::menu::MenuSpawnCommandsExt;
 
 pub struct GameCorePlugin;
 
@@ -94,7 +95,7 @@ fn setup_common(
 
 
     commands.spawn(MenuAction::input_map());
-    MenuBundle::spawn_main_menu(&mut commands);
+    commands.spawn_main_menu();
 }
 
 fn print_available_resolutions(

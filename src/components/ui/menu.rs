@@ -1,10 +1,9 @@
-use bevy::prelude::Component;
+use crate::bundles::Component;
 
 #[derive(Component)]
-pub struct MainMenu;
-#[derive(Component)]
-pub struct SettingsMenu;
-#[derive(Component)]
-pub struct OfflinePlayMenu;
-#[derive(Component)]
-pub struct OnlinePlayMenu;
+pub enum Menu {
+    MainMenu,
+    SettingsMenu,
+    OfflinePlayMenu,
+    OnlinePlayMenu
+}

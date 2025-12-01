@@ -16,7 +16,6 @@ use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTime
 use bevy::prelude::*;
 use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
 use bevy::render::RenderPlugin;
-use bevy::text::FontSmoothing;
 use bevy::ui_widgets::UiWidgetsPlugins;
 use bevy::window::PresentMode;
 use components::*;
