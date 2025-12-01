@@ -186,9 +186,7 @@ fn setup(
             ));
     });
 
-
-
-
+    
     commands.spawn(BallBundle::new(
         &mut meshes,
         &mut materials,

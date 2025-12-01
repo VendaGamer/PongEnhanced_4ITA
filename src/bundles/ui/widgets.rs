@@ -1,3 +1,4 @@
+use std::convert::Into;
 use bevy::ecs::relationship::RelatedSpawnerCommands;
 use bevy::ecs::spawn::SpawnRelatedBundle;
 use bevy::prelude::*;
@@ -175,11 +176,14 @@ pub struct ButtonBundle {
     navigation_slot: UINavSlot
 }
 
-pub type MenuButton = (ButtonBundle, SpawnRelatedBundle<ChildOf, Spawn<LabelBundle>>);
+pub type ButtonT = (ButtonBundle, SpawnRelatedBundle<ChildOf, Spawn<LabelBundle>>);
 const BUTTON_PADDING: Val = Val::Px(30.0);
+const BUTTON_OUTLINE: Outline = Outline::new(Val::Px(5.0),Val::ZERO, Color::WHITE);
+
+const BUTTON_BORDER: Color = Color::linear_rgb(0.8, 0.8, 0.8);
 
 impl ButtonBundle{
-    pub fn menu_button(color: Color, text: &str, slot: UINavSlot) -> MenuButton {
+    pub fn menu_button(color: Color, text: &str, slot: UINavSlot) -> ButtonT {
         (
             Self{
                 button: Button,
@@ -193,8 +197,8 @@ impl ButtonBundle{
                 },
                 background_color: BackgroundColor(color),
                 border_radius: BorderRadius::ZERO,
-                border_color: BorderColor::from(Color::WHITE.with_alpha(0.3)),
-                outline: Outline::new(Val::Px(5.0),Val::ZERO, Color::WHITE),
+                border_color: BorderColor::from(BUTTON_BORDER),
+                outline: BUTTON_OUTLINE,
                 hover_light: HoverLight {
                     amount: 0.0,
                     max: 0.3,
@@ -202,6 +206,34 @@ impl ButtonBundle{
                     base: color,
                 },
                 navigation_slot: slot,
+            },
+            children![LabelBundle::button_label(text)]
+        )
+    }
+
+    pub fn navigate_button(text: &str) -> ButtonT {
+        (
+            Self{
+                button: Button,
+                container: Node{
+                    width: Val::Px(30.0),
+                    height: Val::Px(30.0),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    margin: UiRect::bottom(BUTTON_PADDING),
+                    ..default()
+                },
+                outline: BUTTON_OUTLINE,
+                background_color: Color::linear_rgb(0.2,0.2,0.2).into(),
+                navigation_slot: UINavSlot::row(0),
+                border_color: BorderColor::from(BUTTON_BORDER),
+                hover_light: HoverLight {
+                    amount: 0.0,
+                    max: 0.3,
+                    speed: 2.0,
+                    base: Color::linear_rgb(0.2,0.2,0.2).into(),
+                },
+                border_radius: BorderRadius::ZERO,
             },
             children![LabelBundle::button_label(text)]
         )
@@ -251,20 +283,38 @@ impl ButtonBundle{
 pub struct OptionSelectorBundle
 {
     pub selector: OptionSelector,
-    pub button: Button,
     pub container: Node,
     pub background_color: BackgroundColor,
     pub border_radius: BorderRadius,
-    pub hover_light: HoverLight,
     pub navigation_slot: UINavSlot,
 }
 
+pub type OptionSelectorT = (OptionSelectorBundle, SpawnRelatedBundle<ChildOf, Spawn<LabelBundle>>);
+
 impl OptionSelectorBundle{
-    pub fn new(options: Vec<UIOption>, selected: usize, slot: UINavSlot, label: &str) -> (OptionSelectorBundle, SpawnRelatedBundle<ChildOf, Spawn<LabelBundle>>) {
+
+    pub fn new(options: Vec<UIOption>, selected: usize, slot: UINavSlot, label: &str) -> (Node, SpawnRelatedBundle<ChildOf, (Spawn<ButtonT>, Spawn<OptionSelectorT>, Spawn<ButtonT>)>) {
+        (
+            Node{
+                flex_wrap: FlexWrap::Wrap,
+                flex_direction: FlexDirection::Row,
+                height: Val::Auto,
+                width: Val::Auto,
+                display: Display::Flex,
+                ..default()
+            },
+            children![
+                ButtonBundle::navigate_button("<"),
+                OptionSelectorBundle::new_select(options, selected, slot, label),
+                ButtonBundle::navigate_button(">"),
+            ]
+        )
+    }
+
+    fn new_select(options: Vec<UIOption>, selected: usize, slot: UINavSlot, label: &str) -> OptionSelectorT {
         (
             Self {
                 selector: OptionSelector { options, selected },
-                button: Button,
                 container: Node {
                     width: Val::Px(400.0),
                     height: Val::Px(50.0),
@@ -276,12 +326,6 @@ impl OptionSelectorBundle{
                 },
                 background_color: BackgroundColor(Color::srgb(0.2, 0.2, 0.25)),
                 border_radius: BorderRadius::all(Val::Px(5.0)),
-                hover_light: HoverLight {
-                    amount: 0.0,
-                    max: 0.2,
-                    speed: 3.0,
-                    base: Color::srgb(0.2, 0.2, 0.25),
-                },
                 navigation_slot: slot,
             },
             children![LabelBundle::button_label(label)]

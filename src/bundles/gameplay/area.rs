@@ -22,29 +22,22 @@ impl AreaBundle {
 
         match area_shape {
             AreaShape::TwoSide => {
-                if teams.len() >= 2 {
-                    commands.spawn(GoalBundle::new(teams[0], Side::Left));
-                    commands.spawn(GoalBundle::new(teams[1], Side::Right));
-                    commands.spawn(WallBundle::new(Side::Bottom));
-                    commands.spawn(WallBundle::new(Side::Top));
-
-                }
+                commands.spawn(GoalBundle::new(teams[0], Side::Left));
+                commands.spawn(GoalBundle::new(teams[1], Side::Right));
+                commands.spawn(WallBundle::new(Side::Bottom));
+                commands.spawn(WallBundle::new(Side::Top));
             }
             AreaShape::Triangular => {
-                if teams.len() >= 3 {
-                    commands.spawn(GoalBundle::new(teams[0], Side::Left));
-                    commands.spawn(GoalBundle::new(teams[1], Side::Right));
-                    commands.spawn(GoalBundle::new(teams[2], Side::Bottom));
-                    commands.spawn(WallBundle::new(Side::Top));
-                }
+                commands.spawn(GoalBundle::new(teams[0], Side::Left));
+                commands.spawn(GoalBundle::new(teams[1], Side::Right));
+                commands.spawn(GoalBundle::new(teams[2], Side::Bottom));
+                commands.spawn(WallBundle::new(Side::Top));
             }
             AreaShape::Cuboid => {
-                if teams.len() >= 4 {
-                    commands.spawn(GoalBundle::new(teams[0], Side::Left));
-                    commands.spawn(GoalBundle::new(teams[1], Side::Right));
-                    commands.spawn(GoalBundle::new(teams[2], Side::Bottom));
-                    commands.spawn(GoalBundle::new(teams[3], Side::Top));
-                }
+                commands.spawn(GoalBundle::new(teams[0], Side::Left));
+                commands.spawn(GoalBundle::new(teams[1], Side::Right));
+                commands.spawn(GoalBundle::new(teams[2], Side::Bottom));
+                commands.spawn(GoalBundle::new(teams[3], Side::Top));
             }
         }
 
