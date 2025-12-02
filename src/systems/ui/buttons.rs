@@ -1,7 +1,6 @@
-use crate::components::ui;
+use crate::components::ui::effects::HoverLight;
 use crate::utils::text::lighten_color;
 use bevy::prelude::*;
-use crate::components::ui::effects::HoverLight;
 
 #[derive(EntityEvent)]
 pub struct ButtonPressed(Entity);
@@ -16,7 +15,6 @@ pub fn detect_button_press(
         if let Ok(interaction) = interaction_query.get(entity) {
             if *interaction == Interaction::Pressed {
                 commands.trigger(ButtonPressed(entity));
-                println!("TEST");
                 return;
             }
         }

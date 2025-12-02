@@ -5,7 +5,7 @@ use bevy::ui_widgets::{Slider, SliderRange, SliderThumb, SliderValue, TrackClick
 use crate::bundles::widgets::*;
 use crate::components::{AreaShape, GameMode};
 use crate::components::ui::effects::HoverLight;
-use crate::components::ui::{Dropdown, Menu};
+use crate::components::ui::{Dropdown, Menu, SelectorButton};
 use crate::components::ui::navigation::{OptionSelector, SelectorText, UINavSlot};
 use crate::models::game::fullscreen::ScreenMode;
 use crate::models::ui::option::UIOption;
@@ -42,8 +42,6 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
 
         root.with_children(|parent| {
 
-            parent.append_button(Color::srgb(0.2, 0.2, 0.25), Vec2::new(25.0, 25.0), "<");
-
             let mut selector = parent.spawn((
                 OptionSelector { options, selected },
                 Node {
@@ -61,14 +59,48 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
                 children![LabelBundle::button_label(label)]
             ));
 
+
+            let selector_entity = selector.id();
+
             selector.with_child((
                 Text::new("Empty"),
                 TextFont { font_size: 24.0, ..default() },
                 TextColor(Color::WHITE),
-                SelectorText { selector_entity: selector.id() },
+                SelectorText { selector_entity },
             ));
 
-            parent.append_button(Color::srgb(0.2, 0.2, 0.25), Vec2::new(25.0, 25.0), ">");
+            parent.append_button(Color::srgb(0.2, 0.2, 0.25), Vec2::new(25.0, 25.0), "<")
+                .insert(SelectorButton{
+                    selector: selector_entity,
+                })
+                .observe(
+                    |   pressed:On<ButtonPressed>,
+                        mut selectors: Query<&mut OptionSelector>,
+                        buttons: Query<&SelectorButton>
+                    | {
+                        if let Ok(button) = buttons.get(pressed.event_target()) {
+                            if let Ok(mut selector) = selectors.get_mut(button.selector) {
+                                selector.cycle_prev();
+                            }
+                        }
+                    });
+
+
+            parent.append_button(Color::srgb(0.2, 0.2, 0.25), Vec2::new(25.0, 25.0), ">")
+                .insert(SelectorButton{
+                    selector: selector_entity,
+                })
+                .observe(
+                |   pressed:On<ButtonPressed>,
+                    mut selectors: Query<&mut OptionSelector>,
+                    buttons: Query<&SelectorButton>
+                | {
+                    if let Ok(button) = buttons.get(pressed.event_target()) {
+                        if let Ok(mut selector) = selectors.get_mut(button.selector) {
+                            selector.cycle_next();
+                        }
+                    }
+                });
 
         });
 

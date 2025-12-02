@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::bundles::widgets::LabelBundle;
 use crate::components::{AreaShape, GameMode};
-use crate::components::ui::Menu;
+use crate::components::ui::{Menu, MenuType};
 use crate::components::ui::navigation::UINavSlot;
 use crate::models::game::fullscreen::ScreenMode;
 use crate::models::ui::option::UIOption;
@@ -13,13 +13,13 @@ pub trait MenuSpawnCommandsExt {
     fn spawn_offline_menu(&mut self) -> EntityCommands<'_>;
     fn spawn_online_menu(&mut self) -> EntityCommands<'_>;
     fn spawn_settings_menu(&mut self) -> EntityCommands<'_>;
-    fn spawn_menu_base(&mut self, menu: Menu) -> EntityCommands<'_>;
+    fn spawn_menu_base(&mut self, menu: MenuType) -> EntityCommands<'_>;
 }
 
 impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
     fn spawn_main_menu(&mut self) -> EntityCommands<'_> {
 
-        let mut main_menu = self.spawn_menu_base(Menu::MainMenu);
+        let mut main_menu = self.spawn_menu_base(MenuType::MainMenu);
 
         main_menu.with_children(|parent| {
             parent.spawn(
@@ -67,7 +67,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
     }
 
     fn spawn_offline_menu(&mut self) -> EntityCommands<'_> {
-        let mut offline_menu =self.spawn_menu_base(Menu::OfflinePlayMenu);
+        let mut offline_menu =self.spawn_menu_base(MenuType::OfflinePlayMenu);
 
         offline_menu.with_children(|parent| {
             // Title
@@ -156,7 +156,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
     }
 
     fn spawn_online_menu(&mut self) -> EntityCommands<'_> {
-        let mut online_menu = self.spawn_menu_base(Menu::OnlinePlayMenu);
+        let mut online_menu = self.spawn_menu_base(MenuType::OnlinePlayMenu);
 
         online_menu.with_children(|parent| {
             // Title
@@ -213,7 +213,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
     }
 
     fn spawn_settings_menu(&mut self) -> EntityCommands<'_> {
-        let mut settings_menu = self.spawn_menu_base(Menu::SettingsMenu);
+        let mut settings_menu = self.spawn_menu_base(MenuType::SettingsMenu);
 
 
         settings_menu.with_children(|parent| {
@@ -291,10 +291,10 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
         settings_menu
     }
 
-    fn spawn_menu_base(&mut self, menu: Menu) -> EntityCommands<'_> {
+    fn spawn_menu_base(&mut self, menu_type: MenuType) -> EntityCommands<'_> {
 
         self.spawn((
-            Menu::MainMenu,
+            Menu::new(menu_type),
             Node {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
@@ -331,7 +331,9 @@ fn on_offline(
     mut commands: Commands,
     main_menu: Query<Entity, With<Menu>>,
 ) {
-
+    let entity = main_menu.single().expect("Main Menu doesn't exist");
+    commands.entity(entity).despawn();
+    commands.spawn_offline_menu();
 }
 
 fn on_online(
@@ -368,13 +370,15 @@ fn on_settings_back(
     commands.spawn_main_menu();
 }
 
+#[inline]
 fn handle_exit_button(
     _press: On<ButtonPressed>,
-    mut commands: Commands,
+    commands: Commands,
     query: Query<(Entity, &Menu)>,
 ) {
     handle_current_menu_exit(commands, query);
 }
+
 
 pub fn handle_current_menu_exit(
     mut commands: Commands,
@@ -384,21 +388,17 @@ pub fn handle_current_menu_exit(
 
         commands.entity(menu.0).despawn();
 
-        match menu.1 {
-            Menu::MainMenu => {
+        match menu.1.menu_type {
+            MenuType::MainMenu => {
 
             }
             _ =>{
-
-
 
             }
         }
 
 
     }
-
-
 }
 
 fn on_start_offline_game(
