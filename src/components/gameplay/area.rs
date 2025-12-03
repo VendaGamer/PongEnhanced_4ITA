@@ -2,8 +2,8 @@ use avian2d::prelude::Collider;
 use bevy::prelude::*;
 use crate::utils::*;
 
-#[derive(Component, Clone, Copy)]
-pub struct Area{
+#[derive(Component)]
+pub struct Area {
     pub shape: AreaShape
 }
 
@@ -12,9 +12,9 @@ pub struct DivisionLine;
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub enum AreaShape {
-    TwoSide,
-    Triangular,
-    Cuboid,
+    TwoSide(Option<[Entity;2]>),
+    Triangular(Option<[Entity;3]>),
+    Cuboid(Option<[Entity;4]>),
 }
 
 #[derive(Clone, Copy)]

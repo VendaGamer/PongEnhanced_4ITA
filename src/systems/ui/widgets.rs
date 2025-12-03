@@ -34,15 +34,31 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
         let mut root = self.spawn(Node{
             flex_wrap: FlexWrap::Wrap,
             flex_direction: FlexDirection::Row,
-            height: Val::Auto,
-            width: Val::Auto,
+            row_gap: Val::Px(20.0),
             display: Display::Flex,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            justify_items: JustifyItems::Center,
             ..default()
         });
 
         root.with_children(|parent| {
 
-            let mut selector = parent.spawn((
+            let left_button = parent
+                .append_button(Color::srgb(0.2, 0.2, 0.25), Vec2::new(25.0, 25.0), "<")
+                .observe(
+                    |   pressed:On<ButtonPressed>,
+                        mut selectors: Query<&mut OptionSelector>,
+                        buttons: Query<&SelectorButton>
+                    | {
+                        if let Ok(button) = buttons.get(pressed.event_target()) {
+                            if let Ok(mut selector) = selectors.get_mut(button.selector) {
+                                selector.cycle_prev();
+                            }
+                        }
+                    }).id();
+
+            let selector_entity = parent.spawn((
                 OptionSelector { options, selected },
                 Node {
                     width: Val::Px(400.0),
@@ -57,33 +73,19 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
                 BorderRadius::all(Val::Px(5.0)),
                 slot,
                 children![LabelBundle::button_label(label)]
-            ));
+            )).id();
 
-
-            let selector_entity = selector.id();
-
-            selector.with_child((
+            parent.commands().entity(selector_entity).with_child((
                 Text::new("Empty"),
                 TextFont { font_size: 24.0, ..default() },
                 TextColor(Color::WHITE),
                 SelectorText { selector_entity },
             ));
 
-            parent.append_button(Color::srgb(0.2, 0.2, 0.25), Vec2::new(25.0, 25.0), "<")
-                .insert(SelectorButton{
-                    selector: selector_entity,
-                })
-                .observe(
-                    |   pressed:On<ButtonPressed>,
-                        mut selectors: Query<&mut OptionSelector>,
-                        buttons: Query<&SelectorButton>
-                    | {
-                        if let Ok(button) = buttons.get(pressed.event_target()) {
-                            if let Ok(mut selector) = selectors.get_mut(button.selector) {
-                                selector.cycle_prev();
-                            }
-                        }
-                    });
+
+            parent.commands().entity(left_button).insert(SelectorButton{
+                selector: selector_entity,
+            });
 
 
             parent.append_button(Color::srgb(0.2, 0.2, 0.25), Vec2::new(25.0, 25.0), ">")

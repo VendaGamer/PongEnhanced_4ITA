@@ -1,13 +1,10 @@
-use std::iter::Map;
+use crate::components::{AreaShape, GameMode};
 use bevy::prelude::Resource;
-use crate::components::area::Area;
-use crate::components::{AreaShape, GameMode, Side, Team};
 
 #[derive(Resource, Hash, PartialEq, Eq)]
 pub struct GameConfig {
     pub game_mode: GameMode,
     pub area_shape: AreaShape,
-    pub team: Map<Team, Side>
 }
 
 impl GameConfig {

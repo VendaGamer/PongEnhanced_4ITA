@@ -5,7 +5,7 @@ use crate::bundles::GoalBundle;
 use crate::bundles::wall::WallBundle;
 use crate::utils::screen::TRANSFORM_ZERO;
 
-#[derive(Bundle, Clone, Copy)]
+#[derive(Bundle)]
 pub struct AreaBundle {
     pub area: Area,
     pub transform: Transform,
@@ -16,24 +16,22 @@ impl AreaBundle {
     pub fn spawn(
         area_shape: AreaShape,
         commands: &mut Commands,
-        teams: &[Entity],
     ){
 
-
         match area_shape {
-            AreaShape::TwoSide => {
+            AreaShape::TwoSide(teams) => {
                 commands.spawn(GoalBundle::new(teams[0], Side::Left));
                 commands.spawn(GoalBundle::new(teams[1], Side::Right));
                 commands.spawn(WallBundle::new(Side::Bottom));
                 commands.spawn(WallBundle::new(Side::Top));
             }
-            AreaShape::Triangular => {
+            AreaShape::Triangular(teams) => {
                 commands.spawn(GoalBundle::new(teams[0], Side::Left));
                 commands.spawn(GoalBundle::new(teams[1], Side::Right));
                 commands.spawn(GoalBundle::new(teams[2], Side::Bottom));
                 commands.spawn(WallBundle::new(Side::Top));
             }
-            AreaShape::Cuboid => {
+            AreaShape::Cuboid(teams) => {
                 commands.spawn(GoalBundle::new(teams[0], Side::Left));
                 commands.spawn(GoalBundle::new(teams[1], Side::Right));
                 commands.spawn(GoalBundle::new(teams[2], Side::Bottom));

@@ -1,13 +1,12 @@
-use bevy::ecs::system::entity_command::observe;
-use bevy::prelude::*;
 use crate::bundles::widgets::LabelBundle;
-use crate::components::{AreaShape, GameMode};
-use crate::components::ui::{Menu, MenuType};
 use crate::components::ui::navigation::UINavSlot;
+use crate::components::ui::{Menu, MenuType};
+use crate::components::{AreaShape, GameMode};
 use crate::models::game::fullscreen::ScreenMode;
 use crate::models::ui::option::UIOption;
-use crate::systems::ButtonPressed;
 use crate::systems::widgets::*;
+use crate::systems::ButtonPressed;
+use bevy::prelude::*;
 
 pub trait MenuSpawnCommandsExt {
     fn spawn_main_menu(&mut self) -> EntityCommands<'_>;
@@ -106,9 +105,9 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                     // Arena Shape
                     section.append_selector(
                         vec![
-                            UIOption::area("Two Sides", AreaShape::TwoSide),
-                            UIOption::area("Triangular", AreaShape::Triangular),
-                            UIOption::area("Cuboid", AreaShape::Cuboid)
+                            UIOption::area("Two Sides", AreaShape::TwoSide(None)),
+                            UIOption::area("Triangular", AreaShape::Triangular(None)),
+                            UIOption::area("Cuboid", AreaShape::Cuboid(None))
                         ],
                         0,
                         UINavSlot::new(2, 0),

@@ -1,7 +1,7 @@
 use crate::bundles::area::AreaBundle;
 use crate::bundles::player::PlayerBundle;
 use crate::bundles::*;
-use crate::components::ui::ScoreText;
+use crate::components::ui::{Menu, ScoreText};
 use crate::components::*;
 use crate::resources::controls::MenuAction;
 use crate::resources::navigation::UISelection;
@@ -141,11 +141,15 @@ fn print_available_resolutions(
     }
 }
 
-fn setup(
+pub fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    menu: Query<Entity, With<Menu>>,
 ) {
+
+    commands.entity(menu.single().expect("No menu")).despawn();
+
     let team1 = commands.spawn(Team {
         name: "Team Left".into(),
         current_score: 0,
@@ -197,8 +201,7 @@ fn setup(
         BALL_RADIUS
     )).observe(handle_scoring);
 
-    let teams = [team1, team2];
-    AreaBundle::spawn(AreaShape::TwoSide, &mut commands, &teams);
+    AreaBundle::spawn(AreaShape::TwoSide([team1, team2]), &mut commands);
 
     const SEGMENT_HEIGHT: f32 = 20.0;
     const GAP_HEIGHT: f32 = 15.0;
