@@ -1,7 +1,9 @@
+use std::ops::Deref;
 use crate::bundles::{default, Entity, Transform, Vec3};
 use crate::utils::{FIXED_DIMENSIONS, HALF_HEIGHT, HALF_WALL_THICKNESS, HALF_WIDTH, WALL_THICKNESS};
 use avian2d::prelude::Collider;
-use bevy::prelude::Resource;
+use bevy::prelude::{Deref, Resource};
+use AreaShape::{Cuboid, Triangular, TwoSide};
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub enum AreaSide {
@@ -12,10 +14,11 @@ pub enum AreaSide {
 }
 
 #[derive(Clone, Eq, Hash, PartialEq)]
-pub struct Team {
+pub struct TeamConfig {
     pub name: String,
     pub current_score: u32,
     pub area_side: AreaSide,
+    pub goal: Option<Entity>,
     pub players: Vec<Player>,
 }
 
@@ -27,7 +30,7 @@ pub struct Players {
 #[derive(Clone, Eq, Hash, PartialEq)]
 pub struct Player {
     pub name: String,
-    pub entity: Entity,
+    pub entity: Option<Entity>,
 }
 
 pub enum ControlType{
@@ -37,12 +40,23 @@ pub enum ControlType{
 
 #[derive(Clone, Eq, Hash, PartialEq)]
 pub enum AreaShape {
-    TwoSide(Option<[Team; 2]>),
-    Triangular(Option<[Team; 3]>),
-    Cuboid(Option<[Team; 4]>),
+    TwoSide(Option<[TeamConfig; 2]>),
+    Triangular(Option<[TeamConfig; 3]>),
+    Cuboid(Option<[TeamConfig; 4]>),
+}
+
+impl AreaShape {
+    pub fn get_teams(&self) -> &[TeamConfig] {
+        match self {
+            TwoSide(opt)     => opt.as_ref().unwrap(),
+            Triangular(opt)  => opt.as_ref().unwrap(),
+            Cuboid(opt)      => opt.as_ref().unwrap(),
+        }
+    }
 }
 
 impl AreaSide {
+
     pub fn get_transform(side: Self) -> Transform {
 
 

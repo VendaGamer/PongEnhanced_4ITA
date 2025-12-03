@@ -11,7 +11,7 @@ use crate::systems::*;
 use crate::utils::screen::BALL_RADIUS;
 use crate::utils::FIXED_DIMENSIONS;
 use bevy::window::{Monitor, WindowResized};
-use crate::models::game::area::AreaShape;
+use crate::models::game::area::{AreaShape, TeamConfig};
 use crate::resources::GameConfig;
 use crate::systems::menu::MenuSpawnCommandsExt;
 
@@ -147,51 +147,10 @@ pub fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     menu: Query<Entity, With<Menu>>,
+    game_config: Res<GameConfig>,
 ) {
 
     commands.entity(menu.single().expect("No menu")).despawn();
-
-    let team1 = commands.spawn(Team {
-        name: "Team Left".into(),
-        current_score: 0,
-    }).id();
-
-    let team2 = commands.spawn(Team {
-        name: "Team Right".into(),
-        current_score: 0,
-    }).id();
-
-    commands.spawn(Node {
-        width: Val::Percent(100.0),
-        height: Val::Percent(100.0),
-        justify_content: JustifyContent::SpaceBetween,
-        align_items: AlignItems::Start,
-        padding: UiRect::all(Val::Px(50.0)),
-        ..default()
-    }).with_children(|parent| {
-
-
-            parent.spawn((
-                Text::new("0"),
-                TextFont {
-                    font_size: 72.0,
-                    ..default()
-                },
-                TextColor(Color::srgba(1.0, 1.0, 1.0, 0.8)),
-                ScoreText { team: team2 },
-            ));
-
-
-            parent.spawn((
-                Text::new("0"),
-                TextFont {
-                    font_size: 72.0,
-                    ..default()
-                },
-                TextColor(Color::srgba(1.0, 1.0, 1.0, 0.8)),
-                ScoreText { team: team1 },
-            ));
-    });
 
     
     commands.spawn(BallBundle::new(
@@ -202,7 +161,7 @@ pub fn setup(
         BALL_RADIUS
     )).observe(handle_scoring);
 
-    AreaBundle::spawn(AreaShape::TwoSide([team1, team2]), &mut commands);
+    AreaBundle::spawn(&game_config.area_shape, &mut commands);
 
     const SEGMENT_HEIGHT: f32 = 20.0;
     const GAP_HEIGHT: f32 = 15.0;
@@ -218,7 +177,7 @@ pub fn setup(
 
 
 fn update_score_ui(
-    teams: Query<&Team>,
+    teams: Query<&TeamConfig>,
     mut score_texts: Query<(&mut Text, &ScoreText)>,
 ) {
     for (mut text, score_text) in score_texts.iter_mut() {

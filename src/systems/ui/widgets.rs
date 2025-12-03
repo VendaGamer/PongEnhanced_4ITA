@@ -3,10 +3,10 @@ use crate::components::ui::effects::HoverLight;
 use crate::components::ui::navigation::{OptionSelector, SelectorText, UINavSlot};
 use crate::components::ui::{Dropdown, SelectorButton};
 use crate::models::ui::option::UIOption;
-use crate::systems::ButtonPressed;
 use bevy::ecs::relationship::RelatedSpawnerCommands;
 use bevy::prelude::*;
 use bevy::ui_widgets::{Slider, SliderRange, SliderThumb, SliderValue, TrackClick};
+use crate::events::ui::widgets::ButtonPressed;
 
 pub const BUTTON_PADDING: Val = Val::Px(30.0);
 pub const BUTTON_OUTLINE: Outline = Outline::new(Val::Px(5.0),Val::ZERO, Color::WHITE);
@@ -47,7 +47,7 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
                         mut selectors: Query<&mut OptionSelector>,
                         buttons: Query<&SelectorButton>
                     | {
-                        if let Ok(button) = buttons.get(pressed.event_target()) {
+                        if let Ok(button) = buttons.get(pressed.observer()) {
                             if let Ok(mut selector) = selectors.get_mut(button.selector) {
                                 selector.cycle_prev();
                             }

@@ -2,7 +2,9 @@ use bevy::prelude::*;
 use crate::components::area::Area;
 use crate::bundles::GoalBundle;
 use crate::bundles::wall::WallBundle;
+use crate::components::Player;
 use crate::models::game::area::{AreaShape, AreaSide};
+use crate::resources::GameConfig;
 use crate::utils::screen::TRANSFORM_ZERO;
 
 #[derive(Bundle)]
@@ -14,15 +16,14 @@ pub struct AreaBundle {
 
 impl AreaBundle {
     pub fn spawn(
-        area_shape: AreaShape,
+        area_shape: &AreaShape,
         commands: &mut Commands,
     ){
-
         match area_shape {
             AreaShape::TwoSide(Some(teams)) => {
 
                 commands.spawn_batch([
-                    GoalBundle::new(teams[0], AreaSide::Left),
+                    GoalBundle::new(teams[0]., AreaSide::Left),
                     GoalBundle::new(teams[1], AreaSide::Right),
                 ]);
                 commands.spawn([

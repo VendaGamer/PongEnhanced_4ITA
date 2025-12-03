@@ -1,10 +1,7 @@
 use crate::components::ui::effects::HoverLight;
 use crate::utils::text::lighten_color;
 use bevy::prelude::*;
-
-#[derive(EntityEvent)]
-pub struct ButtonPressed(Entity);
-
+use crate::events::ui::widgets::ButtonPressed;
 
 pub fn detect_button_press(
     button_query: Query<Entity, (With<Button>, With<Interaction>)>,

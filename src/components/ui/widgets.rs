@@ -1,3 +1,4 @@
+use std::hash::Hash;
 use crate::models::ui::option::UIOption;
 use bevy::prelude::*;
 
@@ -9,7 +10,7 @@ pub struct Dropdown
 }
 
 #[derive(Component)]
-#[require(Button, )]
+#[require(Button)]
 pub struct SelectorButton {
     pub selector: Entity
 }

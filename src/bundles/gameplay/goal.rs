@@ -12,14 +12,14 @@ pub struct GoalBundle {
 }
 
 impl GoalBundle{
-    pub fn new(team: Entity, side: AreaSide) -> Self{
+    pub fn new(side: AreaSide) -> Self{
         let collider = AreaSide::get_collider(side.clone());
         let transform = AreaSide::get_transform(side.clone());
 
         Self{
             goal: Goal{
-                team,
-                side
+                side,
+                paddles: vec![],
             },
             collider,
             transform,

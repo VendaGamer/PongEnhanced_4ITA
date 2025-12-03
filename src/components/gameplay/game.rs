@@ -6,15 +6,6 @@ pub struct Ball{
     pub initial_velocity: Vec2
 }
 
-#[derive(Clone, Copy, Eq, Hash, PartialEq)]
-pub enum GameMode {
-    Classic,
-    UpsideDown,
-    Modern,
-    Blackout,
-    Twisted,
-}
-
 pub trait GameModeRules: Send + Sync {
     fn ball_speed(&self) -> f32;
     fn gravity_scale(&self) -> f32;
