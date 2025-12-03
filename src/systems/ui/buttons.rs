@@ -8,7 +8,7 @@ pub struct ButtonPressed(Entity);
 
 pub fn detect_button_press(
     button_query: Query<Entity, (With<Button>, With<Interaction>)>,
-    interaction_query: Query<&Interaction>,
+    interaction_query: Query<&Interaction, Changed<Interaction>>,
     mut commands: Commands,
 ) {
     for entity in &button_query {

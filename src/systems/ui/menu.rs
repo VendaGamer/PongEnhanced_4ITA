@@ -1,3 +1,4 @@
+use bevy::ecs::system::entity_command::observe;
 use bevy::prelude::*;
 use crate::bundles::widgets::LabelBundle;
 use crate::components::{AreaShape, GameMode};
@@ -20,47 +21,49 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
     fn spawn_main_menu(&mut self) -> EntityCommands<'_> {
 
         let mut main_menu = self.spawn_menu_base(MenuType::MainMenu);
-
+        
+        
         main_menu.with_children(|parent| {
+            parent.spawn(LabelBundle::game_title());
+            
             parent.spawn(
                 (
                     Node {
                         flex_direction: FlexDirection::Column,
+                        flex_wrap: FlexWrap::Wrap,
                         padding: UiRect::new(BUTTON_PADDING, BUTTON_PADDING, BUTTON_PADDING, Val::ZERO),
                         ..default()
                     },
                     Outline::new(Val::Px(5.0), Val::ZERO, Color::linear_rgb(0.5, 0.5, 0.5)),
                     BackgroundColor::from(Color::srgb(0.1, 0.1, 0.1)),
                 )
-            );
+            ).with_children(|parent|{
 
-            parent.spawn(LabelBundle::game_title())
-                .with_children(|parent|{
+                parent.append_menu_button(
+                    Color::srgb(0.2, 0.6, 0.9),
+                    "Offline Play",
+                    UINavSlot::row(0))
+                    .observe(on_offline);
 
-                    parent.append_menu_button(
-                        Color::srgb(0.2, 0.6, 0.9),
-                        "Offline Play",
-                        UINavSlot::row(0))
-                        .observe(on_offline);
+                parent.append_menu_button(
+                    Color::srgb(0.6, 0.3, 0.9),
+                    "Online Play",
+                    UINavSlot::row(1)
+                ).observe(on_online);
 
-                    parent.append_menu_button(
-                        Color::srgb(0.6, 0.3, 0.9),
-                        "Online Play",
-                        UINavSlot::row(1)
-                    ).observe(on_online);
+                parent.append_menu_button(
+                    Color::srgb(0.5, 0.5, 0.5),
+                    "Settings", UINavSlot::row(2)
+                ).observe(on_settings);
 
-                    parent.append_menu_button(
-                        Color::srgb(0.5, 0.5, 0.5),
-                        "Settings", UINavSlot::row(2)
-                    ).observe(on_settings);
+                parent.append_menu_button(
+                    Color::srgb(0.8, 0.2, 0.2),
+                    "Exit",
+                    UINavSlot::row(3)
+                ).observe(on_exit);
 
-                    parent.append_menu_button(
-                        Color::srgb(0.8, 0.2, 0.2),
-                        "Exit",
-                        UINavSlot::row(3)
-                    ).observe(on_exit);
+            });
 
-                });
         });
 
         main_menu
@@ -71,14 +74,10 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
 
         offline_menu.with_children(|parent| {
             // Title
-            parent.spawn((
-
-            ));
-
+            parent.append_menu_title("Offline Play");
             // Game options container
             parent.append_menu_section()
                 .with_children(|section| {
-                    section.append_menu_title("Options");
                     // Number of Players
                     section.append_selector(
                         vec![
@@ -261,7 +260,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
 
                     section.append_selector(
                         vec![
-                            UIOption::screen("Exclusive", ScreenMode::ExclusiveFullScreen),
+                            UIOption::screen("Handle later", ScreenMode::ExclusiveFullScreen),
                         ],
                         0,
                         UINavSlot::new(2, 0),
@@ -270,13 +269,13 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
 
                     section.append_selector(
                         vec![
-                            UIOption::screen("Exclusive", ScreenMode::ExclusiveFullScreen),
-                            UIOption::screen("Exclusive", ScreenMode::ExclusiveFullScreen),
-                            UIOption::screen("Exclusive", ScreenMode::ExclusiveFullScreen),
+                            UIOption::screen("Exclusive FullScreen", ScreenMode::ExclusiveFullScreen),
+                            UIOption::screen("FullScreen", ScreenMode::FullScreen),
+                            UIOption::screen("Windowed", ScreenMode::Windowed),
                         ],
                         0,
                         UINavSlot::new(3, 0),
-                        "Fullscreen".into(),
+                        "Screen Mode",
                     );
                 });
 
@@ -285,7 +284,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                 Color::srgb(0.6, 0.6, 0.6),
                 "Back",
                 UINavSlot::row(4))
-                .observe(handle_exit_button);
+                .observe(on_settings_back);
         });
 
         settings_menu

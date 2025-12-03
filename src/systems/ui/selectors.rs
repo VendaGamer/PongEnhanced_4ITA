@@ -14,7 +14,7 @@ pub fn update_selector_text(
 
 pub fn handle_selector_navigation(
     keyboard: Res<ButtonInput<KeyCode>>,
-    mut selectors: Query<(&mut OptionSelector, &Interaction)>,
+    mut selectors: Query<(&mut OptionSelector, &Interaction), Changed<Interaction>>,
 ) {
     for (mut selector, interaction) in &mut selectors {
         if *interaction == Interaction::Hovered {
