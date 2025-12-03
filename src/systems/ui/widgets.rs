@@ -1,15 +1,12 @@
-use bevy::ecs::relationship::RelatedSpawnerCommands;
-use bevy::ecs::spawn::SpawnRelatedBundle;
-use bevy::prelude::*;
-use bevy::ui_widgets::{Slider, SliderRange, SliderThumb, SliderValue, TrackClick};
 use crate::bundles::widgets::*;
-use crate::components::{AreaShape, GameMode};
 use crate::components::ui::effects::HoverLight;
-use crate::components::ui::{Dropdown, Menu, SelectorButton};
 use crate::components::ui::navigation::{OptionSelector, SelectorText, UINavSlot};
-use crate::models::game::fullscreen::ScreenMode;
+use crate::components::ui::{Dropdown, SelectorButton};
 use crate::models::ui::option::UIOption;
 use crate::systems::ButtonPressed;
+use bevy::ecs::relationship::RelatedSpawnerCommands;
+use bevy::prelude::*;
+use bevy::ui_widgets::{Slider, SliderRange, SliderThumb, SliderValue, TrackClick};
 
 pub const BUTTON_PADDING: Val = Val::Px(30.0);
 pub const BUTTON_OUTLINE: Outline = Outline::new(Val::Px(5.0),Val::ZERO, Color::WHITE);
@@ -23,7 +20,6 @@ pub trait WidgetSpawnExt {
     fn append_slider(&mut self, min: f32, max: f32, current: f32, slot: UINavSlot) -> EntityCommands<'_>;
     fn append_button(&mut self, color: Color, size: Vec2, text: &str) -> EntityCommands<'_>;
     fn append_menu_button(&mut self, color: Color, text: &str, slot: UINavSlot) -> EntityCommands<'_>;
-
     fn append_menu_title(&mut self, text: &'static str) -> EntityCommands<'_>;
 }
 

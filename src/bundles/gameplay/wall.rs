@@ -2,6 +2,7 @@ use avian2d::prelude::{Collider, Restitution, RigidBody};
 use bevy::prelude::Transform;
 use crate::bundles::Bundle;
 use crate::components::*;
+use crate::models::game::area::AreaSide;
 
 #[derive(Bundle)]
 pub struct WallBundle {
@@ -13,9 +14,9 @@ pub struct WallBundle {
 }
 
 impl WallBundle {
-    pub fn new(side: Side) -> Self {
-        let collider = Side::get_collider(side);
-        let transform = Side::get_transform(side);
+    pub fn new(side: AreaSide) -> Self {
+        let collider = AreaSide::get_collider(side);
+        let transform = AreaSide::get_transform(side);
 
         Self {
             wall: Wall {

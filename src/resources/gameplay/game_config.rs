@@ -1,5 +1,6 @@
-use crate::components::{AreaShape, GameMode};
+use crate::components::{GameMode};
 use bevy::prelude::Resource;
+use crate::models::game::area::AreaShape;
 
 #[derive(Resource, Hash, PartialEq, Eq)]
 pub struct GameConfig {

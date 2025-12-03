@@ -23,12 +23,6 @@ pub trait GameModeRules: Send + Sync {
 }
 
 #[derive(Component, Copy, Clone)]
-pub struct Paddle{
+pub struct Paddle {
     pub player: Entity
-}
-
-#[derive(Component)]
-pub struct Team {
-    pub name: String,
-    pub current_score: u32
 }

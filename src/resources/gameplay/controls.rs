@@ -1,8 +1,7 @@
-use bevy::prelude::{GamepadAxis, GamepadButton};
+use bevy::prelude::{GamepadButton};
 use bevy::reflect::Reflect;
 use leafwing_input_manager::Actionlike;
 use leafwing_input_manager::prelude::*;
-use leafwing_input_manager::prelude::updating::CentralInputStore;
 use crate::bundles::KeyCode;
 
 #[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Reflect)]

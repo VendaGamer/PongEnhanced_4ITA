@@ -1,4 +1,5 @@
-use crate::components::{AreaShape, GameMode};
+use crate::components::{GameMode};
+use crate::models::game::area::AreaShape;
 use crate::models::game::fullscreen::ScreenMode;
 
 

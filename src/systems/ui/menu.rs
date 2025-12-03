@@ -7,6 +7,7 @@ use crate::models::ui::option::UIOption;
 use crate::systems::widgets::*;
 use crate::systems::ButtonPressed;
 use bevy::prelude::*;
+use crate::models::game::area::AreaShape;
 
 pub trait MenuSpawnCommandsExt {
     fn spawn_main_menu(&mut self) -> EntityCommands<'_>;

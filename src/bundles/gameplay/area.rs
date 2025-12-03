@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use crate::components::area::Area;
-use crate::components::*;
 use crate::bundles::GoalBundle;
 use crate::bundles::wall::WallBundle;
+use crate::models::game::area::{AreaShape, AreaSide};
 use crate::utils::screen::TRANSFORM_ZERO;
 
 #[derive(Bundle)]
@@ -19,23 +19,28 @@ impl AreaBundle {
     ){
 
         match area_shape {
-            AreaShape::TwoSide(teams) => {
-                commands.spawn(GoalBundle::new(teams[0], Side::Left));
-                commands.spawn(GoalBundle::new(teams[1], Side::Right));
-                commands.spawn(WallBundle::new(Side::Bottom));
-                commands.spawn(WallBundle::new(Side::Top));
+            AreaShape::TwoSide(Some(teams)) => {
+
+                commands.spawn_batch([
+                    GoalBundle::new(teams[0], AreaSide::Left),
+                    GoalBundle::new(teams[1], AreaSide::Right),
+                ]);
+                commands.spawn([
+                    WallBundle::new(AreaSide::Bottom),
+                    WallBundle::new(AreaSide::Top)
+                ]);
             }
-            AreaShape::Triangular(teams) => {
-                commands.spawn(GoalBundle::new(teams[0], Side::Left));
-                commands.spawn(GoalBundle::new(teams[1], Side::Right));
-                commands.spawn(GoalBundle::new(teams[2], Side::Bottom));
-                commands.spawn(WallBundle::new(Side::Top));
+            AreaShape::Triangular(Some(teams)) => {
+                commands.spawn(GoalBundle::new(teams[0], AreaSide::Left));
+                commands.spawn(GoalBundle::new(teams[1], AreaSide::Right));
+                commands.spawn(GoalBundle::new(teams[2], AreaSide::Bottom));
+                commands.spawn(WallBundle::new(AreaSide::Top));
             }
-            AreaShape::Cuboid(teams) => {
-                commands.spawn(GoalBundle::new(teams[0], Side::Left));
-                commands.spawn(GoalBundle::new(teams[1], Side::Right));
-                commands.spawn(GoalBundle::new(teams[2], Side::Bottom));
-                commands.spawn(GoalBundle::new(teams[3], Side::Top));
+            AreaShape::Cuboid(Some(teams)) => {
+                commands.spawn(GoalBundle::new(teams[0], AreaSide::Left));
+                commands.spawn(GoalBundle::new(teams[1], AreaSide::Right));
+                commands.spawn(GoalBundle::new(teams[2], AreaSide::Bottom));
+                commands.spawn(GoalBundle::new(teams[3], AreaSide::Top));
             }
         }
 

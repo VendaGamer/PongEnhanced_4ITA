@@ -1,13 +1,12 @@
-use bevy::prelude::*;
-use avian2d::prelude::*;
 use crate::bundles::BallBundle;
 use crate::components::*;
 use crate::utils::screen::BALL_RADIUS;
+use avian2d::prelude::*;
+use bevy::prelude::*;
 
 pub fn handle_scoring(
     collision: On<CollisionStart>,
     goals: Query<&Goal>,
-    mut teams: Query<&mut Team>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut commands: Commands,

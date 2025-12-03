@@ -11,6 +11,7 @@ use crate::systems::*;
 use crate::utils::screen::BALL_RADIUS;
 use crate::utils::FIXED_DIMENSIONS;
 use bevy::window::{Monitor, WindowResized};
+use crate::models::game::area::AreaShape;
 use crate::resources::GameConfig;
 use crate::systems::menu::MenuSpawnCommandsExt;
 
