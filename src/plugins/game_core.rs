@@ -11,7 +11,7 @@ use crate::systems::*;
 use crate::utils::screen::BALL_RADIUS;
 use crate::utils::FIXED_DIMENSIONS;
 use bevy::window::{Monitor, WindowResized};
-use crate::models::game::area::{AreaShape, TeamConfig};
+use crate::models::game::area::{AreaShape, Team};
 use crate::resources::GameConfig;
 use crate::systems::menu::MenuSpawnCommandsExt;
 
@@ -177,7 +177,7 @@ pub fn setup(
 
 
 fn update_score_ui(
-    teams: Query<&TeamConfig>,
+    teams: Query<&Team>,
     mut score_texts: Query<(&mut Text, &ScoreText)>,
 ) {
     for (mut text, score_text) in score_texts.iter_mut() {

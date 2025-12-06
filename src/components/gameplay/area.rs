@@ -1,8 +1,5 @@
-use avian2d::prelude::Collider;
-use bevy::prelude::*;
-use crate::components::Paddle;
 use crate::models::game::area::{AreaShape, AreaSide};
-use crate::utils::*;
+use bevy::prelude::*;
 
 #[derive(Component)]
 pub struct Area {
@@ -15,7 +12,6 @@ pub struct DivisionLine;
 #[derive(Component)]
 pub struct Goal {
     pub side: AreaSide,
-    pub paddles: Vec<Entity>,
 }
 
 #[derive(Component)]

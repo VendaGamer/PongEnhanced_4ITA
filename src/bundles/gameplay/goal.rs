@@ -1,7 +1,7 @@
 use crate::components::{Goal};
 use avian2d::prelude::{Collider, RigidBody};
 use bevy::prelude::{Bundle, Entity, Transform};
-use crate::models::game::area::AreaSide;
+use crate::models::game::area::{AreaSide, Team};
 
 #[derive(Bundle)]
 pub struct GoalBundle {
@@ -12,17 +12,14 @@ pub struct GoalBundle {
 }
 
 impl GoalBundle{
-    pub fn new(side: AreaSide) -> Self{
-        let collider = AreaSide::get_collider(side.clone());
-        let transform = AreaSide::get_transform(side.clone());
+    pub fn new(team: &Team) -> Self{
 
         Self{
             goal: Goal{
-                side,
-                paddles: vec![],
+                side: team.area_side,
             },
-            collider,
-            transform,
+            collider: team.area_side.get_collider(),
+            transform: team.area_side.get_transform(),
             rigid_body: RigidBody::Static
         }
     }

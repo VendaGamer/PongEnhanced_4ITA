@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use crate::components::area::Area;
 use crate::bundles::GoalBundle;
+use crate::bundles::paddle::PaddleBundle;
 use crate::bundles::wall::WallBundle;
 use crate::components::Player;
 use crate::models::game::area::{AreaShape, AreaSide};
@@ -18,17 +19,25 @@ impl AreaBundle {
     pub fn spawn(
         area_shape: &AreaShape,
         commands: &mut Commands,
+        meshes: &mut Assets<Mesh>,
+        materials: &mut Assets<ColorMaterial>,
     ){
         match area_shape {
             AreaShape::TwoSide(Some(teams)) => {
+                let team1 = &teams[0];
+                let team2 = &teams[1];
+                let goal1 = commands.spawn(GoalBundle::new(team1)).id();
+                let goal2 = commands.spawn(GoalBundle::new(team2)).id();
 
                 commands.spawn_batch([
-                    GoalBundle::new(teams[0]., AreaSide::Left),
-                    GoalBundle::new(teams[1], AreaSide::Right),
+                    PaddleBundle::new(meshes, materials, team1.area_side, goal1),
+                    PaddleBundle::new(meshes, materials, team2.area_side, goal2),
                 ]);
-                commands.spawn([
+
+
+                commands.spawn_batch([
                     WallBundle::new(AreaSide::Bottom),
-                    WallBundle::new(AreaSide::Top)
+                    WallBundle::new(AreaSide::Top),
                 ]);
             }
             AreaShape::Triangular(Some(teams)) => {

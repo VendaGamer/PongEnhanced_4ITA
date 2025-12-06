@@ -7,8 +7,8 @@ use crate::resources::GameConfig;
 
 pub fn handle_scoring(
     collision: On<CollisionStart>,
-    goals: Query<&Goal>,
-    game_config: Res<GameConfig>,
+    goals: Query<(Entity, &Goal)>,
+    mut game_config: ResMut<GameConfig>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut commands: Commands,
@@ -17,8 +17,7 @@ pub fn handle_scoring(
     let other = collision.collider2;
 
     if let Ok(goal) = goals.get(other){
-        game_config.area_shape
-        if let Ok(mut team) = teams.get_mut(goal.team) {
+        if let Some(team) = game_config.area_shape.get_team_mut(goal.0) {
             team.current_score += 1;
 
             commands.entity(ball).despawn();

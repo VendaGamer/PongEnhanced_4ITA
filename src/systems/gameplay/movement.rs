@@ -13,7 +13,7 @@ pub fn move_paddle(
     mut paddle_query: Query<(&mut Transform, &Paddle)>,
 ) {
     for (mut paddle_transform, paddle) in paddle_query.iter_mut() {
-        if let Ok(action_state) = player_query.get(paddle.player) {
+        if let Ok(action_state) = player_query.get(paddle.goal) {
             let mut move_amount = time.delta_secs() * 400.0;
             if action_state.pressed(&PlayerAction::Speedup) {
                 move_amount *= 2.0;

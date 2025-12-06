@@ -15,16 +15,30 @@ pub struct PaddleBundle {
 }
 
 impl PaddleBundle {
+
+    pub fn spawn_team(
+        commands: &mut Commands,
+        meshes: &mut Assets<Mesh>,
+        materials: &mut Assets<ColorMaterial>,
+        position: Vec3,
+        size: Vec2,
+        goal: Entity
+    ){
+
+        commands.spawn_batch()
+
+    }
+
     pub fn new(
         meshes: &mut Assets<Mesh>,
         materials: &mut Assets<ColorMaterial>,
         position: Vec3,
         size: Vec2,
-        player: Entity
+        goal: Entity
     ) -> Self {
         Self {
             paddle: Paddle{
-                player
+                goal
             },
             mesh: Mesh2d(meshes.add(Rectangle::new(size.x, size.y))),
             material: MeshMaterial2d(materials.add(Color::WHITE)),

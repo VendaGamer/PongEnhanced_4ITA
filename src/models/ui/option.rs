@@ -1,15 +1,28 @@
-use std::any::Any;
+use crate::models::game::area::AreaShape;
+use crate::models::game::fullscreen::ScreenMode;
+use crate::models::game::gameplay::GameMode;
+use derive_more::From;
 
+#[derive(Clone, Eq, PartialEq, Hash)]
 pub struct UIOption {
     pub text: &'static str,
-    pub value: Box<dyn Any + Send + Sync>,
+    pub value: UIOptionValue,
 }
 
 impl UIOption {
-    pub fn new<T: 'static + Clone + Send + Sync>(text: &'static str, value: T) -> Self {
+    pub fn new(text: &'static str, value: UIOptionValue) -> Self {
         Self {
             text,
-            value: Box::new(value),
+            value,
         }
     }
+}
+
+#[derive(Clone, Eq, PartialEq, Hash, From)]
+pub enum UIOptionValue
+{
+    Integer(u32),
+    Screen(ScreenMode),
+    AreaShape(AreaShape),
+    GameMode(GameMode),
 }

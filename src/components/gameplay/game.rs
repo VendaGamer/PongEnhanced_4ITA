@@ -14,6 +14,6 @@ pub trait GameModeRules: Send + Sync {
 }
 
 #[derive(Component, Copy, Clone)]
-pub struct Paddle {
-    pub player: Entity
+pub struct Paddle{
+    pub goal: Entity
 }

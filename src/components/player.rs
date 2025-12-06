@@ -1,11 +1,12 @@
 use crate::resources::controls::PlayerAction;
 use bevy::prelude::{Component, Entity, KeyCode};
 use leafwing_input_manager::prelude::InputMap;
+use crate::components::Goal;
 
 #[derive(Component)]
 pub struct Player {
     pub id: u8,
-    pub team: Option<Entity>,
+    pub team: Option<Goal>,
     pub name: String,
 }
 

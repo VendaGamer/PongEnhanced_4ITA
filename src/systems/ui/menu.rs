@@ -2,7 +2,7 @@ use crate::bundles::widgets::LabelBundle;
 use crate::components::ui::navigation::UINavSlot;
 use crate::components::ui::{Menu, MenuType};
 use crate::models::game::fullscreen::ScreenMode;
-use crate::models::ui::option::UIOption;
+use crate::models::ui::option::{UIOption, UIOptionValue};
 use crate::systems::widgets::*;
 use bevy::prelude::*;
 use crate::events::ui::widgets::ButtonPressed;
@@ -81,9 +81,9 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                     // Number of Players
                     section.append_selector(
                         vec![
-                            UIOption::new("2 Players", 2),
-                            UIOption::new("3 Players", 3),
-                            UIOption::new("4 Players", 4)],
+                            UIOption::new("2 Players", 2.into()),
+                            UIOption::new("3 Players", 3.into()),
+                            UIOption::new("4 Players", 4.into())],
                         0,
                             UINavSlot::new(0, 0),
                         "Number of Players"
@@ -92,11 +92,11 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                     // Game Mode
                     section.append_selector(
                         vec![
-                            UIOption::new("Classic", GameMode::Classic),
-                            UIOption::new("Modern", GameMode::Modern),
-                            UIOption::new("Upside Down", GameMode::UpsideDown),
-                            UIOption::new("Blackout", GameMode::Blackout),
-                            UIOption::new("Twisted", GameMode::Twisted),
+                            UIOption::new("Classic", GameMode::Classic.into()),
+                            UIOption::new("Modern", GameMode::Modern.into()),
+                            UIOption::new("Upside Down", GameMode::UpsideDown.into()),
+                            UIOption::new("Blackout", GameMode::Blackout.into()),
+                            UIOption::new("Twisted", GameMode::Twisted.into()),
                         ],
                         0,
                         UINavSlot::new(1, 0),
@@ -106,9 +106,9 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                     // Arena Shape
                     section.append_selector(
                         vec![
-                            UIOption::new("Two Sides", AreaShape::TwoSide(None)),
-                            UIOption::new("Triangular", AreaShape::Triangular(None)),
-                            UIOption::new("Cuboid", AreaShape::Cuboid(None))
+                            UIOption::new("Two Sides", AreaShape::TwoSide(None).into()),
+                            UIOption::new("Triangular", AreaShape::Triangular(None).into()),
+                            UIOption::new("Cuboid", AreaShape::Cuboid(None).into())
                         ],
                         0,
                         UINavSlot::new(2, 0),
@@ -119,10 +119,10 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                     // Win Score
                     section.append_selector(
                         vec![
-                            UIOption::new("5 Points", 5),
-                            UIOption::new("10 Points", 10),
-                            UIOption::new("15 Points", 15),
-                            UIOption::new("20 Points", 20),
+                            UIOption::new("5 Points", 5.into()),
+                            UIOption::new("10 Points", 10.into()),
+                            UIOption::new("15 Points", 15.into()),
+                            UIOption::new("20 Points", 20.into()),
                         ],
                         0,
                         UINavSlot::new(3, 0),
@@ -260,7 +260,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
 
                     section.append_selector(
                         vec![
-                            UIOption::new("Handle later", ScreenMode::ExclusiveFullScreen),
+                            UIOption::new("Handle later", UIOptionValue::Integer(0)),
                         ],
                         0,
                         UINavSlot::new(2, 0),
@@ -269,9 +269,9 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
 
                     section.append_selector(
                         vec![
-                            UIOption::new("Exclusive FullScreen", ScreenMode::ExclusiveFullScreen),
-                            UIOption::new("FullScreen", ScreenMode::FullScreen),
-                            UIOption::new("Windowed", ScreenMode::Windowed),
+                            UIOption::new("Exclusive FullScreen", ScreenMode::ExclusiveFullScreen.into()),
+                            UIOption::new("FullScreen", ScreenMode::FullScreen.into()),
+                            UIOption::new("Windowed", ScreenMode::Windowed.into()),
                         ],
                         0,
                         UINavSlot::new(3, 0),
