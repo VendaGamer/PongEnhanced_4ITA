@@ -2,9 +2,7 @@ use crate::models::game::area::{AreaShape, AreaSide};
 use bevy::prelude::*;
 
 #[derive(Component)]
-pub struct Area {
-    pub shape: AreaShape
-}
+pub struct Area;
 
 #[derive(Component)]
 pub struct DivisionLine;

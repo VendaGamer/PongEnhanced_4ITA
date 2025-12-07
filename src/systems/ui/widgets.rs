@@ -1,7 +1,7 @@
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::HoverLight;
-use crate::components::ui::navigation::{OptionSelector, SelectorText, UINavSlot};
-use crate::components::ui::{Dropdown, SelectorButton};
+use crate::components::ui::navigation::{UINavSlot};
+use crate::components::ui::{Dropdown, OptionSelector, SelectorButton, SelectorText};
 use crate::models::ui::option::UIOption;
 use bevy::ecs::relationship::RelatedSpawnerCommands;
 use bevy::prelude::*;
@@ -27,7 +27,9 @@ pub trait WidgetSpawnExt {
 impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
     fn append_selector(&mut self, options: Vec<UIOption>, selected: usize, slot: UINavSlot, label: &str) -> EntityCommands<'_> {
 
-        let mut root = self.spawn(Node{
+        let mut root = self.spawn((
+        OptionSelector { options, selected },
+        Node{
             flex_wrap: FlexWrap::Wrap,
             flex_direction: FlexDirection::Row,
             row_gap: Val::Px(20.0),
@@ -36,28 +38,32 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
             align_items: AlignItems::Center,
             justify_items: JustifyItems::Center,
             ..default()
-        });
+        }));
 
         root.with_children(|parent| {
 
-            let left_button = parent
+            let selector_entity = parent.target_entity();
+
+        parent
                 .append_button(Color::srgb(0.2, 0.2, 0.25), Vec2::new(25.0, 25.0), "<")
+                .insert(SelectorButton{
+                    selector: selector_entity,
+                })
                 .observe(
                     |   pressed:On<ButtonPressed>,
                         mut selectors: Query<&mut OptionSelector>,
                         buttons: Query<&SelectorButton>
                     | {
-                        if let Ok(button) = buttons.get(pressed.observer()) {
+                        if let Ok(button) = buttons.get(pressed.event_target()) {
                             if let Ok(mut selector) = selectors.get_mut(button.selector) {
                                 selector.cycle_prev();
                             }
                         }
-                    }).id();
+                    });
 
-            let selector_entity = parent.spawn((
-                OptionSelector { options, selected },
+        parent.spawn((
                 Node {
-                    width: Val::Px(400.0),
+                    width: Val::Px(450.0),
                     height: Val::Px(50.0),
                     margin: UiRect::all(Val::Px(10.0)),
                     justify_content: JustifyContent::SpaceBetween,
@@ -68,42 +74,38 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
                 BackgroundColor(Color::srgb(0.2, 0.2, 0.25)),
                 BorderRadius::all(Val::Px(5.0)),
                 slot,
-                children![LabelBundle::button_label(label)]
-            )).id();
-
-            parent.commands().entity(selector_entity).with_child((
-                Text::new("Empty"),
-                TextFont { font_size: 24.0, ..default() },
-                TextColor(Color::WHITE),
-                SelectorText { selector_entity },
+                children![
+                LabelBundle::button_label(label),
+                (
+                    LabelBundle::button_label(""),
+                    SelectorText {
+                        selector_entity
+                    }
+                )]
             ));
 
 
-            parent.commands().entity(left_button).insert(SelectorButton{
+        parent.append_button(Color::srgb(0.2, 0.2, 0.25), Vec2::new(25.0, 25.0), ">")
+            .insert(SelectorButton{
                 selector: selector_entity,
-            });
-
-
-            parent.append_button(Color::srgb(0.2, 0.2, 0.25), Vec2::new(25.0, 25.0), ">")
-                .insert(SelectorButton{
-                    selector: selector_entity,
-                })
-                .observe(
-                |   pressed:On<ButtonPressed>,
-                    mut selectors: Query<&mut OptionSelector>,
-                    buttons: Query<&SelectorButton>
-                | {
-                    if let Ok(button) = buttons.get(pressed.event_target()) {
-                        if let Ok(mut selector) = selectors.get_mut(button.selector) {
-                            selector.cycle_next();
-                        }
+            })
+            .observe(
+            |   pressed:On<ButtonPressed>,
+                mut selectors: Query<&mut OptionSelector>,
+                buttons: Query<&SelectorButton>
+            | {
+                if let Ok(button) = buttons.get(pressed.event_target()) {
+                    if let Ok(mut selector) = selectors.get_mut(button.selector) {
+                        selector.cycle_next();
                     }
-                });
+                }
+            });
 
         });
 
         root
     }
+    
     fn append_dropdown(&mut self, options: Vec<UIOption>, selected: usize, slot: UINavSlot) -> EntityCommands<'_> {
 
         self.spawn((
@@ -147,9 +149,7 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
     fn append_slider(&mut self, min: f32, max: f32, current: f32, slot: UINavSlot) -> EntityCommands<'_> {
 
         self.spawn((
-            Slider {
-                track_click: TrackClick::Drag
-            },
+            Slider::default(),
             SliderRange::new(min, max),
             SliderValue(current),
             Node {

@@ -39,7 +39,8 @@ impl Plugin for GameCorePlugin {
                 setup_common,
                 print_available_resolutions
             ))
-            .insert_resource(UISelection::default());
+            .insert_resource(UISelection::default())
+            .insert_resource(GameConfig::default());
     }
 }
 
@@ -161,7 +162,7 @@ pub fn setup(
         BALL_RADIUS
     )).observe(handle_scoring);
 
-    AreaBundle::spawn(&game_config.area_shape, &mut commands);
+    AreaBundle::spawn(&game_config.area_shape, &mut commands, &mut meshes, &mut materials);
 
     const SEGMENT_HEIGHT: f32 = 20.0;
     const GAP_HEIGHT: f32 = 15.0;
@@ -172,19 +173,5 @@ pub fn setup(
         commands.spawn(DivisionLineBundle::new(&mut meshes, &mut materials))
             .insert(Transform::from_translation(Vec3::new(0.0, y_pos, 0.0)));
         y_pos += SEGMENT_HEIGHT + GAP_HEIGHT;
-    }
-}
-
-
-fn update_score_ui(
-    teams: Query<&Goal>,
-    mut game_config: ResMut<GameConfig>,
-    mut score_texts: Query<(&mut Text, &ScoreText)>,
-) {
-    for (mut text, score_text) in score_texts.iter_mut() {
-        game_config.area_shape.
-        if let Ok(team) = teams.get(score_text.) {
-            text.0 = team.current_score.to_string();
-        }
     }
 }

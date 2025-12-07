@@ -1,13 +1,16 @@
+use std::ops::Add;
 use crate::bundles::BallBundle;
 use crate::components::*;
 use crate::utils::screen::BALL_RADIUS;
 use avian2d::prelude::*;
 use bevy::prelude::*;
+use crate::components::ui::ScoreText;
+use crate::models::game::area::Team;
 use crate::resources::GameConfig;
 
 pub fn handle_scoring(
     collision: On<CollisionStart>,
-    goals: Query<(Entity, &Goal)>,
+    mut goals: Query<Entity, With<Goal>>,
     mut game_config: ResMut<GameConfig>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -18,18 +21,35 @@ pub fn handle_scoring(
 
     if let Ok(goal) = goals.get(other){
 
-        goal.paddles
-        goal.current_score += 1;
+        if let Some(team) = game_config.area_shape.get_team_mut(goal){
 
-        commands.entity(ball).despawn();
+            team.current_score += 1;
 
-        commands.spawn(BallBundle::new(
-            &mut meshes,
-            &mut materials,
-            Vec3::ZERO,
-            Vec2::new(-300.0, 300.0),
-            BALL_RADIUS
-        )).observe(handle_scoring);
+            commands.entity(ball).despawn();
 
+            commands.spawn(BallBundle::new(
+                &mut meshes,
+                &mut materials,
+                Vec3::ZERO,
+                Vec2::new(-300.0, 300.0),
+                BALL_RADIUS
+            )).observe(handle_scoring);
+
+        }
+    }
+}
+
+pub fn update_score_ui(
+    game_config: Res<GameConfig>,
+    mut score_texts: Query<(&mut Text, &ScoreText)>,
+) {
+    if !game_config.is_changed(){
+        return;
+    }
+
+    for (mut text, score_text) in score_texts.iter_mut() {
+        if let Some(team) = game_config.area_shape.get_team(score_text.goal){
+            text.0 = team.current_score.to_string();
+        }
     }
 }

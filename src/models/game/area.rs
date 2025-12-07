@@ -4,7 +4,7 @@ use avian2d::prelude::Collider;
 use bevy::prelude::Resource;
 use AreaShape::{Cuboid, Triangular, TwoSide};
 
-#[derive(Clone, Copy, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Eq, Hash, PartialEq, Debug)]
 pub enum AreaSide {
     Left,
     Right,
@@ -12,7 +12,7 @@ pub enum AreaSide {
     Bottom,
 }
 
-#[derive(Clone, Eq, Hash, PartialEq)]
+#[derive(Clone, Eq, Hash, PartialEq, Debug)]
 pub struct Team {
     pub name: String,
     pub current_score: u32,
@@ -21,12 +21,21 @@ pub struct Team {
     pub players: Vec<Player>,
 }
 
+impl Team {
+    pub fn get_positions(&self) -> Vec<Vec3> {
+
+        self.area_side.get_paddle_pos(self.players.len())
+
+    }
+
+}
+
 #[derive(Resource)]
 pub struct Players {
     pub players: Vec<Player>,
 }
 
-#[derive(Clone, Eq, Hash, PartialEq)]
+#[derive(Clone, Eq, Hash, PartialEq, Debug)]
 pub struct Player {
     pub name: String,
     pub entity: Option<Entity>,
@@ -37,7 +46,7 @@ pub enum ControlType{
     Gamepad(Entity),
 }
 
-#[derive(Clone, Eq, Hash, PartialEq)]
+#[derive(Clone, Eq, Hash, PartialEq, Debug)]
 pub enum AreaShape {
     TwoSide(Option<[Team; 2]>),
     Triangular(Option<[Team; 3]>),
@@ -53,7 +62,7 @@ impl AreaShape {
         for team in teams.iter(){
             if let Some(team_goal) = team.goal{
                 if team_goal == goal{
-                    return Some(&team);
+                    return Some(team);
                 }
             }
         }
@@ -122,7 +131,7 @@ impl AreaSide {
         }
     }
 
-    pub fn get_paddle_pos(self, player_count: u32) -> Vec<Vec3> {
+    pub fn get_paddle_pos(self, player_count: usize) -> Vec<Vec3> {
         if player_count == 0 {
             return Vec::new();
         }

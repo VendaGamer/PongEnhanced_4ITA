@@ -16,19 +16,6 @@ pub struct PaddleBundle {
 
 impl PaddleBundle {
 
-    pub fn spawn_team(
-        commands: &mut Commands,
-        meshes: &mut Assets<Mesh>,
-        materials: &mut Assets<ColorMaterial>,
-        position: Vec3,
-        size: Vec2,
-        goal: Entity
-    ){
-
-        commands.spawn_batch()
-
-    }
-
     pub fn new(
         meshes: &mut Assets<Mesh>,
         materials: &mut Assets<ColorMaterial>,

@@ -8,6 +8,15 @@ pub struct GameConfig {
     pub area_shape: AreaShape,
 }
 
+impl Default for GameConfig {
+    fn default() -> Self {
+        Self{
+            game_mode: GameMode::Blackout,
+            area_shape: AreaShape::TwoSide(None)
+        }
+    }
+}
+
 impl GameConfig {
 
     pub fn get_ball_speed(&self) -> f32 {
