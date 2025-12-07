@@ -177,11 +177,13 @@ pub fn setup(
 
 
 fn update_score_ui(
-    teams: Query<&Team>,
+    teams: Query<&Goal>,
+    mut game_config: ResMut<GameConfig>,
     mut score_texts: Query<(&mut Text, &ScoreText)>,
 ) {
     for (mut text, score_text) in score_texts.iter_mut() {
-        if let Ok(team) = teams.get(score_text.team) {
+        game_config.area_shape.
+        if let Ok(team) = teams.get(score_text.) {
             text.0 = team.current_score.to_string();
         }
     }
