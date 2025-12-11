@@ -2,7 +2,7 @@ use bevy::prelude::Component;
 use crate::bundles::{App, Entity, Vec2};
 
 #[derive(Component)]
-pub struct Ball{
+pub struct Ball {
     pub initial_velocity: Vec2
 }
 
@@ -14,6 +14,7 @@ pub trait GameModeRules: Send + Sync {
 }
 
 #[derive(Component, Copy, Clone)]
-pub struct Paddle{
-    pub goal: Entity
+pub struct Paddle {
+    pub goal: Entity,
+    pub player: Entity,
 }

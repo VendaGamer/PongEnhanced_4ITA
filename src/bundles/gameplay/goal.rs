@@ -1,7 +1,7 @@
-use crate::components::{Goal};
+use crate::components::Goal;
+use crate::models::game::area::Team;
 use avian2d::prelude::{Collider, RigidBody};
-use bevy::prelude::{Bundle, Entity, Transform};
-use crate::models::game::area::{AreaSide, Team};
+use bevy::prelude::{Bundle, Transform};
 
 #[derive(Bundle)]
 pub struct GoalBundle {

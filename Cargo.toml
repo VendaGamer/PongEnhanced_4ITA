@@ -8,3 +8,4 @@ bevy = { version = "0.17.3" , features = ["default", "bevy_dev_tools", "experime
 avian2d = "0.4.1"
 leafwing-input-manager = "0.19.0"
 derive_more = "2.1.0"
+erased-serde = "0.4.9"

@@ -6,13 +6,15 @@ use crate::models::game::area::AreaShape;
 pub struct GameConfig {
     pub game_mode: GameMode,
     pub area_shape: AreaShape,
+    pub win_score: u32,
 }
 
 impl Default for GameConfig {
     fn default() -> Self {
         Self{
-            game_mode: GameMode::Blackout,
-            area_shape: AreaShape::TwoSide(None)
+            game_mode: GameMode::Classic,
+            area_shape: AreaShape::TwoSide(None),
+            win_score: 10,
         }
     }
 }

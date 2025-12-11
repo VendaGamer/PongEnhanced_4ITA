@@ -1,8 +1,12 @@
 use crate::bundles::{default, Entity, Transform, Vec3};
 use crate::utils::{FIXED_DIMENSIONS, HALF_HEIGHT, HALF_WALL_THICKNESS, HALF_WIDTH, WALL_THICKNESS};
 use avian2d::prelude::Collider;
-use bevy::prelude::Resource;
+use bevy::prelude::{Color, Commands, Node, PositionType, Resource, Text, TextFont};
+use bevy::text::FontSmoothing;
+use bevy::ui::Val;
 use AreaShape::{Cuboid, Triangular, TwoSide};
+use crate::bundles::widgets::LabelBundle;
+use crate::components::ui::ScoreText;
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq, Debug)]
 pub enum AreaSide {
@@ -12,13 +16,62 @@ pub enum AreaSide {
     Bottom,
 }
 
+impl AreaSide{
+    pub fn opposite(self) -> AreaSide {
+        match self {
+            AreaSide::Left => AreaSide::Right,
+            AreaSide::Right => AreaSide::Left,
+            AreaSide::Top => AreaSide::Bottom,
+            AreaSide::Bottom => AreaSide::Top,
+        }
+    }
+
+    pub fn spawn_score_text(self, commands: &mut Commands, goal: Entity){
+        let position = match self {
+            AreaSide::Left => Vec3::new(-HALF_WIDTH / 2.0, 0.0, 0.0),
+            AreaSide::Right => Vec3::new(HALF_WIDTH / 2.0, 0.0, 0.0),
+            AreaSide::Top => Vec3::new(0.0, HALF_HEIGHT / 2.0, 0.0),
+            AreaSide::Bottom => Vec3::new(0.0, -HALF_HEIGHT / 2.0, 0.0),
+        };
+
+        let entity = commands.spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                left: Val::Px(position.x),
+                top: Val::Px(position.y),
+                ..default()
+            },
+            LabelBundle{
+                text: Text::new("0"),
+                color: Color::WHITE.into(),
+                font: TextFont {
+                    font_size: 80.0,
+                    font_smoothing: FontSmoothing::None,
+                    ..default()
+                }
+            },
+            ScoreText{
+                goal
+            }
+        ));
+    }
+
+    pub fn is_vertical(self) -> bool {
+        match self {
+            AreaSide::Left | AreaSide::Right => true,
+            AreaSide::Top | AreaSide::Bottom => false,
+        }
+    }
+}
+
+
 #[derive(Clone, Eq, Hash, PartialEq, Debug)]
 pub struct Team {
     pub name: String,
     pub current_score: u32,
     pub area_side: AreaSide,
     pub goal: Option<Entity>,
-    pub players: Vec<Player>,
+    pub players: Vec<PlayerInfo>,
 }
 
 impl Team {
@@ -30,15 +83,15 @@ impl Team {
 
 }
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct Players {
-    pub players: Vec<Player>,
+    pub players: Vec<PlayerInfo>,
 }
 
 #[derive(Clone, Eq, Hash, PartialEq, Debug)]
-pub struct Player {
+pub struct PlayerInfo {
     pub name: String,
-    pub entity: Option<Entity>,
+    pub entity: Entity,
 }
 
 pub enum ControlType{
@@ -55,6 +108,14 @@ pub enum AreaShape {
 
 impl AreaShape {
 
+
+    pub fn get_wall_sides(&self) -> &[AreaSide] {
+        match self {
+            TwoSide(_) => &[AreaSide::Top, AreaSide::Bottom],
+            Triangular(_) => &[],
+            Cuboid(_) => &[],
+        }
+    }
     pub fn get_team(&self, goal: Entity) -> Option<&Team> {
 
         let teams = self.get_teams();
@@ -136,7 +197,7 @@ impl AreaSide {
             return Vec::new();
         }
 
-        let mut positions = Vec::with_capacity(player_count as usize);
+        let mut positions = Vec::with_capacity(player_count);
 
         match self {
             AreaSide::Left | AreaSide::Right => {

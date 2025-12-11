@@ -1,13 +1,32 @@
+// --- ./systems/ui/menu.rs ---
 use crate::bundles::widgets::LabelBundle;
 use crate::components::ui::navigation::UINavSlot;
-use crate::components::ui::{Menu, MenuType};
+use crate::components::ui::{Menu, MenuType, OptionSelector};
 use crate::models::game::fullscreen::ScreenMode;
-use crate::models::ui::option::{UIOption, UIOptionValue};
+use crate::models::ui::option::{UIOption};
 use crate::systems::widgets::*;
 use bevy::prelude::*;
+use crate::bundles::area::AreaBundle;
+use crate::bundles::{BallBundle, DivisionLineBundle};
 use crate::events::ui::widgets::ButtonPressed;
-use crate::models::game::area::AreaShape;
+use crate::models::game::area::{AreaShape, Team, AreaSide, PlayerInfo};
 use crate::models::game::gameplay::GameMode;
+use crate::resources::GameConfig;
+use crate::systems::handle_scoring;
+use crate::utils::BALL_RADIUS;
+
+// Marker components for different selector types
+#[derive(Component)]
+pub struct PlayerCountSelector;
+
+#[derive(Component)]
+pub struct GameModeSelector;
+
+#[derive(Component)]
+pub struct ArenaShapeSelector;
+
+#[derive(Component)]
+pub struct WinScoreSelector;
 
 pub trait MenuSpawnCommandsExt {
     fn spawn_main_menu(&mut self) -> EntityCommands<'_>;
@@ -19,13 +38,11 @@ pub trait MenuSpawnCommandsExt {
 
 impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
     fn spawn_main_menu(&mut self) -> EntityCommands<'_> {
-
         let mut main_menu = self.spawn_menu_base(MenuType::MainMenu);
-        
-        
+
         main_menu.with_children(|parent| {
             parent.spawn(LabelBundle::game_title());
-            
+
             parent.spawn(
                 (
                     Node {
@@ -38,7 +55,6 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                     BackgroundColor::from(Color::srgb(0.1, 0.1, 0.1)),
                 )
             ).with_children(|parent|{
-
                 parent.append_menu_button(
                     Color::srgb(0.2, 0.6, 0.9),
                     "Offline Play",
@@ -61,74 +77,69 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                     "Exit",
                     UINavSlot::row(3)
                 ).observe(on_exit);
-
             });
-
         });
 
         main_menu
     }
 
     fn spawn_offline_menu(&mut self) -> EntityCommands<'_> {
-        let mut offline_menu =self.spawn_menu_base(MenuType::OfflinePlayMenu);
+        let mut offline_menu = self.spawn_menu_base(MenuType::OfflinePlayMenu);
 
         offline_menu.with_children(|parent| {
-            // Title
             parent.append_menu_title("Offline Play");
-            // Game options container
+
             parent.append_menu_section()
                 .with_children(|section| {
                     // Number of Players
                     section.append_selector(
                         vec![
-                            UIOption::new("2 Players", 2.into()),
-                            UIOption::new("3 Players", 3.into()),
-                            UIOption::new("4 Players", 4.into())],
+                            UIOption::new("2 Players", 2),
+                            UIOption::new("3 Players", 3),
+                            UIOption::new("4 Players", 4)],
                         0,
-                            UINavSlot::new(0, 0),
+                        UINavSlot::new(0, 0),
                         "Number of Players"
-                    );
+                    ).insert(PlayerCountSelector);
 
                     // Game Mode
                     section.append_selector(
                         vec![
-                            UIOption::new("Classic", GameMode::Classic.into()),
-                            UIOption::new("Modern", GameMode::Modern.into()),
-                            UIOption::new("Upside Down", GameMode::UpsideDown.into()),
-                            UIOption::new("Blackout", GameMode::Blackout.into()),
-                            UIOption::new("Twisted", GameMode::Twisted.into()),
+                            UIOption::new("Classic", GameMode::Classic),
+                            UIOption::new("Modern", GameMode::Modern),
+                            UIOption::new("Upside Down", GameMode::UpsideDown),
+                            UIOption::new("Blackout", GameMode::Blackout),
+                            UIOption::new("Twisted", GameMode::Twisted),
                         ],
                         0,
                         UINavSlot::new(1, 0),
                         "Game Mode",
-                    );
+                    ).insert(GameModeSelector);
 
                     // Arena Shape
                     section.append_selector(
                         vec![
-                            UIOption::new("Two Sides", AreaShape::TwoSide(None).into()),
-                            UIOption::new("Triangular", AreaShape::Triangular(None).into()),
-                            UIOption::new("Cuboid", AreaShape::Cuboid(None).into())
+                            UIOption::new("Two Sides", AreaShape::TwoSide(None)),
+                            UIOption::new("Triangular", AreaShape::Triangular(None)),
+                            UIOption::new("Cuboid", AreaShape::Cuboid(None))
                         ],
                         0,
                         UINavSlot::new(2, 0),
                         "Arena Shape"
-                    );
-
+                    ).insert(ArenaShapeSelector);
 
                     // Win Score
                     section.append_selector(
                         vec![
-                            UIOption::new("5 Points", 5.into()),
-                            UIOption::new("10 Points", 10.into()),
-                            UIOption::new("15 Points", 15.into()),
-                            UIOption::new("20 Points", 20.into()),
+                            UIOption::new("5 Points", 5),
+                            UIOption::new("10 Points", 10),
+                            UIOption::new("15 Points", 15),
+                            UIOption::new("20 Points", 20),
                         ],
                         0,
                         UINavSlot::new(3, 0),
                         "Win Score"
-                    );
-
+                    ).insert(WinScoreSelector);
                 });
 
             parent.spawn(Node {
@@ -158,7 +169,6 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
         let mut online_menu = self.spawn_menu_base(MenuType::OnlinePlayMenu);
 
         online_menu.with_children(|parent| {
-            // Title
             parent.spawn((
                 Node {
                     margin: UiRect::bottom(Val::Px(40.0)),
@@ -172,7 +182,6 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                 TextColor(Color::srgb(0.9, 0.9, 1.0)),
             ));
 
-            // Online options container
             parent.append_menu_section()
                 .with_children(|section| {
                     section.append_menu_button(
@@ -200,7 +209,6 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                     ).observe(on_friends_list);
                 });
 
-            // Back button
             parent.append_menu_button(
                 Color::srgb(0.6, 0.6, 0.6),
                 "Back",
@@ -214,15 +222,11 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
     fn spawn_settings_menu(&mut self) -> EntityCommands<'_> {
         let mut settings_menu = self.spawn_menu_base(MenuType::SettingsMenu);
 
-
         settings_menu.with_children(|parent| {
-
             parent.append_menu_title("SETTINGS");
 
-            // Settings sections container
             parent.append_menu_section()
                 .with_children(|section| {
-                    // Audio Section Header
                     section.spawn((
                         Node {
                             margin: UiRect::bottom(Val::Px(20.0)),
@@ -236,14 +240,9 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                         TextColor(Color::srgb(0.8, 0.8, 0.9)),
                     ));
 
-                    // Master Volume selector
                     section.append_slider(0.0, 100.0, 0.0, UINavSlot::row(0));
-
-
-                    // SFX Volume selector
                     section.append_slider(0.0, 100.0, 0.0, UINavSlot::row(1));
 
-                    // Graphics Section Header
                     section.spawn((
                         Node {
                             margin: UiRect::vertical(Val::Px(20.0)),
@@ -257,10 +256,9 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                         TextColor(Color::srgb(0.8, 0.8, 0.9)),
                     ));
 
-
                     section.append_selector(
                         vec![
-                            UIOption::new("Handle later", UIOptionValue::Integer(0)),
+                            UIOption::new("Handle later", 0),
                         ],
                         0,
                         UINavSlot::new(2, 0),
@@ -269,9 +267,9 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
 
                     section.append_selector(
                         vec![
-                            UIOption::new("Exclusive FullScreen", ScreenMode::ExclusiveFullScreen.into()),
-                            UIOption::new("FullScreen", ScreenMode::FullScreen.into()),
-                            UIOption::new("Windowed", ScreenMode::Windowed.into()),
+                            UIOption::new("Exclusive FullScreen", ScreenMode::ExclusiveFullScreen),
+                            UIOption::new("FullScreen", ScreenMode::FullScreen),
+                            UIOption::new("Windowed", ScreenMode::Windowed),
                         ],
                         0,
                         UINavSlot::new(3, 0),
@@ -279,7 +277,6 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                     );
                 });
 
-            // Back button
             parent.append_menu_button(
                 Color::srgb(0.6, 0.6, 0.6),
                 "Back",
@@ -291,7 +288,6 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
     }
 
     fn spawn_menu_base(&mut self, menu_type: MenuType) -> EntityCommands<'_> {
-
         self.spawn((
             Menu::new(menu_type),
             Node {
@@ -304,10 +300,33 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
             },
             BackgroundColor(Color::srgb(0.05, 0.05, 0.1))
         ))
-
     }
 }
 
+// System to sync selector changes to GameConfig
+pub fn sync_selectors_to_config(
+    player_count: Query<&OptionSelector, (With<PlayerCountSelector>, Changed<OptionSelector>)>,
+    game_mode: Query<&OptionSelector, (With<GameModeSelector>, Changed<OptionSelector>)>,
+    arena_shape: Query<&OptionSelector, (With<ArenaShapeSelector>, Changed<OptionSelector>)>,
+    win_score: Query<&OptionSelector, (With<WinScoreSelector>, Changed<OptionSelector>)>,
+    mut game_config: ResMut<GameConfig>,
+) {
+    // Update game mode
+    if let Ok(selector) = game_mode.single() {
+        if let Some(mode) = selector.options[selector.selected].get_value::<GameMode>() {
+            game_config.game_mode = *mode;
+        }
+    }
+
+    // Update arena shape
+    if let Ok(selector) = arena_shape.single() {
+        if let Some(shape) = selector.options[selector.selected].get_value::<AreaShape>() {
+            game_config.area_shape = shape.clone();
+        }
+    }
+}
+
+// Observer callbacks
 fn on_quick_match(_press: On<ButtonPressed>) {
     println!("Searching for quick match...");
 }
@@ -323,7 +342,6 @@ fn on_join_room(_press: On<ButtonPressed>) {
 fn on_friends_list(_press: On<ButtonPressed>) {
     println!("Opening friends list...");
 }
-
 
 fn on_offline(
     _press: On<ButtonPressed>,
@@ -355,7 +373,7 @@ fn on_settings(
     commands.spawn_settings_menu();
 }
 
-fn on_exit(press: On<ButtonPressed>, mut exit: MessageWriter<AppExit>){
+fn on_exit(_press: On<ButtonPressed>, mut exit: MessageWriter<AppExit>) {
     exit.write(AppExit::Success);
 }
 
@@ -369,49 +387,167 @@ fn on_settings_back(
     commands.spawn_main_menu();
 }
 
-#[inline]
-fn handle_exit_button(
-    _press: On<ButtonPressed>,
-    commands: Commands,
-    query: Query<(Entity, &Menu)>,
-) {
-    handle_current_menu_exit(commands, query);
-}
-
-
-pub fn handle_current_menu_exit(
-    mut commands: Commands,
-    query: Query<(Entity, &Menu)>,
-){
-    if let Ok(menu) = query.single() {
-
-        commands.entity(menu.0).despawn();
-
-        match menu.1.menu_type {
-            MenuType::MainMenu => {
-
-            }
-            _ =>{
-
-            }
-        }
-
-
-    }
-}
-
 fn on_start_offline_game(
     _press: On<ButtonPressed>,
     mut commands: Commands,
-){
+    offline_menu: Query<Entity, With<Menu>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut game_config: ResMut<GameConfig>,
+    player_count_selector: Query<&OptionSelector, With<PlayerCountSelector>>,
+    players: Query<Entity, With<crate::components::Player>>,
+) {
+    // Get player count from selector
+    let player_count = if let Ok(selector) = player_count_selector.single() {
+        *selector.options[selector.selected].get_value::<i32>().unwrap_or(&2) as usize
+    } else {
+        2
+    };
 
+    // Collect player entities
+    let player_entities: Vec<Entity> = players.iter().take(player_count).collect();
+
+    match game_config.area_shape {
+        AreaShape::TwoSide(_) => {
+            let players_per_team = player_count / 2;
+            let team1_players: Vec<PlayerInfo> = player_entities
+                .iter()
+                .take(players_per_team)
+                .enumerate()
+                .map(|(i, &entity)| PlayerInfo {
+                    name: format!("Player {}", i + 1),
+                    entity,
+                })
+                .collect();
+
+            let team2_players: Vec<PlayerInfo> = player_entities
+                .iter()
+                .skip(players_per_team)
+                .enumerate()
+                .map(|(i, &entity)| PlayerInfo {
+                    name: format!("Player {}", i + players_per_team + 1),
+                    entity,
+                })
+                .collect();
+
+            game_config.area_shape = AreaShape::TwoSide(Some([
+                Team {
+                    name: "Left Team".to_string(),
+                    current_score: 0,
+                    area_side: AreaSide::Left,
+                    goal: None,
+                    players: team1_players,
+                },
+                Team {
+                    name: "Right Team".to_string(),
+                    current_score: 0,
+                    area_side: AreaSide::Right,
+                    goal: None,
+                    players: team2_players,
+                },
+            ]));
+        }
+        AreaShape::Triangular(_) => {
+            let players_per_team = player_count / 3;
+            let mut teams = Vec::new();
+            let sides = [AreaSide::Left, AreaSide::Top, AreaSide::Right];
+
+            for (team_idx, &side) in sides.iter().enumerate() {
+                let team_players: Vec<PlayerInfo> = player_entities
+                    .iter()
+                    .skip(team_idx * players_per_team)
+                    .take(players_per_team)
+                    .enumerate()
+                    .map(|(i, &entity)| PlayerInfo {
+                        name: format!("Player {}", team_idx * players_per_team + i + 1),
+                        entity,
+                    })
+                    .collect();
+
+                teams.push(Team {
+                    name: format!("Team {}", team_idx + 1),
+                    current_score: 0,
+                    area_side: side,
+                    goal: None,
+                    players: team_players,
+                });
+            }
+
+            game_config.area_shape = AreaShape::Triangular(Some([
+                teams[0].clone(),
+                teams[1].clone(),
+                teams[2].clone(),
+            ]));
+        }
+        AreaShape::Cuboid(_) => {
+            let players_per_team = player_count / 4;
+            let mut teams = Vec::new();
+            let sides = [AreaSide::Left, AreaSide::Top, AreaSide::Right, AreaSide::Bottom];
+
+            for (team_idx, &side) in sides.iter().enumerate() {
+                let team_players: Vec<crate::models::game::area::PlayerInfo> = player_entities
+                    .iter()
+                    .skip(team_idx * players_per_team)
+                    .take(players_per_team)
+                    .enumerate()
+                    .map(|(i, &entity)| crate::models::game::area::PlayerInfo {
+                        name: format!("Player {}", team_idx * players_per_team + i + 1),
+                        entity,
+                    })
+                    .collect();
+
+                teams.push(Team {
+                    name: format!("Team {}", team_idx + 1),
+                    current_score: 0,
+                    area_side: side,
+                    goal: None,
+                    players: team_players,
+                });
+            }
+
+            game_config.area_shape = AreaShape::Cuboid(Some([
+                teams[0].clone(),
+                teams[1].clone(),
+                teams[2].clone(),
+                teams[3].clone(),
+            ]));
+        }
+    }
+
+    // Despawn menu
+    let entity = offline_menu.single().expect("Offline menu doesn't exist");
+    commands.entity(entity).despawn();
+
+    commands.entity(offline_menu.single().expect("No menu")).despawn();
+
+
+    commands.spawn(BallBundle::new(
+        &mut meshes,
+        &mut materials,
+        Vec3::ZERO,
+        Vec2::new(-300.0, 300.0),
+        BALL_RADIUS
+    )).observe(handle_scoring);
+
+    AreaBundle::spawn(&mut game_config.area_shape, &mut commands, &mut meshes, &mut materials);
+
+    const SEGMENT_HEIGHT: f32 = 20.0;
+    const GAP_HEIGHT: f32 = 15.0;
+    const HALF_HEIGHT: f32 = 360.0;
+
+    let mut y_pos = -HALF_HEIGHT + SEGMENT_HEIGHT / 2.0;
+    while y_pos < HALF_HEIGHT {
+        commands.spawn(DivisionLineBundle::new(&mut meshes, &mut materials))
+            .insert(Transform::from_translation(Vec3::new(0.0, y_pos, 0.0)));
+        y_pos += SEGMENT_HEIGHT + GAP_HEIGHT;
+    }
 }
 
 fn on_menu_to_main(
     _press: On<ButtonPressed>,
     mut commands: Commands,
     current_menu: Query<Entity, With<Menu>>,
-){
+) {
     let entity = current_menu.single().expect("Menu doesn't exist");
     commands.entity(entity).despawn();
     commands.spawn_main_menu();

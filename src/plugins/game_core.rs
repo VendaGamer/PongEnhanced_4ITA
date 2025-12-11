@@ -1,19 +1,15 @@
-use crate::bundles::area::AreaBundle;
 use crate::bundles::player::PlayerBundle;
 use crate::bundles::*;
-use crate::components::ui::{Menu, ScoreText};
-use crate::components::*;
+use crate::models::game::area::{PlayerInfo, Players};
 use crate::resources::controls::MenuAction;
 use crate::resources::navigation::UISelection;
+use crate::resources::GameConfig;
+use crate::systems::menu::MenuSpawnCommandsExt;
 use crate::systems::navigation::{sync_selection_to_ui, ui_navigation};
 use crate::systems::selectors::{handle_selector_navigation, update_selector_text};
 use crate::systems::*;
-use crate::utils::screen::BALL_RADIUS;
 use crate::utils::FIXED_DIMENSIONS;
 use bevy::window::{Monitor, WindowResized};
-use crate::models::game::area::{AreaShape, Team};
-use crate::resources::GameConfig;
-use crate::systems::menu::MenuSpawnCommandsExt;
 
 pub struct GameCorePlugin;
 
@@ -40,7 +36,8 @@ impl Plugin for GameCorePlugin {
                 print_available_resolutions
             ))
             .insert_resource(UISelection::default())
-            .insert_resource(GameConfig::default());
+            .insert_resource(GameConfig::default())
+            .insert_resource(Players::default());
     }
 }
 
@@ -61,41 +58,18 @@ fn handle_ui_scaling(
 
 fn setup_common(
     mut commands: Commands,
+    mut players: ResMut<Players>,
 ) {
     commands.spawn(CameraBundle::default());
 
-    commands.spawn(PlayerBundle::new(
-        Player {
-            id: 1,
-            team: None,
-            name: "Player 1".into(),
-        }
-    ));
-
-    commands.spawn(PlayerBundle::new(
-        Player {
-            id: 2,
-            team: None,
-            name: "Player 2".into(),
-        }
-    ));
-
-    commands.spawn(PlayerBundle::new(
-        Player {
-            id: 3,
-            team: None,
-            name: "Player 3".into(),
-        }
-    ));
-
-    commands.spawn(PlayerBundle::new(
-        Player {
-            id: 4,
-            team: None,
-            name: "Player 4".into(),
-        }
-    ));
-
+    for i in 0..4{
+        let entity = commands.spawn(PlayerBundle::new(i)).id();
+        let info = PlayerInfo{
+            entity,
+            name: format!("Player {}", i + 1),
+        };
+        players.players.push(info);
+    }
 
     commands.spawn(MenuAction::input_map());
     commands.spawn_main_menu();
@@ -140,38 +114,5 @@ fn print_available_resolutions(
         }
 
         dbg!("Total video modes: {}", monitor.video_modes.len());
-    }
-}
-
-pub fn setup(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-    menu: Query<Entity, With<Menu>>,
-    game_config: Res<GameConfig>,
-) {
-
-    commands.entity(menu.single().expect("No menu")).despawn();
-
-    
-    commands.spawn(BallBundle::new(
-        &mut meshes,
-        &mut materials,
-        Vec3::ZERO,
-        Vec2::new(-300.0, 300.0),
-        BALL_RADIUS
-    )).observe(handle_scoring);
-
-    AreaBundle::spawn(&game_config.area_shape, &mut commands, &mut meshes, &mut materials);
-
-    const SEGMENT_HEIGHT: f32 = 20.0;
-    const GAP_HEIGHT: f32 = 15.0;
-    const HALF_HEIGHT: f32 = 360.0;
-
-    let mut y_pos = -HALF_HEIGHT + SEGMENT_HEIGHT / 2.0;
-    while y_pos < HALF_HEIGHT {
-        commands.spawn(DivisionLineBundle::new(&mut meshes, &mut materials))
-            .insert(Transform::from_translation(Vec3::new(0.0, y_pos, 0.0)));
-        y_pos += SEGMENT_HEIGHT + GAP_HEIGHT;
     }
 }

@@ -1,16 +1,14 @@
-use std::ops::Add;
 use crate::bundles::BallBundle;
+use crate::components::ui::ScoreText;
 use crate::components::*;
+use crate::resources::GameConfig;
 use crate::utils::screen::BALL_RADIUS;
 use avian2d::prelude::*;
 use bevy::prelude::*;
-use crate::components::ui::ScoreText;
-use crate::models::game::area::Team;
-use crate::resources::GameConfig;
 
 pub fn handle_scoring(
     collision: On<CollisionStart>,
-    mut goals: Query<Entity, With<Goal>>,
+    goals: Query<&Goal>,
     mut game_config: ResMut<GameConfig>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -19,9 +17,8 @@ pub fn handle_scoring(
     let ball = collision.collider1;
     let other = collision.collider2;
 
-    if let Ok(goal) = goals.get(other){
-
-        if let Some(team) = game_config.area_shape.get_team_mut(goal){
+    if goals.contains(other){
+        if let Some(team) = game_config.area_shape.get_team_mut(other){
 
             team.current_score += 1;
 

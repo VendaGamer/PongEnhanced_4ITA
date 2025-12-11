@@ -6,13 +6,12 @@ use crate::components::Goal;
 #[derive(Component)]
 pub struct Player {
     pub id: u8,
-    pub team: Option<Goal>,
-    pub name: String,
+    pub bindings: InputMap<PlayerAction>,
 }
 
 impl Player{
-    pub fn get_default_input_map(player : &Self) -> InputMap<PlayerAction> {
-        match player.id {
+    pub fn get_default_input_map(id: u8) -> InputMap<PlayerAction> {
+        match id {
             1 => InputMap::new([
                 (PlayerAction::Up, KeyCode::KeyW),
                 (PlayerAction::Down, KeyCode::KeyS),

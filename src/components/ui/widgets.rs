@@ -1,10 +1,10 @@
 use crate::models::ui::option::UIOption;
 use bevy::prelude::*;
-use std::hash::Hash;
+use std::marker::PhantomData;
+use bevy::reflect::{Enum, Reflect};
 
 #[derive(Component)]
-pub struct Dropdown
-{
+pub struct Dropdown {
     pub options: Vec<UIOption>,
     pub selected: usize,
 }
@@ -13,14 +13,6 @@ pub struct Dropdown
 #[require(Button)]
 pub struct SelectorButton {
     pub selector: Entity
-}
-
-pub trait SelectorResource {
-    
-}
-
-pub trait UpdateSelectorResource {
-    fn update_selector_res<T : Resource>();
 }
 
 #[derive(Component)]

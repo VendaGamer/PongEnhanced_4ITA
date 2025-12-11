@@ -8,9 +8,9 @@ const GAME_TITLE: &'static str = "PONG ENHANCED";
 
 #[derive(Bundle)]
 pub struct LabelBundle {
-    text: Text,
-    font: TextFont,
-    color: TextColor,
+    pub(crate) text: Text,
+    pub(crate) font: TextFont,
+    pub(crate) color: TextColor,
 }
 pub type MainMenuLabel = (Node, SpawnRelatedBundle<ChildOf, Spawn<LabelBundle>>);
 pub type StatusLabel = (Node, BackgroundColor, BorderRadius, SpawnRelatedBundle<ChildOf, (Spawn<Text>, Spawn<TextFont>, Spawn<TextColor>)>);

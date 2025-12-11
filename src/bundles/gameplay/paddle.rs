@@ -21,11 +21,13 @@ impl PaddleBundle {
         materials: &mut Assets<ColorMaterial>,
         position: Vec3,
         size: Vec2,
-        goal: Entity
+        goal: Entity,
+        player: Entity
     ) -> Self {
         Self {
             paddle: Paddle{
-                goal
+                goal,
+                player
             },
             mesh: Mesh2d(meshes.add(Rectangle::new(size.x, size.y))),
             material: MeshMaterial2d(materials.add(Color::WHITE)),

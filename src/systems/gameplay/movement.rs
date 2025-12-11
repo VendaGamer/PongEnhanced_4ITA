@@ -3,6 +3,7 @@ use avian2d::prelude::*;
 use leafwing_input_manager::prelude::*;
 use crate::components::*;
 use crate::resources::controls::*;
+use crate::utils::FIXED_DIMENSIONS;
 use crate::utils::screen::PADDLE_SIZE;
 
 const BALL_SPEED: f32 = 600.0;
@@ -19,11 +20,19 @@ pub fn move_paddle(
                 move_amount *= 2.0;
             }
 
-            if action_state.pressed(&PlayerAction::Up) {
+            if action_state.pressed(&PlayerAction::Up){
                 paddle_transform.translation.y += move_amount;
+
+                if(paddle_transform.translation.y <= PADDLE_SIZE.y / 2.0){
+                    paddle_transform.translation.y = PADDLE_SIZE.y / 2.0;
+                }
             }
             if action_state.pressed(&PlayerAction::Down) {
                 paddle_transform.translation.y -= move_amount;
+
+                if(paddle_transform.translation.y >= FIXED_DIMENSIONS.y - PADDLE_SIZE.y / 2.0){
+                    paddle_transform.translation.y = FIXED_DIMENSIONS.y - PADDLE_SIZE.y / 2.0;
+                }
             }
         }
     }
