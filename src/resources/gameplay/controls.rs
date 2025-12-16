@@ -44,8 +44,7 @@ impl MenuAction{
             MenuAction::Navigate,
             VirtualDPad::arrow_keys(),
         );
-
-
+        
         map.insert_dual_axis(
             MenuAction::Navigate,
             GamepadStick::LEFT,
@@ -54,7 +53,6 @@ impl MenuAction{
             MenuAction::Navigate, 
             VirtualDPad::dpad(),
         );
-
 
         map
     }

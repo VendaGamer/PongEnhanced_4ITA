@@ -1,4 +1,3 @@
-// --- ./systems/ui/menu.rs ---
 use crate::bundles::widgets::LabelBundle;
 use crate::components::ui::navigation::UINavSlot;
 use crate::components::ui::{Menu, MenuType, OptionSelector};
@@ -14,19 +13,6 @@ use crate::models::game::gameplay::GameMode;
 use crate::resources::GameConfig;
 use crate::systems::handle_scoring;
 use crate::utils::BALL_RADIUS;
-
-// Marker components for different selector types
-#[derive(Component)]
-pub struct PlayerCountSelector;
-
-#[derive(Component)]
-pub struct GameModeSelector;
-
-#[derive(Component)]
-pub struct ArenaShapeSelector;
-
-#[derive(Component)]
-pub struct WinScoreSelector;
 
 pub trait MenuSpawnCommandsExt {
     fn spawn_main_menu(&mut self) -> EntityCommands<'_>;
@@ -100,7 +86,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                         0,
                         UINavSlot::new(0, 0),
                         "Number of Players"
-                    ).insert(PlayerCountSelector);
+                    );
 
                     // Game Mode
                     section.append_selector(
@@ -114,7 +100,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                         0,
                         UINavSlot::new(1, 0),
                         "Game Mode",
-                    ).insert(GameModeSelector);
+                    );
 
                     // Arena Shape
                     section.append_selector(
@@ -126,7 +112,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                         0,
                         UINavSlot::new(2, 0),
                         "Arena Shape"
-                    ).insert(ArenaShapeSelector);
+                    );
 
                     // Win Score
                     section.append_selector(
@@ -139,7 +125,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                         0,
                         UINavSlot::new(3, 0),
                         "Win Score"
-                    ).insert(WinScoreSelector);
+                    );
                 });
 
             parent.spawn(Node {
@@ -303,29 +289,6 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
     }
 }
 
-// System to sync selector changes to GameConfig
-pub fn sync_selectors_to_config(
-    player_count: Query<&OptionSelector, (With<PlayerCountSelector>, Changed<OptionSelector>)>,
-    game_mode: Query<&OptionSelector, (With<GameModeSelector>, Changed<OptionSelector>)>,
-    arena_shape: Query<&OptionSelector, (With<ArenaShapeSelector>, Changed<OptionSelector>)>,
-    win_score: Query<&OptionSelector, (With<WinScoreSelector>, Changed<OptionSelector>)>,
-    mut game_config: ResMut<GameConfig>,
-) {
-    // Update game mode
-    if let Ok(selector) = game_mode.single() {
-        if let Some(mode) = selector.options[selector.selected].get_value::<GameMode>() {
-            game_config.game_mode = *mode;
-        }
-    }
-
-    // Update arena shape
-    if let Ok(selector) = arena_shape.single() {
-        if let Some(shape) = selector.options[selector.selected].get_value::<AreaShape>() {
-            game_config.area_shape = shape.clone();
-        }
-    }
-}
-
 // Observer callbacks
 fn on_quick_match(_press: On<ButtonPressed>) {
     println!("Searching for quick match...");
@@ -394,7 +357,7 @@ fn on_start_offline_game(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut game_config: ResMut<GameConfig>,
-    player_count_selector: Query<&OptionSelector, With<PlayerCountSelector>>,
+    player_count_selector: Query<&OptionSelector>,
     players: Query<Entity, With<crate::components::Player>>,
 ) {
     // Get player count from selector
@@ -435,14 +398,12 @@ fn on_start_offline_game(
                     name: "Left Team".to_string(),
                     current_score: 0,
                     area_side: AreaSide::Left,
-                    goal: None,
                     players: team1_players,
                 },
                 Team {
                     name: "Right Team".to_string(),
                     current_score: 0,
                     area_side: AreaSide::Right,
-                    goal: None,
                     players: team2_players,
                 },
             ]));
@@ -468,7 +429,6 @@ fn on_start_offline_game(
                     name: format!("Team {}", team_idx + 1),
                     current_score: 0,
                     area_side: side,
-                    goal: None,
                     players: team_players,
                 });
             }
@@ -500,7 +460,6 @@ fn on_start_offline_game(
                     name: format!("Team {}", team_idx + 1),
                     current_score: 0,
                     area_side: side,
-                    goal: None,
                     players: team_players,
                 });
             }

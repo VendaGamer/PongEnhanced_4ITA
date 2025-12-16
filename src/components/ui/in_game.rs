@@ -1,7 +1,7 @@
-use crate::bundles::{Component, Entity};
-use crate::components::Goal;
+use crate::bundles::Component;
+use crate::models::game::area::AreaSide;
 
 #[derive(Component)]
 pub struct ScoreText {
-    pub goal: Entity,
+    pub area_side: AreaSide,
 }

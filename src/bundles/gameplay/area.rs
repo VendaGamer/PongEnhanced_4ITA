@@ -1,12 +1,11 @@
 use crate::bundles::paddle::PaddleBundle;
+use crate::bundles::wall::WallBundle;
 use crate::bundles::GoalBundle;
 use crate::components::area::Area;
-use crate::models::game::area::{AreaShape, AreaSide};
+use crate::models::game::area::AreaShape;
 use crate::utils::screen::TRANSFORM_ZERO;
 use crate::utils::PADDLE_SIZE;
 use bevy::prelude::*;
-use crate::bundles::wall::WallBundle;
-use crate::components::ui::ScoreText;
 
 #[derive(Bundle)]
 pub struct AreaBundle {
@@ -27,14 +26,13 @@ impl AreaBundle {
         for team in teams {
             let goal = commands.spawn(GoalBundle::new(team)).id();
             let positions = team.get_positions();
-            team.goal = Some(goal);
 
             for i in 0..team.players.len() {
                 commands.spawn(PaddleBundle::new(meshes, materials, positions[i],
                                                  PADDLE_SIZE, goal, team.players[i].entity));
             }
             
-            team.area_side.spawn_score_text(commands, goal);
+            team.area_side.spawn_score_text(commands);
         }
 
         let walls = area_shape.get_wall_sides();

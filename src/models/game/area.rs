@@ -26,7 +26,7 @@ impl AreaSide{
         }
     }
 
-    pub fn spawn_score_text(self, commands: &mut Commands, goal: Entity){
+    pub fn spawn_score_text(self, commands: &mut Commands){
         let position = match self {
             AreaSide::Left => Vec3::new(-HALF_WIDTH / 2.0, 0.0, 0.0),
             AreaSide::Right => Vec3::new(HALF_WIDTH / 2.0, 0.0, 0.0),
@@ -51,7 +51,7 @@ impl AreaSide{
                 }
             },
             ScoreText{
-                goal
+                area_side: self,
             }
         ));
     }
@@ -70,7 +70,6 @@ pub struct Team {
     pub name: String,
     pub current_score: u32,
     pub area_side: AreaSide,
-    pub goal: Option<Entity>,
     pub players: Vec<PlayerInfo>,
 }
 
@@ -116,30 +115,26 @@ impl AreaShape {
             Cuboid(_) => &[],
         }
     }
-    pub fn get_team(&self, goal: Entity) -> Option<&Team> {
+    pub fn get_team(&mut self, side: AreaSide) -> Option<&Team> {
 
         let teams = self.get_teams();
 
         for team in teams.iter(){
-            if let Some(team_goal) = team.goal{
-                if team_goal == goal{
-                    return Some(team);
-                }
+            if side == team.area_side {
+                return Some(team);
             }
         }
         None
 
     }
 
-    pub fn get_team_mut(&mut self, goal: Entity) -> Option<&mut Team> {
+    pub fn get_team_mut(&mut self, side: AreaSide) -> Option<&mut Team> {
 
         let teams = self.get_teams_mut();
 
         for team in teams.iter_mut(){
-            if let Some(team_goal) = team.goal{
-                if team_goal == goal{
-                    return Some(team);
-                }
+            if side == team.area_side {
+                return Some(team);
             }
         }
         None
