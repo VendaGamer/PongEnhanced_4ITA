@@ -6,6 +6,7 @@ mod plugins;
 mod utils;
 mod events;
 mod models;
+mod traits;
 
 use crate::plugins::GameCorePlugin;
 use crate::resources::controls::PlayerAction;
@@ -14,6 +15,8 @@ use crate::utils::DEFAULT_FONT;
 use avian2d::prelude::*;
 use bevy::asset::AssetContainer;
 use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig};
+use bevy::input_focus::InputDispatchPlugin;
+use bevy::input_focus::tab_navigation::TabNavigationPlugin;
 use bevy::prelude::*;
 use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
 use bevy::render::RenderPlugin;
@@ -63,7 +66,8 @@ fn main() {
             },
             InputManagerPlugin::<PlayerAction>::default(),
             InputManagerPlugin::<MenuAction>::default(),
-            UiWidgetsPlugins
+            UiWidgetsPlugins,
+            InputDispatchPlugin,
         ));
 
     let world = app.world_mut();

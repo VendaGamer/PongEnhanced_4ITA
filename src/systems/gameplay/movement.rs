@@ -14,25 +14,19 @@ pub fn move_paddle(
     mut paddle_query: Query<(&mut Transform, &Paddle)>,
 ) {
     for (mut paddle_transform, paddle) in paddle_query.iter_mut() {
-        if let Ok(action_state) = player_query.get(paddle.goal) {
+        if let Ok(action_state) = player_query.get(paddle.player) {
             let mut move_amount = time.delta_secs() * 400.0;
+            
             if action_state.pressed(&PlayerAction::Speedup) {
                 move_amount *= 2.0;
             }
 
             if action_state.pressed(&PlayerAction::Up){
                 paddle_transform.translation.y += move_amount;
-
-                if(paddle_transform.translation.y <= PADDLE_SIZE.y / 2.0){
-                    paddle_transform.translation.y = PADDLE_SIZE.y / 2.0;
-                }
             }
+            
             if action_state.pressed(&PlayerAction::Down) {
                 paddle_transform.translation.y -= move_amount;
-
-                if(paddle_transform.translation.y >= FIXED_DIMENSIONS.y - PADDLE_SIZE.y / 2.0){
-                    paddle_transform.translation.y = FIXED_DIMENSIONS.y - PADDLE_SIZE.y / 2.0;
-                }
             }
         }
     }

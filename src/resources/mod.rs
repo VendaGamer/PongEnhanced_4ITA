@@ -1,5 +1,5 @@
-pub mod gameplay;
+pub mod game;
 pub mod ui;
 
-pub use gameplay::*;
+pub use game::*;
 pub use ui::*;

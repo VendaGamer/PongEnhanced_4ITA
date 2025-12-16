@@ -137,8 +137,8 @@ impl AreaShape {
                 return Some(team);
             }
         }
+        
         None
-
     }
 
     pub fn get_teams(&self) -> &[Team] {

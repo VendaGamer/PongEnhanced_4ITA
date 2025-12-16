@@ -2,14 +2,15 @@ use crate::bundles::player::PlayerBundle;
 use crate::bundles::*;
 use crate::models::game::area::{PlayerInfo, Players};
 use crate::resources::controls::MenuAction;
-use crate::resources::navigation::UISelection;
+use crate::resources::navigation::{NavigationState, UISelection};
 use crate::resources::GameConfig;
 use crate::systems::menu::MenuSpawnCommandsExt;
-use crate::systems::navigation::{sync_selection_to_ui, ui_navigation};
+use crate::systems::navigation::{sync_selection_to_ui, ui_navigation, update_slider_visuals};
 use crate::systems::selectors::{handle_selector_navigation, update_selector_text};
 use crate::systems::*;
 use crate::utils::FIXED_DIMENSIONS;
 use bevy::window::{Monitor, WindowResized};
+use crate::systems::widgets::update_slider_style;
 
 pub struct GameCorePlugin;
 
@@ -28,7 +29,8 @@ impl Plugin for GameCorePlugin {
                 sync_selection_to_ui,
                 update_selector_text,
                 handle_selector_navigation,
-                handle_ui_scaling
+                handle_ui_scaling,
+                update_slider_style
             ))
             .add_systems(Startup, (
                 //setup,
@@ -37,7 +39,8 @@ impl Plugin for GameCorePlugin {
             ))
             .insert_resource(UISelection::default())
             .insert_resource(GameConfig::default())
-            .insert_resource(Players::default());
+            .insert_resource(Players::default())
+            .insert_resource(NavigationState::default());
     }
 }
 
@@ -79,40 +82,6 @@ fn print_available_resolutions(
     mut monitors: Query<(Entity, &mut Monitor)>,
 ) {
     for (entity, mut monitor) in monitors.iter_mut() {
-        println!("\n=== Monitor Entity: {:?} ===", entity);
-
-        if let Some(name) = &monitor.name {
-            dbg!("Name: {}", name);
-        } else {
-            dbg!("Name: <unnamed>");
-        }
-
-        dbg!("Physical size: {}x{} px",
-             monitor.physical_width,
-             monitor.physical_height
-        );
-
-        dbg!("Position: ({}, {})",
-             monitor.physical_position.x,
-             monitor.physical_position.y
-        );
-
-        monitor.scale_factor = 2.0;
-
-        dbg!("Scale factor: {}", monitor.scale_factor);
-
-        dbg!("\nSupported video modes:");
-        for (i, mode) in monitor.video_modes.iter().enumerate() {
-            dbg!(
-                "  {}. {}x{} @ {:.2}Hz (Bit depth: {})",
-                i + 1,
-                monitor.physical_width,
-                monitor.physical_height,
-                mode.refresh_rate_millihertz as f32 / 1000.0,
-                mode.bit_depth
-            );
-        }
-
-        dbg!("Total video modes: {}", monitor.video_modes.len());
+       dbg!(monitor);
     }
 }

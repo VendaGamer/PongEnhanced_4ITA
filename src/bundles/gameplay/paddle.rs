@@ -1,7 +1,6 @@
 use crate::Paddle;
-use bevy::prelude::*;
 use avian2d::prelude::*;
-use crate::components::Player;
+use bevy::prelude::*;
 
 #[derive(Bundle)]
 pub struct PaddleBundle {
@@ -34,7 +33,7 @@ impl PaddleBundle {
             transform: Transform::from_translation(position),
             rigid_body: RigidBody::Kinematic,
             collider: Collider::rectangle(size.x, size.y),
-            restitution: Restitution::new(1.0),
+            restitution: Restitution::new(0.0),
         }
     }
 }

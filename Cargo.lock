@@ -8,6 +8,7 @@ version = "0.1.0"
 dependencies = [
  "avian2d",
  "bevy",
+ "bevy_ui_widgets",
  "derive_more",
  "erased-serde",
  "leafwing-input-manager",

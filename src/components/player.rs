@@ -1,15 +1,13 @@
 use crate::resources::controls::PlayerAction;
-use bevy::prelude::{Component, Entity, KeyCode};
+use bevy::prelude::{Component, KeyCode};
 use leafwing_input_manager::prelude::InputMap;
-use crate::components::Goal;
 
 #[derive(Component)]
 pub struct Player {
     pub id: u8,
-    pub bindings: InputMap<PlayerAction>,
 }
 
-impl Player{
+impl Player {
     pub fn get_default_input_map(id: u8) -> InputMap<PlayerAction> {
         match id {
             1 => InputMap::new([

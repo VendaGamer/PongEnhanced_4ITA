@@ -1,5 +1,5 @@
 use crate::models::game::gameplay::GameMode;
-use bevy::prelude::{Entity, Resource};
+use bevy::prelude::Resource;
 use crate::models::game::area::AreaShape;
 
 #[derive(Resource, Hash, PartialEq, Eq)]

@@ -1,4 +1,5 @@
 use bevy::prelude::Resource;
+use crate::bundles::Vec2;
 
 #[derive(Resource)]
 pub struct UISelection {
@@ -10,4 +11,10 @@ impl Default for UISelection{
     fn default() -> Self {
         Self{row: 0, column: 0}
     }
+}
+
+#[derive(Resource, Default)]
+pub struct NavigationState {
+    pub(crate) last_axis: Vec2,
+    pub(crate) cooldown: f32,
 }

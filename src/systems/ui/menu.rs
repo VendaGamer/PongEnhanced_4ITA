@@ -1,7 +1,6 @@
 use crate::bundles::widgets::LabelBundle;
 use crate::components::ui::navigation::UINavSlot;
 use crate::components::ui::{Menu, MenuType, OptionSelector};
-use crate::models::game::fullscreen::ScreenMode;
 use crate::models::ui::option::{UIOption};
 use crate::systems::widgets::*;
 use bevy::prelude::*;
@@ -10,6 +9,7 @@ use crate::bundles::{BallBundle, DivisionLineBundle};
 use crate::events::ui::widgets::ButtonPressed;
 use crate::models::game::area::{AreaShape, Team, AreaSide, PlayerInfo};
 use crate::models::game::gameplay::GameMode;
+use crate::models::game::settings::ScreenMode;
 use crate::resources::GameConfig;
 use crate::systems::handle_scoring;
 use crate::utils::BALL_RADIUS;
@@ -254,7 +254,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                     section.append_selector(
                         vec![
                             UIOption::new("Exclusive FullScreen", ScreenMode::ExclusiveFullScreen),
-                            UIOption::new("FullScreen", ScreenMode::FullScreen),
+                            UIOption::new("FullScreen", ScreenMode::BorderlessFullScreen),
                             UIOption::new("Windowed", ScreenMode::Windowed),
                         ],
                         0,

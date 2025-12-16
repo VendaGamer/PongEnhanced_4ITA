@@ -4,8 +4,11 @@ use crate::components::ui::navigation::{UINavSlot};
 use crate::components::ui::{Dropdown, OptionSelector, SelectorButton, SelectorText};
 use crate::models::ui::option::UIOption;
 use bevy::ecs::relationship::RelatedSpawnerCommands;
+use bevy::picking::hover::Hovered;
 use bevy::prelude::*;
+use bevy::ui::InteractionDisabled;
 use bevy::ui_widgets::{Slider, SliderRange, SliderThumb, SliderValue, TrackClick};
+use bevy_ui_widgets::CoreSliderDragState;
 use crate::events::ui::widgets::ButtonPressed;
 
 pub const BUTTON_PADDING: Val = Val::Px(30.0);
@@ -67,6 +70,7 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
                     height: Val::Px(50.0),
                     margin: UiRect::all(Val::Px(10.0)),
                     justify_content: JustifyContent::SpaceBetween,
+                    justify_items: JustifyItems::Center,
                     align_items: AlignItems::Center,
                     padding: UiRect::all(Val::Px(15.0)),
                     ..default()
@@ -147,38 +151,61 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
     }
 
     fn append_slider(&mut self, min: f32, max: f32, current: f32, slot: UINavSlot) -> EntityCommands<'_> {
-
         self.spawn((
-            Slider::default(),
-            SliderRange::new(min, max),
-            SliderValue(current),
             Node {
-               width: Val::Px(300.0),
-               height: Val::Px(40.0),
-               margin: UiRect::all(Val::Px(10.0)),
-               padding: UiRect::all(Val::Px(4.0)),
-               ..default()
+                display: Display::Flex,
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Stretch,
+                height: Val::Px(40.0),
+                width: Val::Px(300.0),
+                margin: UiRect::all(Val::Px(10.0)),
+                ..default()
             },
-            BackgroundColor(Color::srgb(0.2, 0.2, 0.25)),
-            BorderRadius::all(Val::Px(5.0)),
+            Slider {
+                track_click: TrackClick::Drag,
+            },
+            SliderValue(current),
+            SliderRange::new(min, max),
+            slot,
             HoverLight {
                 amount: 0.0,
                 max: 0.2,
                 speed: 3.0,
                 base: Color::srgb(0.2, 0.2, 0.25),
             },
-            slot,
             children![(
-                    SliderThumb,
+                Node {
+                    height: Val::Px(6.0),
+                    ..default()
+                },
+                BackgroundColor(Color::srgb(0.1, 0.1, 0.15)),
+                BorderRadius::all(Val::Px(3.0)),
+                ),
+                (
                     Node {
-                        width: Val::Px(20.0),
-                        height: Val::Px(32.0),
+                        display: Display::Flex,
+                        position_type: PositionType::Absolute,
+                        left: Val::Px(0.0),
+                        right: Val::Px(20.0),
+                        top: Val::Px(0.0),
+                        bottom: Val::Px(0.0),
                         ..default()
                     },
-                    BackgroundColor(Color::srgb(0.8, 0.8, 0.85)),
-                    BorderRadius::all(Val::Px(3.0)),
-            )]))
-
+                    children![(
+                        SliderThumb,
+                        Node {
+                            width: Val::Px(20.0),
+                            height: Val::Px(32.0),
+                            position_type: PositionType::Absolute,
+                            left: Val::Percent(0.0),
+                            ..default()
+                        },
+                        BackgroundColor(Color::srgb(0.8, 0.8, 0.85)),
+                        BorderRadius::all(Val::Px(5.0)),
+                    )]
+            )]
+        ))
     }
 
     fn append_button(&mut self, color: Color, size: Vec2, text: &str) -> EntityCommands<'_> {
@@ -231,5 +258,59 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
                 TextColor(Color::srgb(0.9, 0.9, 1.0)),
             ))
 
+    }
+}
+
+pub fn update_slider_style(
+    sliders: Query<
+        (
+            Entity,
+            &SliderValue,
+            &SliderRange,
+            &Hovered,
+            &CoreSliderDragState,
+            Has<InteractionDisabled>,
+        ),
+        (
+            Or<(
+                Changed<SliderValue>,
+                Changed<SliderRange>,
+                Changed<Hovered>,
+                Changed<CoreSliderDragState>,
+                Added<InteractionDisabled>,
+            )>,
+        ),
+    >,
+    children: Query<&Children>,
+    mut thumbs: Query<(&mut Node, &mut BackgroundColor, Has<SliderThumb>)>,
+) {
+    for (slider_ent, value, range, hovered, drag_state, disabled) in sliders.iter() {
+        for child in children.iter_descendants(slider_ent) {
+            if let Ok((mut thumb_node, mut thumb_bg, is_thumb)) = thumbs.get_mut(child)
+                && is_thumb
+            {
+                thumb_node.left = percent(range.thumb_position(value.0) * 100.0);
+                thumb_bg.0 = thumb_color(disabled, hovered.0 | drag_state.dragging);
+            }
+        }
+    }
+}
+
+const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
+const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
+const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
+const SLIDER_TRACK: Color = Color::srgb(0.05, 0.05, 0.05);
+const SLIDER_THUMB: Color = Color::srgb(0.35, 0.75, 0.35);
+const ELEMENT_OUTLINE: Color = Color::srgb(0.45, 0.45, 0.45);
+const ELEMENT_FILL: Color = Color::srgb(0.35, 0.75, 0.35);
+const ELEMENT_FILL_DISABLED: Color = Color::srgb(0.5019608, 0.5019608, 0.5019608);
+
+fn thumb_color(disabled: bool, hovered: bool) -> Color {
+    match (disabled, hovered) {
+        (true, _) => ELEMENT_FILL_DISABLED,
+
+        (false, true) => SLIDER_THUMB.lighter(0.3),
+
+        _ => SLIDER_THUMB,
     }
 }
