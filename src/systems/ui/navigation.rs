@@ -1,6 +1,7 @@
 use leafwing_input_manager::prelude::ActionState;
 use bevy::prelude::*;
-use bevy::ui_widgets::{Slider, SliderRange, SliderThumb, SliderValue};
+use bevy::ui::Checked;
+use bevy::ui_widgets::{Slider, SliderRange, SliderThumb, SliderValue, TrackClick};
 use crate::components::ui::navigation::UINavSlot;
 use crate::resources::*;
 use crate::resources::navigation::{NavigationState, UISelection};
@@ -87,10 +88,11 @@ fn clamp_to_existing_slots(sel: &mut UISelection, slots: &Query<&UINavSlot>) {
         let max_col = *cols_in_row.iter().max().unwrap();
         sel.column = sel.column.clamp(min_col, max_col);
     }
+
 }
 
 pub fn update_slider_visuals(
-    sliders: Query<(Entity, &SliderValue, &SliderRange), (Changed<SliderValue>, With<Slider>)>,
+    sliders: Query<(Entity, &SliderValue, &SliderRange)>,
     children: Query<&Children>,
     mut thumbs: Query<&mut Node, With<SliderThumb>>,
 ) {

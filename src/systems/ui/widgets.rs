@@ -1,15 +1,12 @@
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::HoverLight;
-use crate::components::ui::navigation::{UINavSlot};
+use crate::components::ui::navigation::UINavSlot;
 use crate::components::ui::{Dropdown, OptionSelector, SelectorButton, SelectorText};
+use crate::events::ui::widgets::ButtonPressed;
 use crate::models::ui::option::UIOption;
 use bevy::ecs::relationship::RelatedSpawnerCommands;
-use bevy::picking::hover::Hovered;
 use bevy::prelude::*;
-use bevy::ui::InteractionDisabled;
 use bevy::ui_widgets::{Slider, SliderRange, SliderThumb, SliderValue, TrackClick};
-use bevy_ui_widgets::CoreSliderDragState;
-use crate::events::ui::widgets::ButtonPressed;
 
 pub const BUTTON_PADDING: Val = Val::Px(30.0);
 pub const BUTTON_OUTLINE: Outline = Outline::new(Val::Px(5.0),Val::ZERO, Color::WHITE);
@@ -261,56 +258,3 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
     }
 }
 
-pub fn update_slider_style(
-    sliders: Query<
-        (
-            Entity,
-            &SliderValue,
-            &SliderRange,
-            &Hovered,
-            &CoreSliderDragState,
-            Has<InteractionDisabled>,
-        ),
-        (
-            Or<(
-                Changed<SliderValue>,
-                Changed<SliderRange>,
-                Changed<Hovered>,
-                Changed<CoreSliderDragState>,
-                Added<InteractionDisabled>,
-            )>,
-        ),
-    >,
-    children: Query<&Children>,
-    mut thumbs: Query<(&mut Node, &mut BackgroundColor, Has<SliderThumb>)>,
-) {
-    for (slider_ent, value, range, hovered, drag_state, disabled) in sliders.iter() {
-        for child in children.iter_descendants(slider_ent) {
-            if let Ok((mut thumb_node, mut thumb_bg, is_thumb)) = thumbs.get_mut(child)
-                && is_thumb
-            {
-                thumb_node.left = percent(range.thumb_position(value.0) * 100.0);
-                thumb_bg.0 = thumb_color(disabled, hovered.0 | drag_state.dragging);
-            }
-        }
-    }
-}
-
-const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
-const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
-const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
-const SLIDER_TRACK: Color = Color::srgb(0.05, 0.05, 0.05);
-const SLIDER_THUMB: Color = Color::srgb(0.35, 0.75, 0.35);
-const ELEMENT_OUTLINE: Color = Color::srgb(0.45, 0.45, 0.45);
-const ELEMENT_FILL: Color = Color::srgb(0.35, 0.75, 0.35);
-const ELEMENT_FILL_DISABLED: Color = Color::srgb(0.5019608, 0.5019608, 0.5019608);
-
-fn thumb_color(disabled: bool, hovered: bool) -> Color {
-    match (disabled, hovered) {
-        (true, _) => ELEMENT_FILL_DISABLED,
-
-        (false, true) => SLIDER_THUMB.lighter(0.3),
-
-        _ => SLIDER_THUMB,
-    }
-}
