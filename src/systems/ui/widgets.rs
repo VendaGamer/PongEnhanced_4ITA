@@ -149,14 +149,17 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
 
     fn append_slider(&mut self, min: f32, max: f32, current: f32, slot: UINavSlot) -> EntityCommands<'_> {
         self.spawn((
+            // The slider parent needs Button for interaction
+            Button,
             Node {
                 display: Display::Flex,
-                flex_direction: FlexDirection::Column,
+                flex_direction: FlexDirection::Row,
                 justify_content: JustifyContent::Center,
-                align_items: AlignItems::Stretch,
+                align_items: AlignItems::Center,
                 height: Val::Px(40.0),
                 width: Val::Px(300.0),
                 margin: UiRect::all(Val::Px(10.0)),
+                padding: UiRect::all(Val::Px(4.0)),
                 ..default()
             },
             Slider {
@@ -165,43 +168,34 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
             SliderValue(current),
             SliderRange::new(min, max),
             slot,
-            HoverLight {
-                amount: 0.0,
-                max: 0.2,
-                speed: 3.0,
-                base: Color::srgb(0.2, 0.2, 0.25),
-            },
-            children![(
+            BackgroundColor(Color::srgb(0.15, 0.15, 0.2)),
+            BorderRadius::all(Val::Px(5.0)),
+            children![
+            // Track (the background bar)
+            (
                 Node {
+                    width: Val::Percent(100.0),
                     height: Val::Px(6.0),
                     ..default()
                 },
                 BackgroundColor(Color::srgb(0.1, 0.1, 0.15)),
                 BorderRadius::all(Val::Px(3.0)),
-                ),
-                (
-                    Node {
-                        display: Display::Flex,
-                        position_type: PositionType::Absolute,
-                        left: Val::Px(0.0),
-                        right: Val::Px(20.0),
-                        top: Val::Px(0.0),
-                        bottom: Val::Px(0.0),
-                        ..default()
-                    },
-                    children![(
-                        SliderThumb,
-                        Node {
-                            width: Val::Px(20.0),
-                            height: Val::Px(32.0),
-                            position_type: PositionType::Absolute,
-                            left: Val::Percent(0.0),
-                            ..default()
-                        },
-                        BackgroundColor(Color::srgb(0.8, 0.8, 0.85)),
-                        BorderRadius::all(Val::Px(5.0)),
-                    )]
-            )]
+            ),
+            // Thumb (the draggable part)
+            (
+                SliderThumb,
+                Node {
+                    width: Val::Px(20.0),
+                    height: Val::Px(32.0),
+                    position_type: PositionType::Absolute,
+                    // Initial position - will be updated by the slider system
+                    left: Val::Percent(0.0),
+                    ..default()
+                },
+                BackgroundColor(Color::srgb(0.8, 0.8, 0.85)),
+                BorderRadius::all(Val::Px(5.0)),
+            )
+        ]
         ))
     }
 

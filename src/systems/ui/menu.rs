@@ -226,8 +226,8 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                         TextColor(Color::srgb(0.8, 0.8, 0.9)),
                     ));
 
-                    section.append_slider(0.0, 100.0, 0.0, UINavSlot::row(0));
-                    section.append_slider(0.0, 100.0, 0.0, UINavSlot::row(1));
+                    section.append_slider(0.0, 100.0, 50.0, UINavSlot::row(0));
+                    section.append_slider(0.0, 100.0, 50.0, UINavSlot::row(1));
 
                     section.spawn((
                         Node {
