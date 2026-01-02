@@ -90,21 +90,3 @@ fn clamp_to_existing_slots(sel: &mut UISelection, slots: &Query<&UINavSlot>) {
     }
 
 }
-
-pub fn update_slider_visuals(
-    sliders: Query<(Entity, &SliderValue, &SliderRange)>,
-    children: Query<&Children>,
-    mut thumbs: Query<&mut Node, With<SliderThumb>>,
-) {
-    for (slider_entity, value, range) in sliders.iter() {
-        for child in children.iter_descendants(slider_entity) {
-            if let Ok(mut thumb_node) = thumbs.get_mut(child) {
-                let percent = ((value.0 - range.start()) / (range.end() - range.start()) * 100.0)
-                    .clamp(0.0, 100.0);
-
-                thumb_node.left = Val::Percent(percent);
-                println!("Left: {}", percent);
-            }
-        }
-    }
-}

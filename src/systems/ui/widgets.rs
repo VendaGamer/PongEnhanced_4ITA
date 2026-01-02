@@ -6,7 +6,7 @@ use crate::events::ui::widgets::ButtonPressed;
 use crate::models::ui::option::UIOption;
 use bevy::ecs::relationship::RelatedSpawnerCommands;
 use bevy::prelude::*;
-use bevy::ui_widgets::{Slider, SliderRange, SliderThumb, SliderValue, TrackClick};
+use bevy::ui_widgets::{Slider, SliderPrecision, SliderRange, SliderThumb, SliderValue, TrackClick};
 
 pub const BUTTON_PADDING: Val = Val::Px(30.0);
 pub const BUTTON_OUTLINE: Outline = Outline::new(Val::Px(5.0),Val::ZERO, Color::WHITE);
@@ -149,7 +149,6 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
 
     fn append_slider(&mut self, min: f32, max: f32, current: f32, slot: UINavSlot) -> EntityCommands<'_> {
         self.spawn((
-            // The slider parent needs Button for interaction
             Button,
             Node {
                 display: Display::Flex,
@@ -157,21 +156,22 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 height: Val::Px(40.0),
-                width: Val::Px(300.0),
+                width: Val::Px(500.0),
                 margin: UiRect::all(Val::Px(10.0)),
                 padding: UiRect::all(Val::Px(4.0)),
                 ..default()
             },
-            Slider {
-                track_click: TrackClick::Drag,
+            Slider{
+                track_click: TrackClick::Snap
             },
             SliderValue(current),
             SliderRange::new(min, max),
+            Interaction::None,
+            SliderPrecision(0),
             slot,
             BackgroundColor(Color::srgb(0.15, 0.15, 0.2)),
             BorderRadius::all(Val::Px(5.0)),
             children![
-            // Track (the background bar)
             (
                 Node {
                     width: Val::Percent(100.0),
@@ -181,21 +181,18 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
                 BackgroundColor(Color::srgb(0.1, 0.1, 0.15)),
                 BorderRadius::all(Val::Px(3.0)),
             ),
-            // Thumb (the draggable part)
             (
                 SliderThumb,
                 Node {
                     width: Val::Px(20.0),
                     height: Val::Px(32.0),
                     position_type: PositionType::Absolute,
-                    // Initial position - will be updated by the slider system
                     left: Val::Percent(0.0),
                     ..default()
                 },
                 BackgroundColor(Color::srgb(0.8, 0.8, 0.85)),
                 BorderRadius::all(Val::Px(5.0)),
-            )
-        ]
+            )]
         ))
     }
 
@@ -249,6 +246,27 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
                 TextColor(Color::srgb(0.9, 0.9, 1.0)),
             ))
 
+    }
+}
+
+
+
+pub fn update_slider_visuals(
+    sliders: Query<(Entity, &SliderValue, &SliderRange), Changed<SliderValue>>,
+    children: Query<&Children>,
+    mut thumbs: Query<&mut Node, With<SliderThumb>>,
+) {
+    for (slider_entity, value, range) in sliders.iter() {
+        for child in children.iter_descendants(slider_entity) {
+            if let Ok(mut thumb_node) = thumbs.get_mut(child) {
+
+                let percent = ((value.0 - range.start()) / (range.end() - range.start()) * 100.0)
+                    .clamp(0.0, 100.0);
+
+                thumb_node.left = Val::Percent(percent);
+                println!("Left: {}", percent);
+            }
+        }
     }
 }
 

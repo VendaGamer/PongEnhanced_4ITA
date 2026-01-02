@@ -5,11 +5,13 @@ use crate::resources::controls::MenuAction;
 use crate::resources::navigation::{NavigationState, UISelection};
 use crate::resources::GameConfig;
 use crate::systems::menu::MenuSpawnCommandsExt;
-use crate::systems::navigation::{sync_selection_to_ui, ui_navigation, update_slider_visuals};
+use crate::systems::navigation::{sync_selection_to_ui, ui_navigation};
 use crate::systems::selectors::{handle_selector_navigation, update_selector_text};
 use crate::systems::*;
 use crate::utils::FIXED_DIMENSIONS;
+use bevy::ui_widgets::slider_self_update;
 use bevy::window::{Monitor, WindowResized};
+use crate::systems::widgets::update_slider_visuals;
 
 pub struct GameCorePlugin;
 
@@ -36,6 +38,7 @@ impl Plugin for GameCorePlugin {
                 setup_common,
                 print_available_resolutions
             ))
+            .add_observer(slider_self_update)
             .insert_resource(UISelection::default())
             .insert_resource(GameConfig::default())
             .insert_resource(Players::default())
@@ -66,7 +69,7 @@ fn setup_common(
 
     for i in 0..4{
         let entity = commands.spawn(PlayerBundle::new(i)).id();
-        let info = PlayerInfo{
+        let info = PlayerInfo {
             entity,
             name: format!("Player {}", i + 1),
         };
