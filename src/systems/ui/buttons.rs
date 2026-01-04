@@ -30,7 +30,6 @@ pub fn handle_ui_hover_light(
             _ => 0.0,
         };
 
-
         hover.amount = move_towards(hover.amount, target, hover.speed * dt);
         bg.0 = lighten_color(hover.base, hover.amount);
     }

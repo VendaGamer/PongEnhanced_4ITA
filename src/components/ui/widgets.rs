@@ -21,6 +21,9 @@ pub struct OptionSelector {
     pub selected: usize,
 }
 
+#[derive(Component)]
+pub struct ResolutionSelector;
+
 impl OptionSelector {
     pub fn cycle_next(&mut self) {
         self.selected = (self.selected + 1) % self.options.len();
