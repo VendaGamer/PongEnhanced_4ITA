@@ -236,9 +236,9 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
         ))
     }
 
-    fn append_menu_button(&mut self, color: Color, text: &str, slot: UINavSlot) -> EntityCommands<'_> {
+    fn append_menu_button(&mut self, color: Color, text: &str, tab_index: i32) -> EntityCommands<'_> {
         let mut button = self.append_button(color, Vec2::new(350.0, 70.0), text);
-        button.insert(slot);
+        button.insert(TabIndex(tab_index));
         button
     }
 

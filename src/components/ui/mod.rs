@@ -1,5 +1,4 @@
 pub mod menu;
-pub mod navigation;
 pub mod widgets;
 pub mod in_game;
 pub mod effects;

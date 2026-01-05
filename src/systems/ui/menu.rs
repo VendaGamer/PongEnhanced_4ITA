@@ -1,3 +1,4 @@
+use bevy::input_focus::tab_navigation::TabGroup;
 use crate::bundles::widgets::LabelBundle;
 use crate::components::ui::navigation::UINavSlot;
 use crate::components::ui::{Menu, MenuType, OptionSelector};
@@ -123,7 +124,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                             UIOption::new("20 Points", 20),
                         ],
                         0,
-                        UINavSlot::new(3, 0),
+
                         "Win Score"
                     );
                 });
@@ -137,13 +138,13 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                 buttons.append_menu_button(
                     Color::srgb(0.2, 0.7, 0.3),
                     "Start Game",
-                    UINavSlot::new(4, 0),
+                    0
                 ).observe(on_start_offline_game);
 
                 buttons.append_menu_button(
                     Color::srgb(0.6, 0.6, 0.6),
                     "Back",
-                    UINavSlot::new(4, 1),
+                    1
                 ).observe(on_menu_to_main);
             });
         });
@@ -152,7 +153,9 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
     }
 
     fn spawn_online_menu(&mut self) -> EntityCommands<'_> {
-        let mut online_menu = self.spawn_menu_base(MenuType::OnlinePlayMenu);
+        let mut online_menu = self
+            .spawn_menu_base(MenuType::OnlinePlayMenu)
+            .insert(TabGroup::new(0));
 
         online_menu.with_children(|parent| {
             parent.spawn((
@@ -173,36 +176,36 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                     section.append_menu_button(
                         Color::srgb(0.3, 0.6, 0.9),
                         "Quick Match",
-                        UINavSlot::row(0),
+                        0
                     ).observe(on_quick_match);
 
                     section.append_menu_button(
                         Color::srgb(0.5, 0.4, 0.9),
                         "Create Room",
-                        UINavSlot::row(1),
+                        1
                     ).observe(on_create_room);
 
                     section.append_menu_button(
                         Color::srgb(0.9, 0.5, 0.3),
                         "Join Room",
-                        UINavSlot::row(2),
+                        2
                     ).observe(on_join_room);
 
                     section.append_menu_button(
                         Color::srgb(0.4, 0.7, 0.4),
                         "Friends List",
-                        UINavSlot::row(3),
+                        3
                     ).observe(on_friends_list);
                 });
 
             parent.append_menu_button(
                 Color::srgb(0.6, 0.6, 0.6),
                 "Back",
-                UINavSlot::row(4),
+                4
             ).observe(on_menu_to_main);
         });
 
-        online_menu
+        *online_menu
     }
 
     fn spawn_settings_menu(&mut self) -> EntityCommands<'_> {

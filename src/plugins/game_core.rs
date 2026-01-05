@@ -2,10 +2,8 @@ use crate::bundles::player::PlayerBundle;
 use crate::bundles::*;
 use crate::models::game::area::{PlayerInfo, Players};
 use crate::resources::controls::MenuAction;
-use crate::resources::navigation::{NavigationState, UISelection};
 use crate::resources::GameConfig;
 use crate::systems::menu::MenuSpawnCommandsExt;
-use crate::systems::navigation::{sync_selection_to_ui, ui_navigation};
 use crate::systems::selectors::{handle_selector_navigation, update_selector_text};
 use crate::systems::*;
 use crate::utils::FIXED_DIMENSIONS;
@@ -26,8 +24,6 @@ impl Plugin for GameCorePlugin {
                 update_score_ui,
                 detect_button_press,
                 handle_ui_hover_light,
-                ui_navigation,
-                sync_selection_to_ui,
                 update_selector_text,
                 handle_selector_navigation,
                 handle_ui_scaling,
@@ -39,10 +35,8 @@ impl Plugin for GameCorePlugin {
                 print_available_resolutions
             ))
             .add_observer(slider_self_update)
-            .insert_resource(UISelection::default())
             .insert_resource(GameConfig::default())
-            .insert_resource(Players::default())
-            .insert_resource(NavigationState::default());
+            .insert_resource(Players::default());
     }
 }
 
