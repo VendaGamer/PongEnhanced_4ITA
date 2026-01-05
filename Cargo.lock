@@ -8,6 +8,7 @@ version = "0.1.0"
 dependencies = [
  "avian2d",
  "bevy",
+ "bevy_tween",
  "derive_more",
  "erased-serde",
  "leafwing-input-manager",
@@ -1468,6 +1469,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_time_runner"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9ea5113f78f7bc47d75f1449f0accbc0350b117880d2ddb5a197fe84744e3302"
+dependencies = [
+ "bevy_app",
+ "bevy_ecs",
+ "bevy_reflect",
+ "bevy_time",
+ "rustc_version",
+]
+
+[[package]]
 name = "bevy_transform"
 version = "0.17.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1492,6 +1506,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "284738382605476667bbe80cf0959f4dffb61adbdb0149e22e67f4dbf97a5bc2"
 dependencies = [
  "bevy",
+]
+
+[[package]]
+name = "bevy_tween"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c44699c5c7d8f73357d971692aaa93e8469bd8595f4116ab0bb74011f4d261f7"
+dependencies = [
+ "bevy",
+ "bevy_math",
+ "bevy_time_runner",
+ "rustc_version",
+ "tracing",
 ]
 
 [[package]]

@@ -15,7 +15,7 @@ use crate::utils::DEFAULT_FONT;
 use avian2d::prelude::*;
 use bevy::asset::AssetContainer;
 use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig};
-use bevy::input_focus::InputDispatchPlugin;
+use bevy::input_focus::{InputDispatchPlugin, InputFocus, InputFocusSystems};
 use bevy::prelude::*;
 use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
 use bevy::render::RenderPlugin;
@@ -63,7 +63,6 @@ fn main() {
             InputManagerPlugin::<MenuAction>::default(),
             UiWidgetsPlugins,
             InputDispatchPlugin,
-
             GameCorePlugin,
         ));
 

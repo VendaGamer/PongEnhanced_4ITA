@@ -8,7 +8,7 @@ use crate::systems::selectors::{handle_selector_navigation, update_selector_text
 use crate::systems::*;
 use crate::utils::FIXED_DIMENSIONS;
 use bevy::ui_widgets::slider_self_update;
-use bevy::window::{Monitor, WindowResized};
+use bevy::window::{Monitor, PrimaryMonitor, WindowResized};
 use crate::systems::widgets::update_slider_visuals;
 
 pub struct GameCorePlugin;
@@ -32,7 +32,6 @@ impl Plugin for GameCorePlugin {
             .add_systems(Startup, (
                 //setup,
                 setup_common,
-                print_available_resolutions
             ))
             .add_observer(slider_self_update)
             .insert_resource(GameConfig::default())
@@ -72,12 +71,4 @@ fn setup_common(
 
     commands.spawn(MenuAction::input_map());
     commands.spawn_main_menu();
-}
-
-fn print_available_resolutions(
-    monitors: Query<&Monitor>,
-) {
-    for monitor in monitors.iter() {
-       dbg!(monitor);
-    }
 }

@@ -1,10 +1,10 @@
 use bevy::input_focus::tab_navigation::TabGroup;
 use crate::bundles::widgets::LabelBundle;
-use crate::components::ui::navigation::UINavSlot;
 use crate::components::ui::{Menu, MenuType, OptionSelector};
 use crate::models::ui::option::{UIOption};
 use crate::systems::widgets::*;
 use bevy::prelude::*;
+use bevy::window::{Monitor, PrimaryMonitor};
 use crate::bundles::area::AreaBundle;
 use crate::bundles::{BallBundle, DivisionLineBundle};
 use crate::events::ui::widgets::ButtonPressed;
@@ -45,25 +45,27 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                 parent.append_menu_button(
                     Color::srgb(0.2, 0.6, 0.9),
                     "Offline Play",
-                    UINavSlot::row(0))
+                    0)
                     .observe(on_offline);
 
                 parent.append_menu_button(
                     Color::srgb(0.6, 0.3, 0.9),
                     "Online Play",
-                    UINavSlot::row(1)
-                ).observe(on_online);
+                    1)
+                    .observe(on_online);
 
                 parent.append_menu_button(
                     Color::srgb(0.5, 0.5, 0.5),
-                    "Settings", UINavSlot::row(2)
-                ).observe(on_settings);
+                "Settings",
+                    2)
+                    .observe(on_settings);
 
                 parent.append_menu_button(
                     Color::srgb(0.8, 0.2, 0.2),
                     "Exit",
-                    UINavSlot::row(3)
-                ).observe(on_exit);
+                    3)
+                    .observe(on_exit);
+
             });
         });
 
@@ -85,7 +87,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                             UIOption::new("3 Players", 3),
                             UIOption::new("4 Players", 4)],
                         0,
-                        UINavSlot::new(0, 0),
+                        0,
                         "Number of Players"
                     );
 
@@ -99,7 +101,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                             UIOption::new("Twisted", GameMode::Twisted),
                         ],
                         0,
-                        UINavSlot::new(1, 0),
+                        1,
                         "Game Mode",
                     );
 
@@ -111,7 +113,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                             UIOption::new("Cuboid", AreaShape::Cuboid(None))
                         ],
                         0,
-                        UINavSlot::new(2, 0),
+                        2,
                         "Arena Shape"
                     );
 
@@ -124,6 +126,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                             UIOption::new("20 Points", 20),
                         ],
                         0,
+                        3,
 
                         "Win Score"
                     );
@@ -154,8 +157,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
 
     fn spawn_online_menu(&mut self) -> EntityCommands<'_> {
         let mut online_menu = self
-            .spawn_menu_base(MenuType::OnlinePlayMenu)
-            .insert(TabGroup::new(0));
+            .spawn_menu_base(MenuType::OnlinePlayMenu);
 
         online_menu.with_children(|parent| {
             parent.spawn((
@@ -205,11 +207,14 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
             ).observe(on_menu_to_main);
         });
 
-        *online_menu
+        online_menu.insert(TabGroup::new(0));
+
+        online_menu
     }
 
     fn spawn_settings_menu(&mut self) -> EntityCommands<'_> {
         let mut settings_menu = self.spawn_menu_base(MenuType::SettingsMenu);
+
 
         settings_menu.with_children(|parent| {
             parent.append_menu_title("SETTINGS");
@@ -229,8 +234,8 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                         TextColor(Color::srgb(0.8, 0.8, 0.9)),
                     ));
 
-                    section.append_slider(0.0, 100.0, 50.0, UINavSlot::row(0));
-                    section.append_slider(0.0, 100.0, 50.0, UINavSlot::row(1));
+                    section.append_slider(0.0, 100.0, 50.0, 0);
+                    section.append_slider(0.0, 100.0, 50.0, 1);
 
                     section.spawn((
                         Node {
@@ -250,7 +255,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                             UIOption::new("Handle later", 0),
                         ],
                         0,
-                        UINavSlot::new(2, 0),
+                        2,
                         "Resolution".into(),
                     );
 
@@ -261,7 +266,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                             UIOption::new("Windowed", ScreenMode::Windowed),
                         ],
                         0,
-                        UINavSlot::new(3, 0),
+                        3,
                         "Screen Mode",
                     );
                 });
@@ -269,7 +274,7 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
             parent.append_menu_button(
                 Color::srgb(0.6, 0.6, 0.6),
                 "Back",
-                UINavSlot::row(4))
+                4)
                 .observe(on_settings_back);
         });
 

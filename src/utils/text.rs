@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 pub const DEFAULT_FONT: &[u8] = include_bytes!("../../assets/font/jersey10_regular.ttf");
+pub const DEFAULT_LIGHTEN_AMOUNT: f32 = 15.0;
 
 pub const PIXEL_BORDER_SIZE: f32 = 3.0;
 #[derive(Clone, Copy)]
@@ -41,9 +42,9 @@ pub const MODERN_THEME: RetroTheme = RetroTheme {
 pub fn lighten_color(color: Color, amount: f32) -> Color {
     let [r, g, b, a] = color.to_srgba().to_f32_array();
     Color::srgba(
-        (r + amount).min(1.0),
-        (g + amount).min(1.0),
-        (b + amount).min(1.0),
+        (r + amount / 100.0).min(1.0),
+        (g + amount / 100.0).min(1.0),
+        (b + amount / 100.0).min(1.0),
         a,
     )
 }

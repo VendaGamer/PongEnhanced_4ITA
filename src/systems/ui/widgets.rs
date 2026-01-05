@@ -1,8 +1,7 @@
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::HoverLight;
-use crate::components::ui::navigation::UINavSlot;
 use crate::components::ui::{Dropdown, OptionSelector, SelectorButton, SelectorText};
-use crate::events::ui::widgets::ButtonPressed;
+use crate::events::ui::widgets::{ButtonPressed, OptionChanged};
 use crate::models::ui::option::UIOption;
 use crate::utils::{MODERN_THEME};
 use bevy::ecs::relationship::RelatedSpawnerCommands;
@@ -16,17 +15,17 @@ pub const PIXEL_BORDER: f32 = 3.0; // Classic pixel border width
 pub const BUTTON_OUTLINE: Outline = Outline::new(Val::Px(PIXEL_BORDER), Val::ZERO, Color::BLACK);
 
 pub trait WidgetSpawnExt {
-    fn append_selector(&mut self, options: Vec<UIOption>, selected: usize, slot: UINavSlot, label: &str) -> EntityCommands<'_>;
-    fn append_dropdown(&mut self, options: Vec<UIOption>, selected: usize, slot: UINavSlot) -> EntityCommands<'_>;
+    fn append_selector(&mut self, options: Vec<UIOption>, selected: usize, tab_index: i32, label: &str) -> EntityCommands<'_>;
+    fn append_dropdown(&mut self, options: Vec<UIOption>, selected: usize, tab_index: i32) -> EntityCommands<'_>;
     fn append_menu_section(&mut self) -> EntityCommands<'_>;
-    fn append_slider(&mut self, min: f32, max: f32, current: f32, slot: UINavSlot) -> EntityCommands<'_>;
+    fn append_slider(&mut self, min: f32, max: f32, current: f32, tab_index: i32) -> EntityCommands<'_>;
     fn append_button(&mut self, color: Color, size: Vec2, text: &str) -> EntityCommands<'_>;
-    fn append_menu_button(&mut self, color: Color, text: &str, slot: UINavSlot) -> EntityCommands<'_>;
+    fn append_menu_button(&mut self, color: Color, text: &str, tab_index: i32) -> EntityCommands<'_>;
     fn append_menu_title(&mut self, text: &'static str) -> EntityCommands<'_>;
 }
 
 impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
-    fn append_selector(&mut self, options: Vec<UIOption>, selected: usize, slot: UINavSlot, label: &str) -> EntityCommands<'_> {
+    fn append_selector(&mut self, options: Vec<UIOption>, selected: usize, tab_index: i32, label: &str) -> EntityCommands<'_> {
         let mut root = self.spawn((
             OptionSelector { options, selected },
             Node {
@@ -51,10 +50,13 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
                 .observe(
                     |pressed: On<ButtonPressed>,
                      mut selectors: Query<&mut OptionSelector>,
-                     buttons: Query<&SelectorButton>| {
+                     buttons: Query<&SelectorButton>,
+                     mut commands: Commands,
+                    | {
                         if let Ok(button) = buttons.get(pressed.event_target()) {
                             if let Ok(mut selector) = selectors.get_mut(button.selector) {
                                 selector.cycle_prev();
+                                commands.trigger(OptionChanged(button.selector));
                             }
                         }
                     },
@@ -75,7 +77,7 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
                 BackgroundColor(MODERN_THEME.panel_bg),
                 BorderColor::from(MODERN_THEME.border),
                 BorderRadius::ZERO,
-                slot,
+                TabIndex(tab_index),
                 children![
                     LabelBundle::button_label(label),
                     (
@@ -94,10 +96,13 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
                 .observe(
                     |pressed: On<ButtonPressed>,
                      mut selectors: Query<&mut OptionSelector>,
-                     buttons: Query<&SelectorButton>| {
+                     buttons: Query<&SelectorButton>,
+                     mut commands: Commands,
+                    | {
                         if let Ok(button) = buttons.get(pressed.event_target()) {
                             if let Ok(mut selector) = selectors.get_mut(button.selector) {
                                 selector.cycle_next();
+                                commands.trigger(OptionChanged(button.selector));
                             }
                         }
                     },
@@ -107,7 +112,7 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
         root
     }
 
-    fn append_dropdown(&mut self, options: Vec<UIOption>, selected: usize, slot: UINavSlot) -> EntityCommands<'_> {
+    fn append_dropdown(&mut self, options: Vec<UIOption>, selected: usize, tab_index: i32) -> EntityCommands<'_> {
         self.spawn((
             Dropdown { options, selected },
             Node {
@@ -122,13 +127,8 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
             BackgroundColor(MODERN_THEME.panel_bg),
             BorderColor::from(MODERN_THEME.border),
             BorderRadius::ZERO,
-            HoverLight {
-                amount: 0.0,
-                max: 0.15,
-                speed: 5.0,
-                base: MODERN_THEME.panel_bg,
-            },
-            slot,
+            HoverLight,
+            TabIndex(tab_index),
         ))
     }
 
@@ -147,7 +147,7 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
         ))
     }
 
-    fn append_slider(&mut self, min: f32, max: f32, current: f32, slot: UINavSlot) -> EntityCommands<'_> {
+    fn append_slider(&mut self, min: f32, max: f32, current: f32, tab_index: i32) -> EntityCommands<'_> {
         self.spawn((
             Node {
                 display: Display::Flex,
@@ -166,12 +166,11 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
             },
             SliderValue(current),
             SliderRange::new(min, max),
-            TabIndex(0),
+            TabIndex(tab_index),
             Children::spawn((
-                // Slider track with pixel border
                 Spawn((
                     Node {
-                        height: px(12), // Chunkier for pixel style
+                        height: px(12),
                         border: UiRect::all(px(PIXEL_BORDER)),
                         ..default()
                     },
@@ -194,7 +193,7 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
                         SliderThumb,
                         Node {
                             display: Display::Flex,
-                            width: px(20), // Bigger, blockier thumb
+                            width: px(20),
                             height: px(20),
                             position_type: PositionType::Absolute,
                             left: percent(0),
@@ -226,12 +225,7 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
             BorderRadius::ZERO,
             BorderColor::from(MODERN_THEME.border),
             Outline::new(Val::Px(PIXEL_BORDER), Val::ZERO, MODERN_THEME.outline),
-            HoverLight {
-                amount: 0.0,
-                max: 0.25,
-                speed: 4.0, // Snappy for retro feel
-                base: color,
-            },
+            HoverLight,
             children![LabelBundle::button_label(text)],
         ))
     }
@@ -253,7 +247,7 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
             BorderColor::from(MODERN_THEME.accent),
             Text::new(text),
             TextFont {
-                font_size: 72.0, // Bigger for pixel font
+                font_size: 72.0,
                 ..default()
             },
             TextColor(MODERN_THEME.text_bright),

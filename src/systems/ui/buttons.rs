@@ -1,7 +1,13 @@
-use crate::components::ui::effects::HoverLight;
-use crate::utils::text::lighten_color;
+use std::time::Duration;
+use crate::components::ui::effects::{HoverLight, HoverLightColor};
 use bevy::prelude::*;
+use bevy::prelude::*;
+use bevy_tween::combinator::{tween, tween_exact};
+use bevy_tween::interpolate::{background_color, background_color_to};
+use bevy_tween::prelude::*;
+use bevy_tween::tween::apply_component_tween_system;
 use crate::events::ui::widgets::ButtonPressed;
+use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT};
 
 pub fn detect_button_press(
     button_query: Query<Entity, (With<Button>, With<Interaction>)>,
@@ -19,29 +25,32 @@ pub fn detect_button_press(
 }
 
 pub fn handle_ui_hover_light(
-    time: Res<Time>,
-    mut query: Query<(&Interaction, &mut BackgroundColor, &mut HoverLight)>,
+    mut commands: Commands,
+    query: Query<(Entity, &Interaction, &BackgroundColor, Option<&HoverLightColor>),
+        (Changed<Interaction>, With<HoverLight>)>,
 ) {
-    for (interaction, mut bg, mut hover) in &mut query {
-        let dt = time.delta_secs();
+    for (entity, interaction, background_color, maybe_custom_colors) in &query {
+        let base = background_color.0;
 
-        let target = match *interaction {
-            Interaction::Hovered => hover.max,
-            _ => 0.0,
+        let hover_color = if let Some(custom) = maybe_custom_colors {
+            custom.hover_color
+        } else {
+
+            lighten_color(base, DEFAULT_LIGHTEN_AMOUNT)
         };
 
-        hover.amount = move_towards(hover.amount, target, hover.speed * dt);
-        bg.0 = lighten_color(hover.base, hover.amount);
-    }
-}
+        let (target_color, duration) = match *interaction {
+            Interaction::Hovered => (hover_color, Duration::from_millis(150)),
+            _ => (base, Duration::from_millis(200)),
+        };
 
+        let target = entity.into_target();
+        let mut bg_color_state = target.state(background_color.0);
 
-fn move_towards(current: f32, target: f32, max_delta: f32) -> f32 {
-    if (target - current).abs() <= max_delta {
-        target
-    } else if current < target {
-        current + max_delta
-    } else {
-        current - max_delta
+        commands.animation().insert(tween_exact(
+            Duration::ZERO..duration,
+            EaseKind::CubicInOut,
+            bg_color_state.with(background_color_to(target_color)),
+        ));
     }
 }
