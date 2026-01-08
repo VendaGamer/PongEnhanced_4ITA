@@ -5,11 +5,11 @@ use crate::resources::controls::MenuAction;
 use crate::resources::GameConfig;
 use crate::systems::menu::MenuSpawnCommandsExt;
 use crate::systems::selectors::{handle_selector_navigation, update_selector_text};
+use crate::systems::widgets::{handle_ui_hover_light, update_slider_visuals};
 use crate::systems::*;
 use crate::utils::FIXED_DIMENSIONS;
 use bevy::ui_widgets::slider_self_update;
-use bevy::window::{Monitor, PrimaryMonitor, WindowResized};
-use crate::systems::widgets::update_slider_visuals;
+use bevy::window::WindowResized;
 
 pub struct GameCorePlugin;
 

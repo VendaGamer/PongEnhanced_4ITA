@@ -1,14 +1,19 @@
+use std::time::Duration;
 use crate::bundles::widgets::*;
-use crate::components::ui::effects::HoverLight;
+use crate::components::ui::effects::{HoverLight, HoverLightColor};
 use crate::components::ui::{Dropdown, OptionSelector, SelectorButton, SelectorText};
 use crate::events::ui::widgets::{ButtonPressed, OptionChanged};
 use crate::models::ui::option::UIOption;
-use crate::utils::{MODERN_THEME};
+use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT, MODERN_THEME};
 use bevy::ecs::relationship::RelatedSpawnerCommands;
 use bevy::input_focus::tab_navigation::TabIndex;
 use bevy::picking::hover::Hovered;
 use bevy::prelude::*;
 use bevy::ui_widgets::{Slider, SliderRange, SliderThumb, SliderValue, TrackClick};
+use bevy_tween::combinator::{parallel, tween, tween_exact, AnimationBuilderExt};
+use bevy_tween::interpolate::{background_color, background_color_delta_to, background_color_to};
+use bevy_tween::interpolation::EaseKind;
+use bevy_tween::prelude::IntoTarget;
 
 pub const BUTTON_PADDING: Val = Val::Px(20.0);
 pub const PIXEL_BORDER: f32 = 3.0; // Classic pixel border width
@@ -127,7 +132,7 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
             BackgroundColor(MODERN_THEME.panel_bg),
             BorderColor::from(MODERN_THEME.border),
             BorderRadius::ZERO,
-            HoverLight,
+            HoverLight(MODERN_THEME.panel_bg),
             TabIndex(tab_index),
         ))
     }
@@ -225,7 +230,7 @@ impl<'w> WidgetSpawnExt for RelatedSpawnerCommands<'w, ChildOf> {
             BorderRadius::ZERO,
             BorderColor::from(MODERN_THEME.border),
             Outline::new(Val::Px(PIXEL_BORDER), Val::ZERO, MODERN_THEME.outline),
-            HoverLight,
+            HoverLight(color),
             children![LabelBundle::button_label(text)],
         ))
     }
@@ -266,5 +271,55 @@ pub fn update_slider_visuals(
                 thumb_node.left = percent(range.thumb_position(value.0) * 100.0);
             }
         }
+    }
+}
+
+pub fn handle_ui_hover_light(
+    mut commands: Commands,
+    query: Query<(Entity, Ref<Interaction>, &HoverLight, Option<&HoverLightColor>),
+        (Changed<Interaction>, With<BackgroundColor>)>,
+) {
+
+    for (entity, interaction, hover_light, maybe_custom_colors) in &query {
+        let base_color = hover_light.0;
+
+        if interaction.is_added() || !interaction.is_changed() {
+            continue;
+        }
+
+        let hover_color = if let Some(custom) = maybe_custom_colors {
+            custom.hover_color
+        } else {
+            lighten_color(base_color, DEFAULT_LIGHTEN_AMOUNT)
+        };
+
+
+        let mut target = entity.into_target();
+
+        match *interaction {
+            Interaction::Hovered => {
+
+
+                commands.entity(entity).animation().insert_tween_here(
+                    Duration::from_millis(250),
+                    EaseKind::CubicInOut,
+                    target.state(base_color).with(background_color_to(hover_color))
+                );
+            },
+            Interaction::None => {
+
+                commands.entity(entity).animation().insert_tween_here(
+                    Duration::from_millis(250),
+                    EaseKind::CubicInOut,
+                    target.state(hover_color).with(background_color_to(base_color))
+                );
+            }
+            _ => {}
+        };
+
+
+
+
+
     }
 }

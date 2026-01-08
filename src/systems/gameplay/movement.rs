@@ -1,10 +1,9 @@
-use bevy::prelude::*;
-use avian2d::prelude::*;
-use leafwing_input_manager::prelude::*;
 use crate::components::*;
 use crate::resources::controls::*;
-use crate::utils::FIXED_DIMENSIONS;
 use crate::utils::screen::PADDLE_SIZE;
+use avian2d::prelude::*;
+use bevy::prelude::*;
+use leafwing_input_manager::prelude::*;
 
 const BALL_SPEED: f32 = 600.0;
 

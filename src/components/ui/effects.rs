@@ -1,8 +1,9 @@
+use bevy::prelude::Entity;
 use crate::bundles::{Color, Component};
 use crate::utils::lighten_color;
 
 #[derive(Component)]
-pub struct HoverLight;
+pub struct HoverLight(pub Color);
 
 #[derive(Component)]
 pub struct HoverLightColor {

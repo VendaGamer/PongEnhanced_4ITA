@@ -13,14 +13,15 @@ use crate::resources::controls::PlayerAction;
 use crate::resources::MenuAction;
 use crate::utils::DEFAULT_FONT;
 use avian2d::prelude::*;
-use bevy::asset::AssetContainer;
 use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig};
-use bevy::input_focus::{InputDispatchPlugin, InputFocus, InputFocusSystems};
+use bevy::input_focus::InputDispatchPlugin;
 use bevy::prelude::*;
 use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
 use bevy::render::RenderPlugin;
 use bevy::ui_widgets::UiWidgetsPlugins;
 use bevy::window::PresentMode;
+use bevy_tween::{component_tween_system, interpolate, tween, BevyTweenRegisterSystems, DefaultTweenPlugins, TweenCorePlugin};
+use bevy_tween::tween::ComponentTween;
 use components::*;
 use leafwing_input_manager::plugin::InputManagerPlugin;
 
@@ -64,6 +65,7 @@ fn main() {
             UiWidgetsPlugins,
             InputDispatchPlugin,
             GameCorePlugin,
+            DefaultTweenPlugins,
         ));
 
     let world = app.world_mut();

@@ -1,4 +1,4 @@
-use crate::models::game::area::{AreaShape, AreaSide};
+use crate::models::game::area::AreaSide;
 use bevy::prelude::*;
 
 #[derive(Component)]
