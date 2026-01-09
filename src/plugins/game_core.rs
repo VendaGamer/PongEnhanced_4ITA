@@ -1,3 +1,4 @@
+use bevy::input_focus::InputFocusVisible;
 use crate::bundles::player::PlayerBundle;
 use crate::bundles::*;
 use crate::models::game::area::{PlayerInfo, Players};
@@ -5,7 +6,7 @@ use crate::resources::controls::MenuAction;
 use crate::resources::GameConfig;
 use crate::systems::menu::MenuSpawnCommandsExt;
 use crate::systems::selectors::{handle_selector_navigation, update_selector_text};
-use crate::systems::widgets::{handle_ui_hover_light, update_slider_visuals};
+use crate::systems::widgets::{handle_ui_hover_light, highlight_focused_element, navigate_ui, update_slider_visuals};
 use crate::systems::*;
 use crate::utils::FIXED_DIMENSIONS;
 use bevy::ui_widgets::slider_self_update;
@@ -27,7 +28,9 @@ impl Plugin for GameCorePlugin {
                 update_selector_text,
                 handle_selector_navigation,
                 handle_ui_scaling,
-                update_slider_visuals
+                update_slider_visuals,
+                navigate_ui,
+                highlight_focused_element
             ))
             .add_systems(Startup, (
                 //setup,
@@ -35,7 +38,8 @@ impl Plugin for GameCorePlugin {
             ))
             .add_observer(slider_self_update)
             .insert_resource(GameConfig::default())
-            .insert_resource(Players::default());
+            .insert_resource(Players::default())
+            .insert_resource(InputFocusVisible(true));
     }
 }
 

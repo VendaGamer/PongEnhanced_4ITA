@@ -3,6 +3,8 @@ use bevy::prelude::*;
 pub const DEFAULT_FONT: &[u8] = include_bytes!("../../assets/font/jersey10_regular.ttf");
 pub const DEFAULT_LIGHTEN_AMOUNT: f32 = 30.0;
 pub const PIXEL_BORDER_SIZE: f32 = 3.0;
+pub const FOCUSED_BORDER: Srgba = bevy::color::palettes::tailwind::BLUE_50;
+
 
 
 #[derive(Clone, Copy)]
