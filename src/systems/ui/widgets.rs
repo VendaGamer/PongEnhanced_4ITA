@@ -4,12 +4,9 @@ use crate::components::ui::effects::{HoverLight, HoverLightColor};
 use crate::components::ui::{Dropdown, OptionSelector, SelectorButton, SelectorText};
 use crate::events::ui::widgets::{ButtonPressed, OptionChanged};
 use crate::models::ui::option::UIOption;
-use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT, FOCUSED_BORDER, MODERN_THEME};
+use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT, MODERN_THEME};
 use bevy::ecs::relationship::RelatedSpawnerCommands;
-use bevy::input_focus::directional_navigation::DirectionalNavigation;
-use bevy::input_focus::{InputFocus, InputFocusVisible};
 use bevy::input_focus::tab_navigation::TabIndex;
-use bevy::math::CompassOctant;
 use bevy::picking::hover::Hovered;
 use bevy::prelude::*;
 use bevy::ui_widgets::{Slider, SliderRange, SliderThumb, SliderValue, TrackClick};
@@ -17,8 +14,6 @@ use bevy_tween::combinator::{parallel, tween, tween_exact, AnimationBuilderExt};
 use bevy_tween::interpolate::{background_color, background_color_delta_to, background_color_to};
 use bevy_tween::interpolation::EaseKind;
 use bevy_tween::prelude::IntoTarget;
-use leafwing_input_manager::action_state::ActionState;
-use crate::resources::{MenuAction, PlayerAction};
 
 pub const BUTTON_PADDING: Val = Val::Px(20.0);
 pub const PIXEL_BORDER: f32 = 3.0; // Classic pixel border width
@@ -319,62 +314,12 @@ pub fn handle_ui_hover_light(
                     target.state(hover_color).with(background_color_to(base_color))
                 );
             }
-            _ => {
-
-            }
+            _ => {}
         };
+
+
+
+
+
     }
 }
-
-
-fn vec2_to_octant(value: Vec2) -> CompassOctant {
-    let x = value.x;
-    let y = value.y;
-
-    match (x, y) {
-        (x, y) if x > 0.5 && y.abs() <= x => CompassOctant::East,
-        (x, y) if x < -0.5 && y.abs() <= -x => CompassOctant::West,
-        (x, y) if y > 0.5 && x.abs() <= y => CompassOctant::North,
-        (x, y) if y < -0.5 && x.abs() <= -y => CompassOctant::South,
-        (x, y) if x > 0.0 && y > 0.0 => CompassOctant::NorthEast,
-        (x, y) if x < 0.0 && y > 0.0 => CompassOctant::NorthWest,
-        (x, y) if x < 0.0 && y < 0.0 => CompassOctant::SouthWest,
-        (x, y) if x > 0.0 && y < 0.0 => CompassOctant::SouthEast,
-        _ => CompassOctant::East,
-    }
-}
-
-pub fn navigate_ui(action_state: Query<&ActionState<MenuAction>>, mut directional_navigation: DirectionalNavigation) {
-    
-    if let Ok(state) = action_state.single() {
-
-        let axis = state.axis_pair(&MenuAction::Navigate);
-        if axis == Vec2::ZERO {
-            return;
-        }
-
-        match directional_navigation.navigate(vec2_to_octant(axis)){
-            Ok(entity) => {
-                println!("Navigated to {:?}", entity);
-            },
-            Err(err) => {
-                println!("Navigation error: {:?}", err);
-            }
-        }
-    }
-}
-
-pub fn highlight_focused_element(
-    input_focus: Res<InputFocus>,
-    input_focus_visible: Res<InputFocusVisible>,
-    mut query: Query<(Entity, &mut BorderColor)>,
-) {
-    for (entity, mut border_color) in query.iter_mut() {
-        if input_focus.0 == Some(entity) && input_focus_visible.0 {
-            *border_color = BorderColor::all(FOCUSED_BORDER);
-        } else {
-            *border_color = BorderColor::DEFAULT;
-        }
-    }
-}
-

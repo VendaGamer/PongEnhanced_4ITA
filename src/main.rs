@@ -14,7 +14,6 @@ use crate::resources::MenuAction;
 use crate::utils::DEFAULT_FONT;
 use avian2d::prelude::*;
 use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig};
-use bevy::input_focus::directional_navigation::DirectionalNavigationPlugin;
 use bevy::input_focus::InputDispatchPlugin;
 use bevy::prelude::*;
 use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
@@ -65,7 +64,6 @@ fn main() {
             InputManagerPlugin::<MenuAction>::default(),
             UiWidgetsPlugins,
             InputDispatchPlugin,
-            DirectionalNavigationPlugin,
             GameCorePlugin,
             DefaultTweenPlugins,
         ));
@@ -76,8 +74,7 @@ fn main() {
         .insert(AssetId::default(), Font::try_from_bytes(DEFAULT_FONT.into())
         .unwrap())
         .expect("UNABLE TO LOAD FONT");
-
-
+    
     
     app.run();
 }

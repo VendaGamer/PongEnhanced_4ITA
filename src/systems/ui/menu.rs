@@ -1,31 +1,30 @@
-use crate::bundles::area::AreaBundle;
+use bevy::input_focus::tab_navigation::TabGroup;
 use crate::bundles::widgets::LabelBundle;
-use crate::bundles::{BallBundle, DivisionLineBundle};
 use crate::components::ui::{Menu, MenuType, OptionSelector};
+use crate::models::ui::option::{UIOption};
+use crate::systems::widgets::*;
+use bevy::prelude::*;
+use bevy::window::{Monitor, PrimaryMonitor};
+use crate::bundles::area::AreaBundle;
+use crate::bundles::{BallBundle, DivisionLineBundle};
 use crate::events::ui::widgets::ButtonPressed;
-use crate::models::game::area::{AreaShape, AreaSide, PlayerInfo, Team};
+use crate::models::game::area::{AreaShape, Team, AreaSide, PlayerInfo};
 use crate::models::game::gameplay::GameMode;
 use crate::models::game::settings::ScreenMode;
-use crate::models::ui::option::UIOption;
 use crate::resources::GameConfig;
 use crate::systems::handle_scoring;
-use crate::systems::widgets::*;
 use crate::utils::BALL_RADIUS;
-use bevy::input_focus::directional_navigation::DirectionalNavigationMap;
-use bevy::input_focus::InputFocus;
-use bevy::input_focus::tab_navigation::TabGroup;
-use bevy::prelude::*;
 
 pub trait MenuSpawnCommandsExt {
-    fn spawn_main_menu(&mut self, nav_map: ResMut<DirectionalNavigationMap>) -> EntityCommands<'_>;
-    fn spawn_offline_menu(&mut self, nav_map: ResMut<DirectionalNavigationMap>) -> EntityCommands<'_>;
-    fn spawn_online_menu(&mut self, nav_map: ResMut<DirectionalNavigationMap>) -> EntityCommands<'_>;
-    fn spawn_settings_menu(&mut self, nav_map: ResMut<DirectionalNavigationMap>) -> EntityCommands<'_>;
-    fn spawn_menu_base(&mut self, menu: MenuType, mut input_focus: ResMut<InputFocus>) -> EntityCommands<'_>;
+    fn spawn_main_menu(&mut self) -> EntityCommands<'_>;
+    fn spawn_offline_menu(&mut self) -> EntityCommands<'_>;
+    fn spawn_online_menu(&mut self) -> EntityCommands<'_>;
+    fn spawn_settings_menu(&mut self) -> EntityCommands<'_>;
+    fn spawn_menu_base(&mut self, menu: MenuType) -> EntityCommands<'_>;
 }
 
 impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
-    fn spawn_main_menu(&mut self, nav_map: ResMut<DirectionalNavigationMap>) -> EntityCommands<'_> {
+    fn spawn_main_menu(&mut self) -> EntityCommands<'_> {
         let mut main_menu = self.spawn_menu_base(MenuType::MainMenu);
 
         main_menu.with_children(|parent| {
