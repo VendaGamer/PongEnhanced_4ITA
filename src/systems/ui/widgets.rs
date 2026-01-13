@@ -19,7 +19,7 @@ pub const PIXEL_BORDER: f32 = 3.0; // Classic pixel border width
 pub const BUTTON_OUTLINE: Outline = Outline::new(Val::Px(PIXEL_BORDER), Val::ZERO, Color::BLACK);
 
 
-pub fn update_slider_visuals(
+pub fn u_slider_visuals(
     sliders: Query<(Entity, &SliderValue, &SliderRange), Changed<SliderValue>>,
     children: Query<&Children>,
     mut thumbs: Query<&mut Node, With<SliderThumb>>,
@@ -33,10 +33,10 @@ pub fn update_slider_visuals(
     }
 }
 
-pub fn handle_ui_hover_light(
+pub fn u_ui_hover_light(
     mut commands: Commands,
     query: Query<(Entity, Ref<Interaction>, &HoverLight, Option<&HoverLightColor>),
-        (Changed<Interaction>, With<BackgroundColor>)>,
+    (Changed<Interaction>, With<BackgroundColor>)>,
 ) {
     for (entity, interaction, hover_light, maybe_custom_colors) in &query {
         let base_color = hover_light.0;
@@ -164,7 +164,7 @@ pub fn w_slider(min: f32, max: f32, current: f32, tab_index: i32) -> impl Bundle
     )
 }
 
-pub fn append_menu_section() -> impl Bundle {
+pub fn w_menu_section() -> impl Bundle {
     (
         Node {
             flex_direction: FlexDirection::Column,
@@ -218,7 +218,7 @@ pub fn w_dropdown(options: Vec<UIOption>, selected: usize, tab_index: i32) -> im
     )
 }
 
-pub fn append_selector(options: Vec<UIOption>, selected: usize, tab_index: i32, label: &str) -> impl Bundle {
+pub fn w_selector(options: Vec<UIOption>, selected: usize, tab_index: i32, label: &str) -> impl Bundle {
     (
         OptionSelector { options, selected },
         Node {
@@ -252,7 +252,8 @@ pub fn append_selector(options: Vec<UIOption>, selected: usize, tab_index: i32, 
                 BorderColor::from(MODERN_THEME.border),
                 BorderRadius::ZERO,
 
-            ))
+            )),
+
         )
     )
 
@@ -300,6 +301,10 @@ pub fn append_selector(options: Vec<UIOption>, selected: usize, tab_index: i32, 
     });
 
     root
+}
+
+pub fn w_menu_button(color: Color, text: &str) -> impl Bundle {
+    w_button(color, Vec2::new(350.0, 70.0), text)
 }
 
 pub fn update_selector(

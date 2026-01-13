@@ -3,13 +3,12 @@ use crate::bundles::*;
 use crate::models::game::area::{PlayerInfo, Players};
 use crate::resources::controls::MenuAction;
 use crate::resources::GameConfig;
-use crate::systems::menu::MenuSpawnCommandsExt;
 use crate::systems::selectors::{handle_selector_navigation, update_selector_text};
-use crate::systems::widgets::{handle_ui_hover_light, update_slider_visuals};
 use crate::systems::*;
 use crate::utils::FIXED_DIMENSIONS;
 use bevy::ui_widgets::slider_self_update;
 use bevy::window::WindowResized;
+use crate::systems::menu::m_main;
 
 pub struct GameCorePlugin;
 
@@ -22,12 +21,9 @@ impl Plugin for GameCorePlugin {
                 maintain_ball_speed,
                 paddle_hit_dynamics,
                 update_score_ui,
-                detect_button_press,
-                handle_ui_hover_light,
                 update_selector_text,
                 handle_selector_navigation,
                 handle_ui_scaling,
-                update_slider_visuals
             ))
             .add_systems(Startup, (
                 //setup,
@@ -70,5 +66,5 @@ fn setup_common(
     }
 
     commands.spawn(MenuAction::input_map());
-    commands.spawn_main_menu();
+    commands.spawn(m_main());
 }

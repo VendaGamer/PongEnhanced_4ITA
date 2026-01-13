@@ -1,87 +1,69 @@
-use bevy::input_focus::tab_navigation::TabGroup;
-use crate::bundles::widgets::LabelBundle;
-use crate::components::ui::{Menu, MenuType, OptionSelector};
-use crate::models::ui::option::{UIOption};
-use crate::systems::widgets::*;
-use bevy::prelude::*;
-use bevy::window::{Monitor, PrimaryMonitor};
 use crate::bundles::area::AreaBundle;
+use crate::bundles::widgets::LabelBundle;
 use crate::bundles::{BallBundle, DivisionLineBundle};
+use crate::components::ui::{Menu, MenuType, OptionSelector};
 use crate::events::ui::widgets::ButtonPressed;
-use crate::models::game::area::{AreaShape, Team, AreaSide, PlayerInfo};
+use crate::models::game::area::{AreaShape, AreaSide, PlayerInfo, Team};
 use crate::models::game::gameplay::GameMode;
 use crate::models::game::settings::ScreenMode;
+use crate::models::ui::option::UIOption;
 use crate::resources::GameConfig;
 use crate::systems::handle_scoring;
+use crate::systems::widgets::*;
 use crate::utils::BALL_RADIUS;
+use bevy::prelude::*;
 
-pub trait MenuSpawnCommandsExt {
-    fn spawn_main_menu(&mut self) -> EntityCommands<'_>;
-    fn spawn_offline_menu(&mut self) -> EntityCommands<'_>;
-    fn spawn_online_menu(&mut self) -> EntityCommands<'_>;
-    fn spawn_settings_menu(&mut self) -> EntityCommands<'_>;
-    fn spawn_menu_base(&mut self, menu: MenuType) -> EntityCommands<'_>;
+
+pub fn m_main() -> impl Bundle {
+    (
+        m_base(MenuType::MainMenu),
+        Children::spawn((
+            Spawn(LabelBundle::game_title()),
+            Spawn((
+                Node {
+                    flex_direction: FlexDirection::Column,
+                    flex_wrap: FlexWrap::Wrap,
+                    padding: UiRect::new(BUTTON_PADDING, BUTTON_PADDING, BUTTON_PADDING, Val::ZERO),
+                    ..default()
+                },
+                Outline::new(Val::Px(5.0), Val::ZERO, Color::linear_rgb(0.5, 0.5, 0.5)),
+                BackgroundColor::from(Color::srgb(0.1, 0.1, 0.1)),
+                Children::spawn((
+                    Spawn((
+                        w_menu_button(Color::srgb(0.2, 0.6, 0.9),
+                                      "Offline Play"),
+                        Observer::new(on_offline)
+                    )),
+                    Spawn((
+                        w_menu_button(Color::srgb(0.6, 0.3, 0.9),
+                                      "Online Play"),
+                        Observer::new(on_online)
+                    )),
+                    Spawn((
+                        w_menu_button(Color::srgb(0.5, 0.5, 0.5),
+                                      "Settings"),
+                        Observer::new(on_settings)
+                    )),
+                    Spawn((
+                        w_menu_button(Color::srgb(0.8, 0.2, 0.2),
+                                          "Exit"),
+                        Observer::new(on_exit)
+                    )),
+                ))
+            ))
+        ))
+    )
 }
 
-impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
-    fn spawn_main_menu(&mut self) -> EntityCommands<'_> {
-        let mut main_menu = self.spawn_menu_base(MenuType::MainMenu);
-
-        main_menu.with_children(|parent| {
-            parent.spawn(LabelBundle::game_title());
-
-            parent.spawn(
-                (
-                    Node {
-                        flex_direction: FlexDirection::Column,
-                        flex_wrap: FlexWrap::Wrap,
-                        padding: UiRect::new(BUTTON_PADDING, BUTTON_PADDING, BUTTON_PADDING, Val::ZERO),
-                        ..default()
-                    },
-                    Outline::new(Val::Px(5.0), Val::ZERO, Color::linear_rgb(0.5, 0.5, 0.5)),
-                    BackgroundColor::from(Color::srgb(0.1, 0.1, 0.1)),
-                )
-            ).with_children(|parent|{
-                parent.append_menu_button(
-                    Color::srgb(0.2, 0.6, 0.9),
-                    "Offline Play",
-                    0)
-                    .observe(on_offline);
-
-                parent.append_menu_button(
-                    Color::srgb(0.6, 0.3, 0.9),
-                    "Online Play",
-                    1)
-                    .observe(on_online);
-
-                parent.append_menu_button(
-                    Color::srgb(0.5, 0.5, 0.5),
-                "Settings",
-                    2)
-                    .observe(on_settings);
-
-                parent.append_menu_button(
-                    Color::srgb(0.8, 0.2, 0.2),
-                    "Exit",
-                    3)
-                    .observe(on_exit);
-
-            });
-        });
-
-        main_menu
-    }
-
-    fn spawn_offline_menu(&mut self) -> EntityCommands<'_> {
-        let mut offline_menu = self.spawn_menu_base(MenuType::OfflinePlayMenu);
-
-        offline_menu.with_children(|parent| {
-            parent.append_menu_title("Offline Play");
-
-            parent.append_menu_section()
-                .with_children(|section| {
-                    // Number of Players
-                    section.append_selector(
+pub fn m_offline() -> impl Bundle {
+    (
+        m_base(MenuType::OfflinePlayMenu),
+        Children::spawn((
+            Spawn(w_menu_title("Offline Play")),
+            Spawn((
+                w_menu_section(),
+                Children::spawn((
+                    Spawn(w_selector(
                         vec![
                             UIOption::new("2 Players", 2),
                             UIOption::new("3 Players", 3),
@@ -89,10 +71,8 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                         0,
                         0,
                         "Number of Players"
-                    );
-
-                    // Game Mode
-                    section.append_selector(
+                    )),
+                    Spawn(w_selector(
                         vec![
                             UIOption::new("Classic", GameMode::Classic),
                             UIOption::new("Modern", GameMode::Modern),
@@ -103,10 +83,8 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                         0,
                         1,
                         "Game Mode",
-                    );
-
-                    // Arena Shape
-                    section.append_selector(
+                    )),
+                    Spawn(w_selector(
                         vec![
                             UIOption::new("Two Sides", AreaShape::TwoSide(None)),
                             UIOption::new("Triangular", AreaShape::Triangular(None)),
@@ -115,10 +93,8 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                         0,
                         2,
                         "Arena Shape"
-                    );
-
-                    // Win Score
-                    section.append_selector(
+                    )),
+                    Spawn(w_selector(
                         vec![
                             UIOption::new("5 Points", 5),
                             UIOption::new("10 Points", 10),
@@ -129,172 +105,33 @@ impl<'w, 's> MenuSpawnCommandsExt for Commands<'w, 's> {
                         3,
 
                         "Win Score"
-                    );
-                });
-
-            parent.spawn(Node {
+                    )),
+                ))
+            )),
+            Spawn((
+                Node {
                 flex_direction: FlexDirection::Row,
                 margin: UiRect::top(Val::Px(30.0)),
                 column_gap: Val::Px(20.0),
                 ..default()
-            }).with_children(|buttons| {
-                buttons.append_menu_button(
-                    Color::srgb(0.2, 0.7, 0.3),
-                    "Start Game",
-                    0
-                ).observe(on_start_offline_game);
-
-                buttons.append_menu_button(
-                    Color::srgb(0.6, 0.6, 0.6),
-                    "Back",
-                    1
-                ).observe(on_menu_to_main);
-            });
-        });
-
-        offline_menu
-    }
-
-    fn spawn_online_menu(&mut self) -> EntityCommands<'_> {
-        let mut online_menu = self
-            .spawn_menu_base(MenuType::OnlinePlayMenu);
-
-        online_menu.with_children(|parent| {
-            parent.spawn((
-                Node {
-                    margin: UiRect::bottom(Val::Px(40.0)),
-                    ..default()
                 },
-                Text::new("ONLINE PLAY"),
-                TextFont {
-                    font_size: 64.0,
-                    ..default()
-                },
-                TextColor(Color::srgb(0.9, 0.9, 1.0)),
-            ));
-
-            parent.append_menu_section()
-                .with_children(|section| {
-                    section.append_menu_button(
-                        Color::srgb(0.3, 0.6, 0.9),
-                        "Quick Match",
-                        0
-                    ).observe(on_quick_match);
-
-                    section.append_menu_button(
-                        Color::srgb(0.5, 0.4, 0.9),
-                        "Create Room",
-                        1
-                    ).observe(on_create_room);
-
-                    section.append_menu_button(
-                        Color::srgb(0.9, 0.5, 0.3),
-                        "Join Room",
-                        2
-                    ).observe(on_join_room);
-
-                    section.append_menu_button(
-                        Color::srgb(0.4, 0.7, 0.4),
-                        "Friends List",
-                        3
-                    ).observe(on_friends_list);
-                });
-
-            parent.append_menu_button(
-                Color::srgb(0.6, 0.6, 0.6),
-                "Back",
-                4
-            ).observe(on_menu_to_main);
-        });
-
-        online_menu.insert(TabGroup::new(0));
-
-        online_menu
-    }
-
-    fn spawn_settings_menu(&mut self) -> EntityCommands<'_> {
-        let mut settings_menu = self.spawn_menu_base(MenuType::SettingsMenu);
-
-
-        settings_menu.with_children(|parent| {
-            parent.append_menu_title("SETTINGS");
-
-            parent.append_menu_section()
-                .with_children(|section| {
-                    section.spawn((
-                        Node {
-                            margin: UiRect::bottom(Val::Px(20.0)),
-                            ..default()
-                        },
-                        Text::new("Audio"),
-                        TextFont {
-                            font_size: 32.0,
-                            ..default()
-                        },
-                        TextColor(Color::srgb(0.8, 0.8, 0.9)),
-                    ));
-
-                    section.append_slider(0.0, 100.0, 50.0, 0);
-                    section.append_slider(0.0, 100.0, 50.0, 1);
-
-                    section.spawn((
-                        Node {
-                            margin: UiRect::vertical(Val::Px(20.0)),
-                            ..default()
-                        },
-                        Text::new("Graphics"),
-                        TextFont {
-                            font_size: 32.0,
-                            ..default()
-                        },
-                        TextColor(Color::srgb(0.8, 0.8, 0.9)),
-                    ));
-
-                    section.append_selector(
-                        vec![
-                            UIOption::new("Handle later", 0),
-                        ],
-                        0,
-                        2,
-                        "Resolution".into(),
-                    );
-
-                    section.append_selector(
-                        vec![
-                            UIOption::new("Exclusive FullScreen", ScreenMode::ExclusiveFullScreen),
-                            UIOption::new("FullScreen", ScreenMode::BorderlessFullScreen),
-                            UIOption::new("Windowed", ScreenMode::Windowed),
-                        ],
-                        0,
-                        3,
-                        "Screen Mode",
-                    );
-                });
-
-            parent.append_menu_button(
-                Color::srgb(0.6, 0.6, 0.6),
-                "Back",
-                4)
-                .observe(on_settings_back);
-        });
-
-        settings_menu
-    }
-
-    fn spawn_menu_base(&mut self, menu_type: MenuType) -> EntityCommands<'_> {
-        self.spawn((
-            Menu::new(menu_type),
-            Node {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                flex_direction: FlexDirection::Column,
-                ..default()
-            },
-            BackgroundColor(Color::srgb(0.05, 0.05, 0.1))
+                Children::spawn((
+                    Spawn((
+                        w_menu_button(
+                        Color::srgb(0.2, 0.7, 0.3),
+                        "Start Game"),
+                        Observer::new(on_start_offline_game)
+                    )),
+                    Spawn((
+                            w_menu_button(
+                            Color::srgb(0.6, 0.6, 0.6),
+                            "Back"),
+                        Observer::new(on_back_main)
+                    ))
+                ))
+            ))
         ))
-    }
+    )
 }
 
 // Observer callbacks
@@ -321,7 +158,7 @@ fn on_offline(
 ) {
     let entity = main_menu.single().expect("Main Menu doesn't exist");
     commands.entity(entity).despawn();
-    commands.spawn_offline_menu();
+    commands.spawn(m_offline());
 }
 
 fn on_online(
@@ -331,7 +168,7 @@ fn on_online(
 ) {
     let entity = main_menu.single().expect("Main Menu doesn't exist");
     commands.entity(entity).despawn();
-    commands.spawn_online_menu();
+    commands.spawn(m_online());
 }
 
 fn on_settings(
@@ -341,21 +178,21 @@ fn on_settings(
 ) {
     let entity = main_menu.single().expect("Main Menu doesn't exist");
     commands.entity(entity).despawn();
-    commands.spawn_settings_menu();
+    commands.spawn(m_settings());
 }
 
 fn on_exit(_press: On<ButtonPressed>, mut exit: MessageWriter<AppExit>) {
     exit.write(AppExit::Success);
 }
 
-fn on_settings_back(
+fn on_back_main(
     _press: On<ButtonPressed>,
     mut commands: Commands,
     settings_menu: Query<Entity, With<Menu>>,
 ) {
     let entity = settings_menu.single().expect("Settings Menu doesn't exist");
     commands.entity(entity).despawn();
-    commands.spawn_main_menu();
+    commands.spawn(m_main());
 }
 
 fn on_start_offline_game(
@@ -510,12 +347,148 @@ fn on_start_offline_game(
     }
 }
 
-fn on_menu_to_main(
-    _press: On<ButtonPressed>,
-    mut commands: Commands,
-    current_menu: Query<Entity, With<Menu>>,
-) {
-    let entity = current_menu.single().expect("Menu doesn't exist");
-    commands.entity(entity).despawn();
-    commands.spawn_main_menu();
+
+pub fn m_online() -> impl Bundle {
+    (
+        m_base(MenuType::OnlinePlayMenu),
+        Children::spawn_one((
+            Node {
+                margin: UiRect::bottom(Val::Px(40.0)),
+                ..default()
+            },
+            Text::new("ONLINE PLAY"),
+            TextFont {
+                font_size: 64.0,
+                ..default()
+            },
+            TextColor(Color::srgb(0.9, 0.9, 1.0)),
+            Children::spawn((
+                Spawn((
+                    w_menu_section(),
+                    Children::spawn((
+                        Spawn((
+                            w_menu_button(
+                                Color::srgb(0.3, 0.6, 0.9),
+                                "Quick Match"
+                            ),
+                            Observer::new(on_quick_match)
+                        )),
+                        Spawn((
+                            w_menu_button(
+                                Color::srgb(0.5, 0.4, 0.9),
+                                "Create Room",
+                            ),
+                            Observer::new(on_create_room)
+                        )),
+                        Spawn((
+                            w_menu_button(
+                                Color::srgb(0.9, 0.5, 0.3),
+                                "Join Room",
+                            ),
+                            Observer::new(on_join_room)
+                        )),
+                        Spawn((
+                            w_menu_button(
+                                Color::srgb(0.4, 0.7, 0.4),
+                                "Friends List",
+                            ),
+                            Observer::new(on_friends_list)
+                        )),
+                    )),
+                )),
+                Spawn((
+                    w_menu_button(
+                        Color::srgb(0.6, 0.6, 0.6),
+                        "Back",
+                    ),
+                    Observer::new(on_back_main)
+                ))
+            ))
+        ))
+    )
+}
+
+pub fn m_settings() -> impl Bundle {
+    (
+        m_base(MenuType::SettingsMenu),
+        Children::spawn((
+            Spawn(w_menu_title("SETTINGS")),
+            Spawn((
+                w_menu_section(),
+                Children::spawn((
+                    Spawn((
+                        Node {
+                            margin: UiRect::bottom(Val::Px(20.0)),
+                            ..default()
+                        },
+                        Text::new("Audio"),
+                        TextFont {
+                            font_size: 32.0,
+                            ..default()
+                        },
+                        TextColor(Color::srgb(0.8, 0.8, 0.9)),
+                    )),
+                    Spawn((
+                        w_menu_section(),
+                        Children::spawn((
+                            Spawn(w_slider(0.0, 100.0, 50.0, 0)),
+                            Spawn(w_slider(0.0, 100.0, 50.0, 1)),
+                            Spawn((
+                                Node {
+                                    margin: UiRect::vertical(Val::Px(20.0)),
+                                    ..default()
+                                },
+                                Text::new("Graphics"),
+                                TextFont {
+                                    font_size: 32.0,
+                                    ..default()
+                                },
+                                TextColor(Color::srgb(0.8, 0.8, 0.9)),
+                            )),
+                            Spawn(w_selector(
+                                vec![
+                                    UIOption::new("Handle later", 0),
+                                ],
+                                0,
+                                2,
+                                "Resolution".into(),
+                            )),
+                            Spawn(w_selector(
+                                vec![
+                                    UIOption::new("Exclusive FullScreen", ScreenMode::ExclusiveFullScreen),
+                                    UIOption::new("FullScreen", ScreenMode::BorderlessFullScreen),
+                                    UIOption::new("Windowed", ScreenMode::Windowed),
+                                ],
+                                0,
+                                3,
+                                "Screen Mode",
+                            ))
+                        ))
+                    ))
+                ))
+            )),
+            Spawn((
+                w_menu_button(
+                    Color::srgb(0.6, 0.6, 0.6),
+                    "Back"
+                ),
+                Observer::new(on_back_main)
+            ))
+        ))
+    )
+}
+
+fn m_base(menu_type: MenuType) -> impl Bundle {
+    (
+        Menu::new(menu_type),
+        Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            flex_direction: FlexDirection::Column,
+            ..default()
+        },
+        BackgroundColor(Color::srgb(0.05, 0.05, 0.1))
+    )
 }
