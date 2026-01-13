@@ -11,9 +11,7 @@ pub struct Dropdown {
 
 #[derive(Component)]
 #[require(Button)]
-pub struct SelectorButton {
-    pub selector: Entity
-}
+pub struct SelectorButton;
 
 #[derive(Component)]
 pub struct OptionSelector {
