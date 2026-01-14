@@ -231,10 +231,10 @@ pub fn w_selector(options: Vec<UIOption>, selected: usize, tab_index: i32, label
             justify_items: JustifyItems::Center,
             ..default()
         },
-        Children::spawn(
+        Children::spawn((
             Spawn((
                 w_button(MODERN_THEME.button, Vec2::new(40.0, 40.0), "<"),
-                SelectorButton
+                SelectorButton(false),
             )),
             Spawn((
                 Node {
@@ -251,56 +251,13 @@ pub fn w_selector(options: Vec<UIOption>, selected: usize, tab_index: i32, label
                 BackgroundColor(MODERN_THEME.panel_bg),
                 BorderColor::from(MODERN_THEME.border),
                 BorderRadius::ZERO,
-
             )),
-
-        )
+            Spawn((
+                w_button(MODERN_THEME.button, Vec2::new(40.0, 40.0), "<"),
+                SelectorButton(true),
+            ))
+        ))
     )
-
-    root.with_children(|parent| {
-        let selector_entity = parent.target_entity();
-        parent
-            .append_button()
-            .insert()
-            .observe(
-
-            );
-
-        parent.spawn((
-
-            TabIndex(tab_index),
-            children![
-                    LabelBundle::button_label(label),
-                    (
-                        LabelBundle::button_label(""),
-                        SelectorText { selector_entity }
-                    )
-                ],
-        ));
-
-
-        parent
-            .append_button(MODERN_THEME.button, Vec2::new(40.0, 40.0), ">")
-            .insert(SelectorButton {
-                selector: selector_entity,
-            })
-            .observe(
-                |pressed: On<ButtonPressed>,
-                 mut selectors: Query<&mut OptionSelector>,
-                 buttons: Query<&SelectorButton>,
-                 mut commands: Commands,
-                | {
-                    if let Ok(button) = buttons.get(pressed.event_target()) {
-                        if let Ok(mut selector) = selectors.get_mut(button.selector) {
-                            selector.cycle_next();
-                            commands.trigger(OptionChanged(button.selector));
-                        }
-                    }
-                },
-            );
-    });
-
-    root
 }
 
 pub fn w_menu_button(color: Color, text: &str) -> impl Bundle {
@@ -310,14 +267,21 @@ pub fn w_menu_button(color: Color, text: &str) -> impl Bundle {
 pub fn update_selector(
     pressed: On<ButtonPressed>,
     mut selectors: Query<&mut OptionSelector>,
-    button: Query<&ChildOf, With<SelectorButton>>,
+    button: Query<(&ChildOf, &SelectorButton)>,
     mut commands: Commands)
 {
 
-    if let Ok(child_of) = button.get(pressed.event_target()) {
+    if let Ok((child_of, button)) = button.get(pressed.event_target()) {
         let selector_entity = child_of.parent();
         if let Ok(mut selector) = selectors.get_mut(selector_entity) {
-        selector.cycle_prev();
+            
+        if button.0 {
+            selector.cycle_next();
+        } else {
+            selector.cycle_prev();
+        }
+            
+
         commands.trigger(OptionChanged(selector_entity));
         }
     }

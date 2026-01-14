@@ -9,9 +9,12 @@ pub struct Dropdown {
     pub selected: usize,
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 #[require(Button)]
-pub struct SelectorButton;
+pub struct SelectorButton(pub bool);
+
+#[derive(Component)]
+pub struct SelectorText;
 
 #[derive(Component)]
 pub struct OptionSelector {
@@ -52,9 +55,4 @@ impl OptionSelector {
             selected
         }
     }
-}
-
-#[derive(Component)]
-pub struct SelectorText {
-    pub selector_entity: Entity
 }
