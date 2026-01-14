@@ -12,6 +12,8 @@ dependencies = [
  "derive_more",
  "erased-serde",
  "leafwing-input-manager",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

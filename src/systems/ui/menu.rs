@@ -1,19 +1,20 @@
+use bevy::ecs::query::Spawned;
 use bevy::light::SimulationLightSystems::AddClusters;
 use crate::bundles::area::AreaBundle;
 use crate::bundles::widgets::LabelBundle;
 use crate::bundles::{BallBundle, DivisionLineBundle};
 use crate::components::ui::{Menu, MenuType, OptionSelector};
-use crate::events::ui::widgets::ButtonPressed;
+use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged};
 use crate::models::game::area::{AreaShape, AreaSide, PlayerInfo, Team};
 use crate::models::game::gameplay::GameMode;
 use crate::models::game::settings::ScreenMode;
 use crate::models::ui::option::UIOption;
-use crate::resources::GameConfig;
+use crate::resources::{GameModeConfig, GameSettings};
 use crate::systems::handle_scoring;
 use crate::systems::widgets::*;
 use crate::utils::BALL_RADIUS;
 use bevy::prelude::*;
-use bevy::ui_widgets::{observe};
+use bevy::ui_widgets::{observe, Slider, SliderValue, SliderValueChange, ValueChange};
 
 pub fn m_main() -> impl Bundle {
     (
@@ -73,7 +74,6 @@ pub fn m_offline() -> impl Bundle {
                             UIOption::new("4 Players", 4)
                         ],
                         0,
-                        0,
                         "Number of Players"
                     ),
                     w_selector(
@@ -85,7 +85,6 @@ pub fn m_offline() -> impl Bundle {
                             UIOption::new("Twisted", GameMode::Twisted),
                         ],
                         0,
-                        1,
                         "Game Mode",
                     ),
                     w_selector(
@@ -95,7 +94,6 @@ pub fn m_offline() -> impl Bundle {
                             UIOption::new("Cuboid", AreaShape::Cuboid(None))
                         ],
                         0,
-                        2,
                         "Arena Shape"
                     ),
                     w_selector(
@@ -106,7 +104,6 @@ pub fn m_offline() -> impl Bundle {
                             UIOption::new("20 Points", 20),
                         ],
                         0,
-                        3,
                         "Win Score"
                     )
                 ],
@@ -178,10 +175,11 @@ fn on_settings(
     _press: On<ButtonPressed>,
     mut commands: Commands,
     main_menu: Query<Entity, With<Menu>>,
+    settings: Res<GameSettings>,
 ) {
     let entity = main_menu.single().expect("Main Menu doesn't exist");
     commands.entity(entity).despawn();
-    commands.spawn(m_settings());
+    commands.spawn(m_settings(settings));
 }
 
 fn on_exit(_press: On<ButtonPressed>, mut exit: MessageWriter<AppExit>) {
@@ -204,7 +202,7 @@ fn on_start_offline_game(
     offline_menu: Query<Entity, With<Menu>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    mut game_config: ResMut<GameConfig>,
+    mut game_config: ResMut<GameModeConfig>,
     player_count_selector: Query<&OptionSelector>,
     players: Query<Entity, With<crate::components::Player>>,
 ) {
@@ -400,7 +398,7 @@ pub fn m_online() -> impl Bundle {
     )
 }
 
-pub fn m_settings() -> impl Bundle {
+pub fn m_settings(settings: Res<GameSettings>) -> impl Bundle {
     (
         m_base(MenuType::SettingsMenu),
         children![
@@ -421,8 +419,18 @@ pub fn m_settings() -> impl Bundle {
                         },
                         TextColor(Color::srgb(0.8, 0.8, 0.9)),
                     ),
-                    w_slider(0.0, 100.0, 50.0, 0),
-                    w_slider(0.0, 100.0, 50.0, 1),
+                    LabelBundle::button_label("Sound Effects"),
+                    (
+                        Name::new("SfxVol"),
+                        w_slider(0.0, 100.0, settings.sfx_volume),
+                        observe(on_sfx_changed)
+                    ),
+                    LabelBundle::button_label("Master"),
+                    (
+                        Name::new("MasterVol"),
+                        w_slider(0.0, 100.0, settings.master_volume),
+                        observe(on_master_changed)
+                    ),
                     (
                         Name::new("Graphics Settings"),
                         Node {
@@ -436,13 +444,23 @@ pub fn m_settings() -> impl Bundle {
                         },
                         TextColor(Color::srgb(0.8, 0.8, 0.9)),
                     ),
+                    (
+                        w_selector(
+                        vec![
+                            UIOption::new("Exclusive FullScreen", ScreenMode::ExclusiveFullScreen),
+                            UIOption::new("FullScreen", ScreenMode::BorderlessFullScreen),
+                            UIOption::new("Windowed", ScreenMode::Windowed),
+                        ],
+                        0,
+                        "Screen Mode"),
+                        observe(on_screen_mode_changed)
+                    ),
                     w_selector(
                         vec![
                             UIOption::new("Handle later", 0),
                         ],
                         0,
-                        2,
-                        "Resolution".into(),
+                        "Resolution",
                     ),
                     w_selector(
                         vec![
@@ -451,7 +469,6 @@ pub fn m_settings() -> impl Bundle {
                             UIOption::new("Windowed", ScreenMode::Windowed),
                         ],
                         0,
-                        3,
                         "Screen Mode",
                     ),
                 ]
@@ -465,6 +482,25 @@ pub fn m_settings() -> impl Bundle {
         ]
     )
 }
+
+fn on_sfx_changed(change: On<SliderValueChanged>, mut settings: ResMut<GameSettings>){
+    settings.sfx_volume = change.value;
+    println!("Changed SFX volume to {}", change.value);
+}
+
+fn on_master_changed(change: On<SliderValueChanged>, mut settings: ResMut<GameSettings>){
+    settings.master_volume = change.value;
+    println!("Changed MASTER volume to {}", change.value);
+}
+
+fn on_screen_mode_changed(change : On<OptionChanged>){
+
+}
+
+fn on_settings_apply(){
+
+}
+
 
 fn m_base(menu_type: MenuType) -> impl Bundle {
     (

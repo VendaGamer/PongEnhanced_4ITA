@@ -2,13 +2,13 @@ use crate::bundles::player::PlayerBundle;
 use crate::bundles::*;
 use crate::models::game::area::{PlayerInfo, Players};
 use crate::resources::controls::MenuAction;
-use crate::resources::GameConfig;
+use crate::resources::{GameModeConfig, GameSettings};
+use crate::systems::menu::m_main;
 use crate::systems::selectors::{handle_selector_navigation, update_selector_text};
 use crate::systems::*;
 use crate::utils::FIXED_DIMENSIONS;
 use bevy::ui_widgets::slider_self_update;
 use bevy::window::WindowResized;
-use crate::systems::menu::m_main;
 
 pub struct GameCorePlugin;
 
@@ -29,8 +29,8 @@ impl Plugin for GameCorePlugin {
                 //setup,
                 setup_common,
             ))
-            .add_observer(slider_self_update)
-            .insert_resource(GameConfig::default())
+            .insert_resource(GameModeConfig::default())
+            .insert_resource(GameSettings::default())
             .insert_resource(Players::default());
     }
 }
@@ -52,7 +52,7 @@ fn handle_ui_scaling(
 
 fn setup_common(
     mut commands: Commands,
-    mut players: ResMut<Players>,
+    mut players: ResMut<Players>
 ) {
     commands.spawn(CameraBundle::default());
 

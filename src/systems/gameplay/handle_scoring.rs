@@ -1,7 +1,7 @@
 use crate::bundles::BallBundle;
 use crate::components::ui::ScoreText;
 use crate::components::*;
-use crate::resources::GameConfig;
+use crate::resources::GameModeConfig;
 use crate::utils::screen::BALL_RADIUS;
 use avian2d::prelude::*;
 use bevy::prelude::*;
@@ -9,7 +9,7 @@ use bevy::prelude::*;
 pub fn handle_scoring(
     collision: On<CollisionStart>,
     goals: Query<&Goal>,
-    mut game_config: ResMut<GameConfig>,
+    mut game_config: ResMut<GameModeConfig>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut commands: Commands,
@@ -37,7 +37,7 @@ pub fn handle_scoring(
 }
 
 pub fn update_score_ui(
-    mut game_config: ResMut<GameConfig>,
+    mut game_config: ResMut<GameModeConfig>,
     mut score_texts: Query<(&mut Text, &ScoreText)>,
 ) {
     if !game_config.is_changed(){

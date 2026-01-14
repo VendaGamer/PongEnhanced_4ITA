@@ -4,11 +4,12 @@ use avian2d::prelude::Collider;
 use bevy::prelude::{Color, Commands, Node, PositionType, Resource, Text, TextFont};
 use bevy::text::FontSmoothing;
 use bevy::ui::Val;
+use serde::{Deserialize, Serialize};
 use AreaShape::{Cuboid, Triangular, TwoSide};
 use crate::bundles::widgets::LabelBundle;
 use crate::components::ui::ScoreText;
 
-#[derive(Clone, Copy, Eq, Hash, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, Hash, PartialEq, Debug,Serialize, Deserialize)]
 pub enum AreaSide {
     Left,
     Right,
@@ -65,7 +66,7 @@ impl AreaSide{
 }
 
 
-#[derive(Clone, Eq, Hash, PartialEq, Debug)]
+#[derive(Clone, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
 pub struct Team {
     pub name: String,
     pub current_score: u32,
@@ -87,7 +88,7 @@ pub struct Players {
     pub players: Vec<PlayerInfo>,
 }
 
-#[derive(Clone, Eq, Hash, PartialEq, Debug)]
+#[derive(Clone, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
 pub struct PlayerInfo {
     pub name: String,
     pub entity: Entity,
@@ -98,7 +99,7 @@ pub enum ControlType{
     Gamepad(Entity),
 }
 
-#[derive(Clone, Eq, Hash, PartialEq, Debug)]
+#[derive(Clone, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
 pub enum AreaShape {
     TwoSide(Option<[Team; 2]>),
     Triangular(Option<[Team; 3]>),

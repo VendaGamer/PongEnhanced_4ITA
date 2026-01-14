@@ -1,19 +1,18 @@
-use std::string::ToString;
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::{HoverLight, HoverLightColor};
 use crate::components::ui::{Dropdown, OptionSelector, SelectorButton, SelectorText};
+use crate::events::widgets::{ButtonPressed, OptionChanged};
 use crate::models::ui::option::UIOption;
 use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT, MODERN_THEME};
 use bevy::input_focus::tab_navigation::TabIndex;
 use bevy::picking::hover::Hovered;
 use bevy::prelude::*;
-use bevy::ui_widgets::{Slider, SliderRange, SliderThumb, SliderValue, TrackClick};
+use bevy::ui_widgets::{Slider, SliderPrecision, SliderRange, SliderThumb, SliderValue, TrackClick};
 use bevy_tween::combinator::AnimationBuilderExt;
 use bevy_tween::interpolate::background_color_to;
 use bevy_tween::interpolation::EaseKind;
 use bevy_tween::prelude::IntoTarget;
 use std::time::Duration;
-use crate::events::ui::widgets::{ButtonPressed, OptionChanged};
 
 pub const BUTTON_PADDING: Val = Val::Px(20.0);
 pub const PIXEL_BORDER: f32 = 3.0; // Classic pixel border width
@@ -118,7 +117,7 @@ pub fn w_menu_title(text: &'static str) -> impl Bundle {
     )
 }
 
-pub fn w_slider(min: f32, max: f32, current: f32, tab_index: i32) -> impl Bundle {
+pub fn w_slider(min: f32, max: f32, current: f32) -> impl Bundle {
     (
         Node {
             display: Display::Flex,
@@ -135,9 +134,9 @@ pub fn w_slider(min: f32, max: f32, current: f32, tab_index: i32) -> impl Bundle
         Slider {
             track_click: TrackClick::Snap,
         },
+        SliderPrecision(0),
         SliderValue(current),
         SliderRange::new(min, max),
-        TabIndex(tab_index),
         Children::spawn((
             Spawn((
                 Node {
@@ -218,7 +217,7 @@ pub fn w_dropdown(options: Vec<UIOption>, selected: usize, tab_index: i32) -> im
         TabIndex(tab_index),
     )
 }
-pub fn w_selector(options: Vec<UIOption>, selected: usize, tab_index: i32, label: &str) -> impl Bundle {
+pub fn w_selector(options: Vec<UIOption>, selected: usize, label: &str) -> impl Bundle {
     (
         OptionSelector { options, selected },
         Node {
@@ -287,9 +286,23 @@ pub fn update_selector(
         } else {
             selector.cycle_prev();
         }
-            
 
         commands.trigger(OptionChanged(selector_entity));
+        }
+    }
+}
+
+pub fn t_button_press(
+    button_query: Query<Entity, (With<Button>, With<Interaction>)>,
+    interaction_query: Query<&Interaction, Changed<Interaction>>,
+    mut commands: Commands,
+) {
+    for entity in &button_query {
+        if let Ok(interaction) = interaction_query.get(entity) {
+            if *interaction == Interaction::Pressed {
+                commands.trigger(ButtonPressed(entity));
+                return;
+            }
         }
     }
 }
