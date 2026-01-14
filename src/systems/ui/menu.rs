@@ -1,3 +1,4 @@
+use bevy::light::SimulationLightSystems::AddClusters;
 use crate::bundles::area::AreaBundle;
 use crate::bundles::widgets::LabelBundle;
 use crate::bundles::{BallBundle, DivisionLineBundle};
@@ -12,67 +13,70 @@ use crate::systems::handle_scoring;
 use crate::systems::widgets::*;
 use crate::utils::BALL_RADIUS;
 use bevy::prelude::*;
-
+use bevy::ui_widgets::{observe};
 
 pub fn m_main() -> impl Bundle {
     (
         m_base(MenuType::MainMenu),
-        Children::spawn((
-            Spawn(LabelBundle::game_title()),
-            Spawn((
+        children![
+            LabelBundle::game_title(),
+            (
                 Node {
                     flex_direction: FlexDirection::Column,
                     flex_wrap: FlexWrap::Wrap,
                     padding: UiRect::new(BUTTON_PADDING, BUTTON_PADDING, BUTTON_PADDING, Val::ZERO),
+                    width: Val::Auto,
+                    height: Val::Auto,
                     ..default()
                 },
                 Outline::new(Val::Px(5.0), Val::ZERO, Color::linear_rgb(0.5, 0.5, 0.5)),
                 BackgroundColor::from(Color::srgb(0.1, 0.1, 0.1)),
-                Children::spawn((
-                    Spawn((
+                children![
+                    (
                         w_menu_button(Color::srgb(0.2, 0.6, 0.9),
                                       "Offline Play"),
-                        Observer::new(on_offline)
-                    )),
-                    Spawn((
+                        observe(on_offline),
+                    ),
+                    (
                         w_menu_button(Color::srgb(0.6, 0.3, 0.9),
                                       "Online Play"),
-                        Observer::new(on_online)
-                    )),
-                    Spawn((
+                        observe(on_online)
+                    ),
+                    (
                         w_menu_button(Color::srgb(0.5, 0.5, 0.5),
                                       "Settings"),
-                        Observer::new(on_settings)
-                    )),
-                    Spawn((
+                        observe(on_settings)
+                    ),
+                    (
                         w_menu_button(Color::srgb(0.8, 0.2, 0.2),
                                           "Exit"),
-                        Observer::new(on_exit)
-                    )),
-                ))
-            ))
-        ))
+                        observe(on_exit)
+                    )
+                ]
+            )
+        ]
     )
 }
 
 pub fn m_offline() -> impl Bundle {
     (
         m_base(MenuType::OfflinePlayMenu),
-        Children::spawn((
-            Spawn(w_menu_title("Offline Play")),
-            Spawn((
+        children![
+            w_menu_title("Offline Play"),
+            (
                 w_menu_section(),
-                Children::spawn((
-                    Spawn(w_selector(
+                children![
+                    w_selector(
                         vec![
                             UIOption::new("2 Players", 2),
                             UIOption::new("3 Players", 3),
-                            UIOption::new("4 Players", 4)],
+                            UIOption::new("4 Players", 4)
+                        ],
                         0,
                         0,
                         "Number of Players"
-                    )),
-                    Spawn(w_selector(
+                    ),
+                    w_selector(
                         vec![
                             UIOption::new("Classic", GameMode::Classic),
                             UIOption::new("Modern", GameMode::Modern),
@@ -83,8 +87,8 @@ pub fn m_offline() -> impl Bundle {
                         0,
                         1,
                         "Game Mode",
-                    )),
-                    Spawn(w_selector(
+                    ),
+                    w_selector(
                         vec![
                             UIOption::new("Two Sides", AreaShape::TwoSide(None)),
                             UIOption::new("Triangular", AreaShape::Triangular(None)),
@@ -93,8 +97,8 @@ pub fn m_offline() -> impl Bundle {
                         0,
                         2,
                         "Arena Shape"
-                    )),
-                    Spawn(w_selector(
+                    ),
+                    w_selector(
                         vec![
                             UIOption::new("5 Points", 5),
                             UIOption::new("10 Points", 10),
@@ -103,34 +107,33 @@ pub fn m_offline() -> impl Bundle {
                         ],
                         0,
                         3,
-
                         "Win Score"
-                    )),
-                ))
-            )),
-            Spawn((
+                    )
+                ],
+            ),
+            (
                 Node {
-                flex_direction: FlexDirection::Row,
-                margin: UiRect::top(Val::Px(30.0)),
-                column_gap: Val::Px(20.0),
-                ..default()
+                    flex_direction: FlexDirection::Row,
+                    margin: UiRect::top(Val::Px(30.0)),
+                    column_gap: Val::Px(20.0),
+                    ..default()
                 },
-                Children::spawn((
-                    Spawn((
+                children![
+                    (
                         w_menu_button(
-                        Color::srgb(0.2, 0.7, 0.3),
-                        "Start Game"),
-                        Observer::new(on_start_offline_game)
-                    )),
-                    Spawn((
-                            w_menu_button(
+                            Color::srgb(0.2, 0.7, 0.3),
+                            "Start Game"),
+                        observe(on_start_offline_game)
+                    ),
+                    (
+                        w_menu_button(
                             Color::srgb(0.6, 0.6, 0.6),
                             "Back"),
-                        Observer::new(on_back_main)
-                    ))
-                ))
-            ))
-        ))
+                        observe(on_back_main)
+                    )
+                ]
+            )
+        ],
     )
 }
 
@@ -351,72 +354,62 @@ fn on_start_offline_game(
 pub fn m_online() -> impl Bundle {
     (
         m_base(MenuType::OnlinePlayMenu),
-        Children::spawn_one((
-            Node {
-                margin: UiRect::bottom(Val::Px(40.0)),
-                ..default()
-            },
-            Text::new("ONLINE PLAY"),
-            TextFont {
-                font_size: 64.0,
-                ..default()
-            },
-            TextColor(Color::srgb(0.9, 0.9, 1.0)),
-            Children::spawn((
-                Spawn((
-                    w_menu_section(),
-                    Children::spawn((
-                        Spawn((
-                            w_menu_button(
-                                Color::srgb(0.3, 0.6, 0.9),
-                                "Quick Match"
-                            ),
-                            Observer::new(on_quick_match)
-                        )),
-                        Spawn((
-                            w_menu_button(
-                                Color::srgb(0.5, 0.4, 0.9),
-                                "Create Room",
-                            ),
-                            Observer::new(on_create_room)
-                        )),
-                        Spawn((
-                            w_menu_button(
-                                Color::srgb(0.9, 0.5, 0.3),
-                                "Join Room",
-                            ),
-                            Observer::new(on_join_room)
-                        )),
-                        Spawn((
-                            w_menu_button(
-                                Color::srgb(0.4, 0.7, 0.4),
-                                "Friends List",
-                            ),
-                            Observer::new(on_friends_list)
-                        )),
-                    )),
-                )),
-                Spawn((
-                    w_menu_button(
-                        Color::srgb(0.6, 0.6, 0.6),
-                        "Back",
+        children![
+            w_menu_title("Online Play"),
+            (
+                w_menu_section(),
+                children![
+                    (
+                        w_menu_button(
+                            Color::srgb(0.3, 0.6, 0.9),
+                            "Quick Match"
+                        ),
+                        observe(on_quick_match)
                     ),
-                    Observer::new(on_back_main)
-                ))
-            ))
-        ))
+                    (
+                        w_menu_button(
+                            Color::srgb(0.5, 0.4, 0.9),
+                            "Create Room",
+                        ),
+                        observe(on_create_room)
+                    ),
+                    (
+                        w_menu_button(
+                            Color::srgb(0.9, 0.5, 0.3),
+                            "Join Room",
+                        ),
+                        observe(on_join_room)
+                    ),
+                    (
+                        w_menu_button(
+                            Color::srgb(0.4, 0.7, 0.4),
+                            "Friends List",
+                        ),
+                        observe(on_friends_list)
+                    ),
+                ],
+            ),
+            (
+                w_menu_button(
+                    Color::srgb(0.6, 0.6, 0.6),
+                    "Back",
+                ),
+                observe(on_back_main)
+            )
+        ],
     )
 }
 
 pub fn m_settings() -> impl Bundle {
     (
         m_base(MenuType::SettingsMenu),
-        Children::spawn((
-            Spawn(w_menu_title("SETTINGS")),
-            Spawn((
+        children![
+            w_menu_title("Settings"),
+            (
                 w_menu_section(),
-                Children::spawn((
-                    Spawn((
+                children![
+                    (
+                        Name::new("Audio Settings"),
                         Node {
                             margin: UiRect::bottom(Val::Px(20.0)),
                             ..default()
@@ -427,54 +420,49 @@ pub fn m_settings() -> impl Bundle {
                             ..default()
                         },
                         TextColor(Color::srgb(0.8, 0.8, 0.9)),
-                    )),
-                    Spawn((
-                        w_menu_section(),
-                        Children::spawn((
-                            Spawn(w_slider(0.0, 100.0, 50.0, 0)),
-                            Spawn(w_slider(0.0, 100.0, 50.0, 1)),
-                            Spawn((
-                                Node {
-                                    margin: UiRect::vertical(Val::Px(20.0)),
-                                    ..default()
-                                },
-                                Text::new("Graphics"),
-                                TextFont {
-                                    font_size: 32.0,
-                                    ..default()
-                                },
-                                TextColor(Color::srgb(0.8, 0.8, 0.9)),
-                            )),
-                            Spawn(w_selector(
-                                vec![
-                                    UIOption::new("Handle later", 0),
-                                ],
-                                0,
-                                2,
-                                "Resolution".into(),
-                            )),
-                            Spawn(w_selector(
-                                vec![
-                                    UIOption::new("Exclusive FullScreen", ScreenMode::ExclusiveFullScreen),
-                                    UIOption::new("FullScreen", ScreenMode::BorderlessFullScreen),
-                                    UIOption::new("Windowed", ScreenMode::Windowed),
-                                ],
-                                0,
-                                3,
-                                "Screen Mode",
-                            ))
-                        ))
-                    ))
-                ))
-            )),
-            Spawn((
+                    ),
+                    w_slider(0.0, 100.0, 50.0, 0),
+                    w_slider(0.0, 100.0, 50.0, 1),
+                    (
+                        Name::new("Graphics Settings"),
+                        Node {
+                            margin: UiRect::vertical(Val::Px(20.0)),
+                            ..default()
+                        },
+                        Text::new("Graphics"),
+                        TextFont {
+                            font_size: 32.0,
+                            ..default()
+                        },
+                        TextColor(Color::srgb(0.8, 0.8, 0.9)),
+                    ),
+                    w_selector(
+                        vec![
+                            UIOption::new("Handle later", 0),
+                        ],
+                        0,
+                        2,
+                        "Resolution".into(),
+                    ),
+                    w_selector(
+                        vec![
+                            UIOption::new("Exclusive FullScreen", ScreenMode::ExclusiveFullScreen),
+                            UIOption::new("FullScreen", ScreenMode::BorderlessFullScreen),
+                            UIOption::new("Windowed", ScreenMode::Windowed),
+                        ],
+                        0,
+                        3,
+                        "Screen Mode",
+                    ),
+                ]
+            ),
+            (
                 w_menu_button(
-                    Color::srgb(0.6, 0.6, 0.6),
-                    "Back"
-                ),
-                Observer::new(on_back_main)
-            ))
-        ))
+                Color::srgb(0.6, 0.6, 0.6),
+                    "Back"),
+                observe(on_back_main)
+            )
+        ]
     )
 }
 

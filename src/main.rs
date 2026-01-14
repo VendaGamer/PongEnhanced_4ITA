@@ -8,6 +8,7 @@ mod events;
 mod models;
 mod traits;
 
+use crate::plugins::game_ui::GameUIPlugin;
 use crate::plugins::GameCorePlugin;
 use crate::resources::controls::PlayerAction;
 use crate::resources::MenuAction;
@@ -20,8 +21,7 @@ use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
 use bevy::render::RenderPlugin;
 use bevy::ui_widgets::UiWidgetsPlugins;
 use bevy::window::PresentMode;
-use bevy_tween::{component_tween_system, interpolate, tween, BevyTweenRegisterSystems, DefaultTweenPlugins, TweenCorePlugin};
-use bevy_tween::tween::ComponentTween;
+use bevy_tween::{DefaultTweenPlugins};
 use components::*;
 use leafwing_input_manager::plugin::InputManagerPlugin;
 
@@ -66,6 +66,7 @@ fn main() {
             InputDispatchPlugin,
             GameCorePlugin,
             DefaultTweenPlugins,
+            GameUIPlugin
         ));
 
     let world = app.world_mut();

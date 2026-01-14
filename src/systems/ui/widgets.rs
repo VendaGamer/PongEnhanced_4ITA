@@ -1,3 +1,4 @@
+use std::string::ToString;
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::{HoverLight, HoverLightColor};
 use crate::components::ui::{Dropdown, OptionSelector, SelectorButton, SelectorText};
@@ -217,7 +218,6 @@ pub fn w_dropdown(options: Vec<UIOption>, selected: usize, tab_index: i32) -> im
         TabIndex(tab_index),
     )
 }
-
 pub fn w_selector(options: Vec<UIOption>, selected: usize, tab_index: i32, label: &str) -> impl Bundle {
     (
         OptionSelector { options, selected },
@@ -251,6 +251,13 @@ pub fn w_selector(options: Vec<UIOption>, selected: usize, tab_index: i32, label
                 BackgroundColor(MODERN_THEME.panel_bg),
                 BorderColor::from(MODERN_THEME.border),
                 BorderRadius::ZERO,
+                Children::spawn_one((
+                    LabelBundle::button_label(label),
+                    Children::spawn_one((
+                        LabelBundle::button_label(""),
+                        SelectorText,
+                    ))
+                ))
             )),
             Spawn((
                 w_button(MODERN_THEME.button, Vec2::new(40.0, 40.0), "<"),

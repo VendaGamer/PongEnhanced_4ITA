@@ -9,7 +9,6 @@ pub struct Menu{
 }
 
 impl Menu{
-
     pub fn new(menu_type: MenuType) -> Self{
         Self{
             selectables: None,

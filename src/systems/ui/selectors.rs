@@ -3,12 +3,12 @@ use crate::components::ui::{OptionSelector, SelectorText};
 
 pub fn update_selector_text(
     selectors: Query<&OptionSelector, Changed<OptionSelector>>,
-    mut texts: Query<(&SelectorText, &mut Text)>,
+    texts: Query<(&SelectorText, &mut Text)>,
 ) {
-    for (selector_text, mut text) in &mut texts {
-        if let Ok(selector) = selectors.get(selector_text.selector_entity) {
-            text.0 = selector.get_current().into();
-        }
+    for (selector_text, mut text) in texts {
+
+
+
     }
 }
 
