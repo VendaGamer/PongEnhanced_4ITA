@@ -1,20 +1,19 @@
-use bevy::ecs::query::Spawned;
-use bevy::light::SimulationLightSystems::AddClusters;
 use crate::bundles::area::AreaBundle;
 use crate::bundles::widgets::LabelBundle;
 use crate::bundles::{BallBundle, DivisionLineBundle};
-use crate::components::ui::{Menu, MenuType, OptionSelector};
+use crate::components::ui::{Menu, MenuType, OptionSelector, SettingsSelector};
 use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged};
 use crate::models::game::area::{AreaShape, AreaSide, PlayerInfo, Team};
 use crate::models::game::gameplay::GameMode;
-use crate::models::game::settings::ScreenMode;
 use crate::models::ui::option::UIOption;
-use crate::resources::{GameModeConfig, GameSettings};
+use crate::resources::{GameModeConfig, GameSettings, Monitors, PendingSettings, ToUIOptions};
 use crate::systems::handle_scoring;
 use crate::systems::widgets::*;
 use crate::utils::BALL_RADIUS;
+use bevy::dev_tools::fps_overlay::FpsOverlayConfig;
 use bevy::prelude::*;
-use bevy::ui_widgets::{observe, Slider, SliderValue, SliderValueChange, ValueChange};
+use bevy::ui_widgets::observe;
+use bevy::window::WindowMode;
 
 pub fn m_main() -> impl Bundle {
     (
@@ -69,39 +68,39 @@ pub fn m_offline() -> impl Bundle {
                 children![
                     w_selector(
                         vec![
-                            UIOption::new("2 Players", 2),
-                            UIOption::new("3 Players", 3),
-                            UIOption::new("4 Players", 4)
+                            UIOption::new("2 Players".to_string(), 2),
+                            UIOption::new("3 Players".to_string(), 3),
+                            UIOption::new("4 Players".to_string(), 4)
                         ],
                         0,
                         "Number of Players"
                     ),
                     w_selector(
                         vec![
-                            UIOption::new("Classic", GameMode::Classic),
-                            UIOption::new("Modern", GameMode::Modern),
-                            UIOption::new("Upside Down", GameMode::UpsideDown),
-                            UIOption::new("Blackout", GameMode::Blackout),
-                            UIOption::new("Twisted", GameMode::Twisted),
+                            UIOption::new("Classic".to_string(), GameMode::Classic),
+                            UIOption::new("Modern".to_string(), GameMode::Modern),
+                            UIOption::new("Upside Down".to_string(), GameMode::UpsideDown),
+                            UIOption::new("Blackout".to_string(), GameMode::Blackout),
+                            UIOption::new("Twisted".to_string(), GameMode::Twisted),
                         ],
                         0,
                         "Game Mode",
                     ),
                     w_selector(
                         vec![
-                            UIOption::new("Two Sides", AreaShape::TwoSide(None)),
-                            UIOption::new("Triangular", AreaShape::Triangular(None)),
-                            UIOption::new("Cuboid", AreaShape::Cuboid(None))
+                            UIOption::new("Two Sides".to_string(), AreaShape::TwoSide(None)),
+                            UIOption::new("Triangular".to_string(), AreaShape::Triangular(None)),
+                            UIOption::new("Cuboid".to_string(), AreaShape::Cuboid(None))
                         ],
                         0,
                         "Arena Shape"
                     ),
                     w_selector(
                         vec![
-                            UIOption::new("5 Points", 5),
-                            UIOption::new("10 Points", 10),
-                            UIOption::new("15 Points", 15),
-                            UIOption::new("20 Points", 20),
+                            UIOption::new("5 Points".to_string(), 5),
+                            UIOption::new("10 Points".to_string(), 10),
+                            UIOption::new("15 Points".to_string(), 15),
+                            UIOption::new("20 Points".to_string(), 20),
                         ],
                         0,
                         "Win Score"
@@ -176,10 +175,11 @@ fn on_settings(
     mut commands: Commands,
     main_menu: Query<Entity, With<Menu>>,
     settings: Res<GameSettings>,
+    monitors: Res<Monitors>,
 ) {
     let entity = main_menu.single().expect("Main Menu doesn't exist");
     commands.entity(entity).despawn();
-    commands.spawn(m_settings(settings));
+    spawn_m_settings(&settings, &monitors, &mut commands);
 }
 
 fn on_exit(_press: On<ButtonPressed>, mut exit: MessageWriter<AppExit>) {
@@ -398,89 +398,60 @@ pub fn m_online() -> impl Bundle {
     )
 }
 
-pub fn m_settings(settings: Res<GameSettings>) -> impl Bundle {
-    (
-        m_base(MenuType::SettingsMenu),
-        children![
-            w_menu_title("Settings"),
-            (
-                w_menu_section(),
-                children![
-                    (
-                        Name::new("Audio Settings"),
-                        Node {
-                            margin: UiRect::bottom(Val::Px(20.0)),
-                            ..default()
-                        },
-                        Text::new("Audio"),
-                        TextFont {
-                            font_size: 32.0,
-                            ..default()
-                        },
-                        TextColor(Color::srgb(0.8, 0.8, 0.9)),
-                    ),
-                    LabelBundle::button_label("Sound Effects"),
-                    (
-                        Name::new("SfxVol"),
-                        w_slider(0.0, 100.0, settings.sfx_volume),
-                        observe(on_sfx_changed)
-                    ),
-                    LabelBundle::button_label("Master"),
-                    (
-                        Name::new("MasterVol"),
-                        w_slider(0.0, 100.0, settings.master_volume),
-                        observe(on_master_changed)
-                    ),
-                    (
-                        Name::new("Graphics Settings"),
-                        Node {
-                            margin: UiRect::vertical(Val::Px(20.0)),
-                            ..default()
-                        },
-                        Text::new("Graphics"),
-                        TextFont {
-                            font_size: 32.0,
-                            ..default()
-                        },
-                        TextColor(Color::srgb(0.8, 0.8, 0.9)),
-                    ),
-                    (
-                        w_selector(
-                        vec![
-                            UIOption::new("Exclusive FullScreen", ScreenMode::ExclusiveFullScreen),
-                            UIOption::new("FullScreen", ScreenMode::BorderlessFullScreen),
-                            UIOption::new("Windowed", ScreenMode::Windowed),
-                        ],
+pub fn spawn_m_settings(
+    settings: &Res<GameSettings>,
+    monitors: &Res<Monitors>,
+    commands: &mut Commands,
+) {
+    commands.insert_resource(PendingSettings::from(settings));
+    commands.spawn(m_base(MenuType::SettingsMenu)).with_children(|base| {
+
+        base.spawn(w_menu_title("Settings"));
+
+        base.spawn(Node {
+                flex_direction: FlexDirection::Column,
+                width: Val::Px(1000.0),
+                max_height: Val::Px(600.0),
+                overflow: Overflow::clip_y(),
+                ..default()
+            }).with_children(|container| {
+            container.spawn(w_menu_section())
+                .with_children(| section |{
+
+                    let options = monitors.monitors.to_ui_options();
+                    let monitor_index = monitors.selected_monitor.unwrap_or_default();
+                    let monitor = monitors.get_current_monitor_or_first().expect("No Monitors");
+                    let refresh_rates = monitor.refresh_rates
+                        .iter()
+                        .map(|rate| UIOption::new(format!("{}Hz", *rate / 1000), *rate))
+                        .collect();
+
+
+                section.spawn(w_selector(
+                        options,
+                        monitor_index,
+                    "Monitor"))
+                        .insert(SettingsSelector::Monitor)
+                        .observe(on_monitor_changed);
+
+                    section.spawn(w_selector(
+                        monitor.resolutions.to_ui_options(),
                         0,
-                        "Screen Mode"),
-                        observe(on_screen_mode_changed)
-                    ),
-                    w_selector(
-                        vec![
-                            UIOption::new("Handle later", 0),
-                        ],
+                        "Resolution"))
+                        .insert(SettingsSelector::Resolution)
+                        .observe(on_monitor_changed);
+
+                    section.spawn(w_selector(
+                        refresh_rates,
                         0,
-                        "Resolution",
-                    ),
-                    w_selector(
-                        vec![
-                            UIOption::new("Exclusive FullScreen", ScreenMode::ExclusiveFullScreen),
-                            UIOption::new("FullScreen", ScreenMode::BorderlessFullScreen),
-                            UIOption::new("Windowed", ScreenMode::Windowed),
-                        ],
-                        0,
-                        "Screen Mode",
-                    ),
-                ]
-            ),
-            (
-                w_menu_button(
-                Color::srgb(0.6, 0.6, 0.6),
-                    "Back"),
-                observe(on_back_main)
-            )
-        ]
-    )
+                        "Refresh Rate"))
+                        .insert(SettingsSelector::RefreshRate)
+                        .observe(on_monitor_changed);
+                });
+            container.spawn(LabelBundle::button_label(""));
+        });
+
+    });
 }
 
 fn on_sfx_changed(change: On<SliderValueChanged>, mut settings: ResMut<GameSettings>){
@@ -515,4 +486,62 @@ fn m_base(menu_type: MenuType) -> impl Bundle {
         },
         BackgroundColor(Color::srgb(0.05, 0.05, 0.1))
     )
+}
+
+fn on_monitor_changed(
+    change: On<OptionChanged>,
+    selectors: Query<&OptionSelector>,
+    mut windows: Query<&mut Window>,
+) {
+    if let Ok(selector) = selectors.get(change.event_target()) {
+        if let Some(monitor_idx) = selector.options[selector.selected].get_value::<usize>() {
+            if let Ok(mut window) = windows.single_mut() {
+                window.mode = WindowMode::Fullscreen(
+                    MonitorSelection::Index(*monitor_idx),
+                    VideoModeSelection::Current
+                );
+                println!("Changed to monitor {}", monitor_idx);
+            }
+        }
+    }
+}
+
+fn on_vsync_changed(
+    change: On<OptionChanged>,
+    selectors: Query<&OptionSelector>,
+    mut settings: ResMut<GameSettings>,
+    mut windows: Query<&mut Window>,
+) {
+    if let Ok(selector) = selectors.get(change.event_target()) {
+        if let Some(enabled) = selector.options[selector.selected].get_value::<bool>() {
+            settings.vsync = *enabled;
+
+            if let Ok(mut window) = windows.single_mut() {
+                window.present_mode = if *enabled {
+                    bevy::window::PresentMode::AutoVsync
+                } else {
+                    bevy::window::PresentMode::AutoNoVsync
+                };
+            }
+
+            println!("VSync {}", if *enabled { "enabled" } else { "disabled" });
+        }
+    }
+}
+
+fn on_show_fps_changed(
+    change: On<OptionChanged>,
+    selectors: Query<&OptionSelector>,
+    mut settings: ResMut<GameSettings>,
+    mut fps_overlay: ResMut<FpsOverlayConfig>,
+) {
+    if let Ok(selector) = selectors.get(change.event_target()) {
+        if let Some(show) = selector.options[selector.selected].get_value::<bool>() {
+
+            settings.show_fps = *show;
+            fps_overlay.enabled = *show;
+
+            println!("FPS counter {}", if *show { "shown" } else { "hidden" });
+        }
+    }
 }

@@ -21,7 +21,7 @@ use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
 use bevy::render::RenderPlugin;
 use bevy::ui_widgets::UiWidgetsPlugins;
 use bevy::window::PresentMode;
-use bevy_tween::{DefaultTweenPlugins};
+use bevy_tween::DefaultTweenPlugins;
 use components::*;
 use leafwing_input_manager::plugin::InputManagerPlugin;
 
@@ -34,6 +34,7 @@ fn main() {
                     primary_window: Some(Window {
                         title: "Pong Enhanced".into(),
                         present_mode: PresentMode::AutoVsync,
+                        resizable: false,
                         ..default()
                     }),
                     ..default()

@@ -1,17 +1,87 @@
+use crate::components::ui::{IntoUIOptionString, OptionSelector};
 use crate::models::game::area::AreaShape;
 use crate::models::game::gameplay::GameMode;
-use crate::models::game::settings::ScreenMode;
-use bevy::prelude::{Resource, UVec2};
+use bevy::prelude::{Res, Resource, UVec2};
+use bevy::window::{MonitorSelection, WindowMode};
+use derive_more::{From, Into};
 use serde::{Deserialize, Serialize};
 
-#[derive(Resource, Serialize, Deserialize, Copy, Clone)]
+#[derive(Resource, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct GameSettings {
     pub master_volume: f32,
     pub sfx_volume: f32,
-    pub screen_mode: ScreenMode,
-    pub resolution: UVec2,
+    pub video_mode: WindowMode,
     pub vsync: bool,
     pub show_fps: bool,
+}
+
+#[derive(Resource, Clone, Eq, PartialEq, Debug)]
+pub struct PendingSettings {
+    pub video_mode: WindowMode,
+    pub vsync: bool,
+    pub show_fps: bool,
+}
+
+impl From<&Res<'_, GameSettings>> for PendingSettings {
+    fn from(settings: &Res<'_, GameSettings>) -> Self {
+        Self{
+            video_mode: settings.video_mode,
+            vsync: settings.vsync,
+            show_fps: settings.show_fps,
+        }
+    }
+}
+
+
+
+#[derive(Resource, Clone, Default, Debug)]
+pub struct Monitors {
+    pub monitors: Vec<MonitorInfo>,
+    pub selected_monitor: Option<usize>,
+}
+
+impl Monitors {
+    pub fn get_current_monitor_or_first(&self) -> Option<&MonitorInfo> {
+        let index = self.selected_monitor.unwrap_or_default();
+
+        self.monitors.get(index)
+    }
+}
+
+
+#[derive(Debug, Clone)]
+pub struct MonitorInfo {
+    pub monitor_selection: MonitorSelection,
+    pub name: String,
+    pub refresh_rates: Vec<RefreshRate>,
+    pub resolutions: Vec<Resolution>,
+    pub bit_depths: Vec<BitDepth>,
+}
+
+#[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, From, Into)]
+pub struct RefreshRate(pub u32);
+
+impl IntoUIOptionString for RefreshRate {
+    fn as_ui_option_string(&self) -> String {
+        format!("{}Hz", self.0 / 1000)
+    }
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, From, Into)]
+pub struct Resolution(pub UVec2);
+
+impl IntoUIOptionString for Resolution {
+    fn as_ui_option_string(&self) -> String {
+        format!("{} x {}", self.0.x, self.0.y)
+    }
+}
+#[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, From, Into)]
+pub struct BitDepth(pub u16);
+
+impl IntoUIOptionString for BitDepth {
+    fn as_ui_option_string(&self) -> String {
+        format!("{}-bit", self.0)
+    }
 }
 
 
@@ -20,8 +90,7 @@ impl Default for GameSettings {
         Self {
             master_volume: 50.0,
             sfx_volume: 50.0,
-            screen_mode: ScreenMode::BorderlessFullScreen,
-            resolution: UVec2::new(1280, 720),
+            video_mode: WindowMode::BorderlessFullscreen(MonitorSelection::Primary),
             vsync: true,
             show_fps: true,
         }

@@ -35,23 +35,15 @@ impl AreaSide{
             AreaSide::Bottom => Vec3::new(0.0, -HALF_HEIGHT / 2.0, 0.0),
         };
 
-        let entity = commands.spawn((
+        commands.spawn((
             Node {
                 position_type: PositionType::Absolute,
                 left: Val::Px(position.x),
                 top: Val::Px(position.y),
                 ..default()
             },
-            LabelBundle{
-                text: Text::new("0"),
-                color: Color::WHITE.into(),
-                font: TextFont {
-                    font_size: 80.0,
-                    font_smoothing: FontSmoothing::None,
-                    ..default()
-                }
-            },
-            ScoreText{
+            LabelBundle::custom("0", Color::WHITE.into(), 80.0),
+            ScoreText {
                 area_side: self,
             }
         ));

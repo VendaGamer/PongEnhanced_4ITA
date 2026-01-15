@@ -1,12 +1,13 @@
+use std::sync::Arc;
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::{HoverLight, HoverLightColor};
-use crate::components::ui::{Dropdown, OptionSelector, SelectorButton, SelectorText};
+use crate::components::ui::{Dropdown, OptionSelector, OptionValue, SelectorButton, SelectorText};
 use crate::events::widgets::{ButtonPressed, OptionChanged};
-use crate::models::ui::option::UIOption;
 use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT, MODERN_THEME};
 use bevy::input_focus::tab_navigation::TabIndex;
 use bevy::picking::hover::Hovered;
 use bevy::prelude::*;
+use bevy::text::FontSmoothing;
 use bevy::ui_widgets::{Slider, SliderPrecision, SliderRange, SliderThumb, SliderValue, TrackClick};
 use bevy_tween::combinator::AnimationBuilderExt;
 use bevy_tween::interpolate::background_color_to;
@@ -198,7 +199,7 @@ pub fn w_slider_thumb(size: Vec2) -> impl Bundle {
     )
 }
 
-pub fn w_dropdown(options: Vec<UIOption>, selected: usize, tab_index: i32) -> impl Bundle {
+pub fn w_dropdown(options: Arc<Vec<dyn OptionValue>>, selected: usize, tab_index: i32) -> impl Bundle {
     (
         Dropdown { options, selected },
         Node {
@@ -217,7 +218,7 @@ pub fn w_dropdown(options: Vec<UIOption>, selected: usize, tab_index: i32) -> im
         TabIndex(tab_index),
     )
 }
-pub fn w_selector(options: Vec<UIOption>, selected: usize, label: &str) -> impl Bundle {
+pub fn w_selector(options: Vec<UIOption>, selected: usize, label: impl Into<String>) -> impl Bundle {
     (
         OptionSelector { options, selected },
         Node {
@@ -251,18 +252,63 @@ pub fn w_selector(options: Vec<UIOption>, selected: usize, label: &str) -> impl 
                 BorderColor::from(MODERN_THEME.border),
                 BorderRadius::ZERO,
                 Children::spawn_one((
-                    LabelBundle::button_label(label),
-                    Children::spawn_one((
-                        LabelBundle::button_label(""),
-                        SelectorText,
-                    ))
+                    Node {
+                        display: Display::Flex,
+                        flex_direction: FlexDirection::Row,
+                        justify_content: JustifyContent::SpaceBetween,
+                        align_items: AlignItems::Center,
+                        width: Val::Percent(100.0),
+                        ..default()
+                    },
+                    Children::spawn((
+                        Spawn(LabelBundle::button_label(label)),
+                        Spawn((
+                            TextFont {
+                                font_size: 32.0,
+                                font_smoothing: FontSmoothing::None,
+                                ..default()
+                            },
+                            TextColor(Color::WHITE),
+                            SelectorText,
+                        )),
+                    )),
                 ))
             )),
             Spawn((
-                w_button(MODERN_THEME.button, Vec2::new(40.0, 40.0), "<"),
+                w_button(MODERN_THEME.button, Vec2::new(40.0, 40.0), ">"),
                 SelectorButton(true),
             ))
         ))
+    )
+}
+
+pub fn w_section_header(text: &'static str) -> impl Bundle {
+    (
+        Node {
+            margin: UiRect::new(Val::ZERO, Val::ZERO, Val::Px(20.0), Val::Px(10.0)),
+            ..default()
+        },
+        Text::new(text),
+        TextFont {
+            font_size: 36.0,
+            ..default()
+        },
+        TextColor(MODERN_THEME.accent),
+    )
+}
+
+pub fn w_labeled_slider(min: f32, max: f32, current: f32, label: &str) -> impl Bundle {
+    (
+        Node {
+            flex_direction: FlexDirection::Column,
+            margin: UiRect::all(Val::Px(10.0)),
+            row_gap: Val::Px(10.0),
+            ..default()
+        },
+        Children::spawn((
+            Spawn(LabelBundle::button_label(label)),
+            Spawn(w_slider(min, max, current)),
+        )),
     )
 }
 
@@ -301,7 +347,6 @@ pub fn t_button_press(
         if let Ok(interaction) = interaction_query.get(entity) {
             if *interaction == Interaction::Pressed {
                 commands.trigger(ButtonPressed(entity));
-                return;
             }
         }
     }

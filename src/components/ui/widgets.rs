@@ -1,58 +1,92 @@
-use crate::models::ui::option::UIOption;
+use std::fmt::Debug;
 use bevy::prelude::*;
-use std::marker::PhantomData;
-use bevy::reflect::{Enum, Reflect};
+use std::sync::Arc;
 
 #[derive(Component)]
 pub struct Dropdown {
-    pub options: Vec<UIOption>,
     pub selected: usize,
 }
 
-#[derive(Component, Default)]
+#[derive(Component)]
+pub struct ConditionalVisibility {
+    pub depends_on: SettingsSelector,
+    pub required_values: Vec<String>,
+}
+
+#[derive(Component)]
 #[require(Button)]
 pub struct SelectorButton(pub bool);
 
 #[derive(Component)]
+#[require(Text)]
 pub struct SelectorText;
 
 #[derive(Component)]
 pub struct OptionSelector {
-    pub options: Vec<UIOption>,
     pub selected: usize,
+    pub options: Arc<Vec<Box<dyn OptionValue>>>,
+}
+
+pub trait OptionValue: Send + Sync + Debug + IntoUIOptionString { }
+
+
+pub trait IntoUIOptionString {
+    fn as_ui_option_string(&self) -> String;
 }
 
 #[derive(Component)]
-pub struct ResolutionSelector;
+pub enum SettingsSelector {
+    WindowMode,
+    Monitor,
+    Resolution,
+    RefreshRate,
+    ShowFPS,
+}
 
 impl OptionSelector {
-    pub fn cycle_next(&mut self) {
-        self.selected = (self.selected + 1) % self.options.len();
-    }
-
-    pub fn cycle_prev(&mut self) {
-        if self.selected == 0 {
-            self.selected = self.options.len() - 1;
-        } else {
-            self.selected -= 1;
+    pub fn new(options: Vec<Box<dyn OptionValue>>) -> Self {
+        Self {
+            selected: 0,
+            options: Arc::new(options),
         }
     }
 
-    pub fn get_current(&self) -> &str {
-        self.options[self.selected].text
-    }
-
-    pub fn new(options: Vec<UIOption>) -> OptionSelector{
-        OptionSelector{
-            options,
-            selected: 0
+    pub fn with_selected(options: Vec<Box<dyn OptionValue>>, selected: usize) -> Self {
+        Self {
+            selected: selected.min(options.len().saturating_sub(1)),
+            options: Arc::new(options),
         }
     }
 
-    pub fn new_selected(options: Vec<UIOption>, selected: usize) -> OptionSelector{
-        OptionSelector{
-            options,
-            selected
+    pub fn current(&self) -> Option<&dyn OptionValue> {
+        self.options.get(self.selected).map(|b| &**b)
+    }
+
+    pub fn current_string(&self) -> String {
+        self.current()
+            .map(|v| v.as_ui_option_string())
+            .unwrap_or_else(|| "None".to_string())
+    }
+
+    pub fn next(&mut self) {
+        if !self.options.is_empty() {
+            self.selected = (self.selected + 1) % self.options.len();
+        }
+    }
+
+    pub fn prev(&mut self) {
+        if !self.options.is_empty() {
+            self.selected = if self.selected == 0 {
+                self.options.len() - 1
+            } else {
+                self.selected - 1
+            };
+        }
+    }
+
+    pub fn set(&mut self, idx: usize) {
+        if idx < self.options.len() {
+            self.selected = idx;
         }
     }
 }
