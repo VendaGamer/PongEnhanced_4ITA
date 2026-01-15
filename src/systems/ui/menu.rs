@@ -3,10 +3,10 @@ use crate::bundles::widgets::LabelBundle;
 use crate::bundles::{BallBundle, DivisionLineBundle};
 use crate::components::ui::{Menu, MenuType, OptionSelector, SettingsSelector};
 use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged};
-use crate::models::game::area::{AreaShape, AreaSide, PlayerInfo, Team};
-use crate::models::game::gameplay::GameMode;
+use crate::models::game::area::{AreaShape, AreaSide, PlayerInfo, TeamInfo};
+use crate::models::game::gameplay::{GameMode, PlayerNum};
 use crate::models::ui::option::UIOption;
-use crate::resources::{GameModeConfig, GameSettings, Monitors, PendingSettings, ToUIOptions};
+use crate::resources::{BitDepth, GameModeConfig, GameSettings, Monitors, PendingSettings, ToUIOptions};
 use crate::systems::handle_scoring;
 use crate::systems::widgets::*;
 use crate::utils::BALL_RADIUS;
@@ -68,42 +68,37 @@ pub fn m_offline() -> impl Bundle {
                 children![
                     w_selector(
                         vec![
-                            UIOption::new("2 Players".to_string(), 2),
-                            UIOption::new("3 Players".to_string(), 3),
-                            UIOption::new("4 Players".to_string(), 4)
-                        ],
+                            PlayerNum(1),
+                            PlayerNum(2),
+                            PlayerNum(3),
+                            PlayerNum(4)
+                        ].into(),
                         0,
                         "Number of Players"
                     ),
                     w_selector(
                         vec![
-                            UIOption::new("Classic".to_string(), GameMode::Classic),
-                            UIOption::new("Modern".to_string(), GameMode::Modern),
-                            UIOption::new("Upside Down".to_string(), GameMode::UpsideDown),
-                            UIOption::new("Blackout".to_string(), GameMode::Blackout),
-                            UIOption::new("Twisted".to_string(), GameMode::Twisted),
-                        ],
+                            GameMode::Classic,
+                            GameMode::Modern,
+                            GameMode::UpsideDown,
+                            GameMode::Blackout,
+                            GameMode::Twisted,
+                        ].into(),
                         0,
                         "Game Mode",
                     ),
                     w_selector(
                         vec![
-                            UIOption::new("Two Sides".to_string(), AreaShape::TwoSide(None)),
-                            UIOption::new("Triangular".to_string(), AreaShape::Triangular(None)),
-                            UIOption::new("Cuboid".to_string(), AreaShape::Cuboid(None))
+
                         ],
                         0,
                         "Arena Shape"
                     ),
-                    w_selector(
-                        vec![
-                            UIOption::new("5 Points".to_string(), 5),
-                            UIOption::new("10 Points".to_string(), 10),
-                            UIOption::new("15 Points".to_string(), 15),
-                            UIOption::new("20 Points".to_string(), 20),
-                        ],
-                        0,
-                        "Win Score"
+                    LabelBundle::button_label("Win Score"),
+                    w_slider(
+                        0.0,
+                        100.0,
+                        50.0,
                     )
                 ],
             ),
@@ -240,13 +235,13 @@ fn on_start_offline_game(
                 .collect();
 
             game_config.area_shape = AreaShape::TwoSide(Some([
-                Team {
+                TeamInfo {
                     name: "Left Team".to_string(),
                     current_score: 0,
                     area_side: AreaSide::Left,
                     players: team1_players,
                 },
-                Team {
+                TeamInfo {
                     name: "Right Team".to_string(),
                     current_score: 0,
                     area_side: AreaSide::Right,
@@ -271,7 +266,7 @@ fn on_start_offline_game(
                     })
                     .collect();
 
-                teams.push(Team {
+                teams.push(TeamInfo {
                     name: format!("Team {}", team_idx + 1),
                     current_score: 0,
                     area_side: side,
@@ -302,7 +297,7 @@ fn on_start_offline_game(
                     })
                     .collect();
 
-                teams.push(Team {
+                teams.push(TeamInfo {
                     name: format!("Team {}", team_idx + 1),
                     current_score: 0,
                     area_side: side,

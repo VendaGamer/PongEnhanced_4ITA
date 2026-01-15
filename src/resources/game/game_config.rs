@@ -1,10 +1,11 @@
-use crate::components::ui::{IntoUIOptionString, OptionSelector};
+use std::sync::{Arc, Weak};
 use crate::models::game::area::AreaShape;
 use crate::models::game::gameplay::GameMode;
 use bevy::prelude::{Res, Resource, UVec2};
 use bevy::window::{MonitorSelection, WindowMode};
 use derive_more::{From, Into};
 use serde::{Deserialize, Serialize};
+use crate::components::ui::UIOptionString;
 
 #[derive(Resource, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct GameSettings {
@@ -41,46 +42,46 @@ pub struct Monitors {
 }
 
 impl Monitors {
-    pub fn get_current_monitor_or_first(&self) -> Option<&MonitorInfo> {
+    pub fn get_current_monitor(&self) -> Option<&MonitorInfo> {
         let index = self.selected_monitor.unwrap_or_default();
-
         self.monitors.get(index)
     }
 }
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct MonitorInfo {
     pub monitor_selection: MonitorSelection,
     pub name: String,
-    pub refresh_rates: Vec<RefreshRate>,
-    pub resolutions: Vec<Resolution>,
-    pub bit_depths: Vec<BitDepth>,
+    pub refresh_rates: Arc<Vec<Box<RefreshRate>>>,
+    pub resolutions: Arc<Vec<Box<Resolution>>>,
+    pub bit_depths: Arc<Vec<Box<BitDepth>>>,
 }
 
 #[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, From, Into)]
 pub struct RefreshRate(pub u32);
 
-impl IntoUIOptionString for RefreshRate {
-    fn as_ui_option_string(&self) -> String {
-        format!("{}Hz", self.0 / 1000)
+impl UIOptionString for RefreshRate {
+
+    fn fill_ui_option_string(&self, string: &mut String) {
+        string.push_str(format!("{} Hz", self.0).as_str());
     }
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, From, Into)]
 pub struct Resolution(pub UVec2);
 
-impl IntoUIOptionString for Resolution {
-    fn as_ui_option_string(&self) -> String {
-        format!("{} x {}", self.0.x, self.0.y)
+impl UIOptionString for Resolution {
+    fn fill_ui_option_string(&self, string: &mut String) {
+        string.push_str(format!("{} x {}", self.0.x, self.0.y).as_str());
     }
 }
 #[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, From, Into)]
 pub struct BitDepth(pub u16);
 
-impl IntoUIOptionString for BitDepth {
-    fn as_ui_option_string(&self) -> String {
-        format!("{}-bit", self.0)
+impl UIOptionString for BitDepth {
+    fn fill_ui_option_string(&self, string: &mut String) {
+        string.push_str(format!("{}-bit", self.0).as_str())
     }
 }
 
@@ -108,7 +109,24 @@ impl Default for GameModeConfig {
     fn default() -> Self {
         Self{
             game_mode: GameMode::Classic,
-            area_shape: AreaShape::TwoSide(None),
+            area_shape: AreaShape::TwoSide(
+                [
+                    // Team 1
+                    crate::models::game::area::TeamInfo {
+                        name: "Team 1".to_string(),
+                        current_score: 0,
+                        area_side: crate::models::game::area::AreaSide::Left,
+                        players: vec![],
+                    },
+                    // Team 2
+                    crate::models::game::area::TeamInfo {
+                        name: "Team 2".to_string(),
+                        current_score: 0,
+                        area_side: crate::models::game::area::AreaSide::Right,
+                        players: vec![],
+                    },
+                ]
+            ),
             win_score: 10,
         }
     }

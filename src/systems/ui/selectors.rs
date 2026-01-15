@@ -10,7 +10,8 @@ pub fn update_selector_text(
 
         for child in children.iter_descendants(selector_entity) {
             if let Ok(mut text) = texts.get_mut(child) {
-                text.0 = selector.get_current_string().clone();
+                text.0.clear();
+                text.0.push_str(selector.current_string());
                 break;
             }
         }

@@ -7,15 +7,18 @@ use bevy::ui::Val;
 use serde::{Deserialize, Serialize};
 use AreaShape::{Cuboid, Triangular, TwoSide};
 use crate::bundles::widgets::LabelBundle;
-use crate::components::ui::ScoreText;
+use crate::components::ui::{ScoreText, ChangeUIOptionString, UIOptionString};
 
-#[derive(Clone, Copy, Eq, Hash, PartialEq, Debug,Serialize, Deserialize)]
+#[derive(Clone, Copy, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
 pub enum AreaSide {
     Left,
     Right,
     Top,
     Bottom,
 }
+
+
+
 
 impl AreaSide{
     pub fn opposite(self) -> AreaSide {
@@ -59,14 +62,14 @@ impl AreaSide{
 
 
 #[derive(Clone, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
-pub struct Team {
+pub struct TeamInfo {
     pub name: String,
     pub current_score: u32,
     pub area_side: AreaSide,
     pub players: Vec<PlayerInfo>,
 }
 
-impl Team {
+impl TeamInfo {
     pub fn get_positions(&self) -> Vec<Vec3> {
 
         self.area_side.get_paddle_pos(self.players.len())
@@ -93,10 +96,22 @@ pub enum ControlType{
 
 #[derive(Clone, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
 pub enum AreaShape {
-    TwoSide(Option<[Team; 2]>),
-    Triangular(Option<[Team; 3]>),
-    Cuboid(Option<[Team; 4]>),
+    TwoSide([TeamInfo; 2]),
+    Triangular([TeamInfo; 3]),
+    Cuboid([TeamInfo; 4]),
 }
+
+impl UIOptionString for AreaShape {
+    fn fill_ui_option_string(&self, string: &mut String) {
+        let s = match self {
+            TwoSide(_) => "Two Side",
+            Triangular(_) => "Triangular",
+            Cuboid(_) => "Cuboid",
+        };
+        string.push_str(s);
+    }
+}
+
 
 impl AreaShape {
 
@@ -108,7 +123,7 @@ impl AreaShape {
             Cuboid(_) => &[],
         }
     }
-    pub fn get_team(&mut self, side: AreaSide) -> Option<&Team> {
+    pub fn get_team(&mut self, side: AreaSide) -> Option<&TeamInfo> {
 
         let teams = self.get_teams();
 
@@ -121,7 +136,7 @@ impl AreaShape {
 
     }
 
-    pub fn get_team_mut(&mut self, side: AreaSide) -> Option<&mut Team> {
+    pub fn get_team_mut(&mut self, side: AreaSide) -> Option<&mut TeamInfo> {
 
         let teams = self.get_teams_mut();
 
@@ -134,7 +149,7 @@ impl AreaShape {
         None
     }
 
-    pub fn get_teams(&self) -> &[Team] {
+    pub fn get_teams(&self) -> &[TeamInfo] {
         match self {
             TwoSide(opt)     => opt.as_ref().unwrap(),
             Triangular(opt)  => opt.as_ref().unwrap(),
@@ -142,7 +157,7 @@ impl AreaShape {
         }
     }
 
-    pub fn get_teams_mut(&mut self) -> &mut [Team] {
+    pub fn get_teams_mut(&mut self) -> &mut [TeamInfo] {
         match self {
             TwoSide(opt)     => opt.as_mut().unwrap(),
             Triangular(opt)  => opt.as_mut().unwrap(),

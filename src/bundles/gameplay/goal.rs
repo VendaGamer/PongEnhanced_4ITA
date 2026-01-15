@@ -1,5 +1,5 @@
 use crate::components::Goal;
-use crate::models::game::area::Team;
+use crate::models::game::area::TeamInfo;
 use avian2d::prelude::{Collider, RigidBody};
 use bevy::prelude::{Bundle, Transform};
 
@@ -12,7 +12,7 @@ pub struct GoalBundle {
 }
 
 impl GoalBundle{
-    pub fn new(team: &Team) -> Self{
+    pub fn new(team: &TeamInfo) -> Self{
 
         Self{
             goal: Goal{

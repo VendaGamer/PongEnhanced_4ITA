@@ -1,3 +1,4 @@
+use std::ops::Add;
 use std::sync::Arc;
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::{HoverLight, HoverLightColor};
@@ -199,9 +200,12 @@ pub fn w_slider_thumb(size: Vec2) -> impl Bundle {
     )
 }
 
-pub fn w_dropdown(options: Arc<Vec<dyn OptionValue>>, selected: usize, tab_index: i32) -> impl Bundle {
+pub fn w_dropdown(options: impl Into<Arc<Vec<Box<dyn OptionValue>>>>, selected: usize, tab_index: i32) -> impl Bundle {
     (
-        Dropdown { options, selected },
+        Dropdown {
+            selected,
+            options: options.into(),
+        },
         Node {
             width: Val::Px(300.0),
             height: Val::Px(50.0),
@@ -218,9 +222,12 @@ pub fn w_dropdown(options: Arc<Vec<dyn OptionValue>>, selected: usize, tab_index
         TabIndex(tab_index),
     )
 }
-pub fn w_selector(options: Vec<UIOption>, selected: usize, label: impl Into<String>) -> impl Bundle {
+pub fn w_selector(options: impl Into<Arc<Vec<Box<dyn OptionValue>>>>, selected: usize, label: impl Into<String>) -> impl Bundle {
     (
-        OptionSelector { options, selected },
+        OptionSelector {
+            options: options.into(),
+            selected
+        },
         Node {
             flex_wrap: FlexWrap::Wrap,
             flex_direction: FlexDirection::Row,
@@ -326,11 +333,14 @@ pub fn update_selector(
     if let Ok((child_of, button)) = button.get(pressed.event_target()) {
         let selector_entity = child_of.parent();
         if let Ok(mut selector) = selectors.get_mut(selector_entity) {
-            
+
+        let mut string: String = selector.current_string();
+
+
         if button.0 {
-            selector.cycle_next();
+            selector.next();
         } else {
-            selector.cycle_prev();
+            selector.prev();
         }
 
         commands.trigger(OptionChanged(selector_entity));

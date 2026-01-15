@@ -5,6 +5,7 @@ use std::sync::Arc;
 #[derive(Component)]
 pub struct Dropdown {
     pub selected: usize,
+    pub options: Arc<Vec<Box<dyn OptionValue>>>,
 }
 
 #[derive(Component)]
@@ -27,11 +28,11 @@ pub struct OptionSelector {
     pub options: Arc<Vec<Box<dyn OptionValue>>>,
 }
 
-pub trait OptionValue: Send + Sync + Debug + IntoUIOptionString { }
+pub trait OptionValue: Send + Sync + Debug + UIOptionString { }
 
 
-pub trait IntoUIOptionString {
-    fn as_ui_option_string(&self) -> String;
+pub trait UIOptionString {
+    fn fill_ui_option_string(&self, string: &mut String);
 }
 
 #[derive(Component)]
@@ -44,6 +45,7 @@ pub enum SettingsSelector {
 }
 
 impl OptionSelector {
+
     pub fn new(options: Vec<Box<dyn OptionValue>>) -> Self {
         Self {
             selected: 0,
@@ -62,10 +64,10 @@ impl OptionSelector {
         self.options.get(self.selected).map(|b| &**b)
     }
 
-    pub fn current_string(&self) -> String {
+    pub fn current_string(&self) -> &str {
         self.current()
-            .map(|v| v.as_ui_option_string())
-            .unwrap_or_else(|| "None".to_string())
+            .map(|v| v.fill_ui_option_string())
+            .unwrap_or_else(|| "None")
     }
 
     pub fn next(&mut self) {

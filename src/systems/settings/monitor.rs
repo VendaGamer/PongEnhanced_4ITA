@@ -1,4 +1,5 @@
-﻿use crate::resources::{MonitorInfo, Monitors, RefreshRate};
+﻿use std::sync::Arc;
+use crate::resources::{BitDepth, MonitorInfo, Monitors, RefreshRate, Resolution};
 use bevy::ecs::query::*;
 use bevy::prelude::*;
 use bevy::window::*;
@@ -71,26 +72,30 @@ pub fn on_spawn_monitors(
 
         let mut refresh_rates: Vec<Box<RefreshRate>> = monitor.video_modes
             .iter()
-            .map(|video_mode| {
-                Box::new(RefreshRate(video_mode.refresh_rate_millihertz))
-            })
+            .map(|video_mode|
+                Box::new(video_mode.refresh_rate_millihertz.into())
+            )
             .collect();
 
-        let mut resolutions: Vec<UIOption> = monitor.video_modes
+        let mut resolutions: Vec<Box<Resolution>> = monitor.video_modes
             .iter()
-            .map(|video_mode| { video_mode.physical_size })
+            .map(|video_mode|
+                 Box::new(video_mode.physical_size.into())
+            )
             .collect();
 
-        let mut bit_depths: Vec<u16> = monitor.video_modes
+        let mut bit_depths: Vec<Box<BitDepth>> = monitor.video_modes
             .iter()
-            .map(|video_mode| { video_mode.bit_depth })
+            .map(|video_mode|
+                 Box::new(video_mode.bit_depth.into())
+            )
             .collect();
 
-        resolutions.sort_unstable_by_key(|r| (r.x, r.y));
+        resolutions.sort_unstable_by_key(|r| (r.0.x, r.0.y));
         resolutions.dedup();
 
-        refresh_rates.sort_unstable_by_key(|k| k.get_value::<u32>());
-        refresh_rates.dedup_by_key(|k| k.get_value::<u32>());
+        refresh_rates.sort_unstable();
+        refresh_rates.dedup();
 
         bit_depths.sort_unstable();
         bit_depths.dedup();
@@ -100,9 +105,9 @@ pub fn on_spawn_monitors(
             MonitorInfo {
                 monitor_selection: MonitorSelection::Entity(entity),
                 name,
-                refresh_rates,
-                resolutions,
-                bit_depths
+                refresh_rates: Arc::new(refresh_rates),
+                resolutions: Arc::new(resolutions),
+                bit_depths: Arc::new(bit_depths)
             }
         );
     }
