@@ -3,6 +3,7 @@ use crate::resources::{BitDepth, MonitorInfo, Monitors, RefreshRate, Resolution}
 use bevy::ecs::query::*;
 use bevy::prelude::*;
 use bevy::window::*;
+use crate::components::ui::UIOptionValue;
 
 #[cfg(windows)]
 fn get_monitor_name_windows(device_path: &str) -> Option<String> {
@@ -41,11 +42,23 @@ fn get_monitor_name_windows(device_path: &str) -> Option<String> {
 
 pub fn on_spawn_monitors(
     query: Query<(Entity, &Monitor), Spawned>,
-    mut resource: ResMut<Monitors>,
+    mut monitors: ResMut<Monitors>,
     window: Query<&mut Window, With<PrimaryWindow>>,
 ){
+
+    let mut info: Vec<Box<MonitorInfo>> = Vec::new();
+    let primary_window = window.single().expect("Couldn't get primary window");
+
+    let selected_monitor = match primary_window.mode{
+        WindowMode::BorderlessFullscreen(monitor) => Some(monitor),
+        WindowMode::Fullscreen(monitor, _) => Some(monitor),
+        _ => None,
+    };
+
+
     for (index, (entity, monitor)) in query.iter().enumerate() {
 
+        let selection = MonitorSelection::Entity(entity);
         let name = if let Some(real_name) = monitor.name.clone(){
 
             #[cfg(windows)]
@@ -65,9 +78,13 @@ pub fn on_spawn_monitors(
             format!("Monitor {}", index + 1)
         };
 
-        if window.contains(entity){
-            resource.selected_monitor = Some(index);
+
+        if let Some(current_monitor) = selected_monitor {
+            if current_monitor.eq(&selection){
+                monitors.selected_monitor = Some(index);
+            }
         }
+
 
 
         let mut refresh_rates: Vec<Box<RefreshRate>> = monitor.video_modes
@@ -100,15 +117,17 @@ pub fn on_spawn_monitors(
         bit_depths.sort_unstable();
         bit_depths.dedup();
 
-
-        resource.monitors.push(
-            MonitorInfo {
-                monitor_selection: MonitorSelection::Entity(entity),
+        info.push(Box::new(
+            MonitorInfo{
+                monitor_selection: selection,
                 name,
                 refresh_rates: Arc::new(refresh_rates),
                 resolutions: Arc::new(resolutions),
-                bit_depths: Arc::new(bit_depths)
+                bit_depths: Arc::new(bit_depths),
             }
-        );
+        ));
     }
+
+    monitors.monitors = Arc::from(info);
+
 }

@@ -1,8 +1,9 @@
+use std::fmt::Write;
 use derive_more::{From, Into};
 use serde::{Deserialize, Serialize};
-use crate::components::ui::{ChangeUIOptionString, UIOptionString};
+use crate::components::ui::{UIOptionString};
 
-#[derive(Clone, Copy, Eq, Hash, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Copy, Eq, Hash, PartialEq, Serialize, Deserialize, Default, Debug)]
 pub enum GameMode {
     #[default]
     Classic,
@@ -12,23 +13,25 @@ pub enum GameMode {
     Twisted,
 }
 
-#[derive(Clone, Copy, Eq, Hash, PartialEq, Serialize, Deserialize, Default, From, Into)]
+#[derive(Clone, Debug, Copy, Eq, Hash, PartialEq, Serialize, Deserialize, Default, From, Into)]
 pub struct PlayerNum(pub u8);
 
-impl UIOptionString for PlayerNum{
-    fn fill_ui_option_string(&self, string: &String) -> &str {
-        string.
+impl UIOptionString for PlayerNum {
+    fn push_ui_option_string(&self, string: &mut String) {
+        write!(string, "{} Players", self.0).unwrap();
     }
 }
 
-impl ChangeUIOptionString for GameMode {
-    fn to_ui_option_string(&self) -> &str {
-        match self {
+impl UIOptionString for GameMode {
+    fn push_ui_option_string(&self, string: &mut String) {
+        let s = match self {
             GameMode::Classic => "Classic",
             GameMode::UpsideDown => "Upside Down",
             GameMode::Modern => "Modern",
             GameMode::Blackout => "Blackout",
             GameMode::Twisted => "Twisted",
-        }.to_string()
+        };
+
+        string.push_str(s);
     }
 }

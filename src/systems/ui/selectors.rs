@@ -11,7 +11,7 @@ pub fn update_selector_text(
         for child in children.iter_descendants(selector_entity) {
             if let Ok(mut text) = texts.get_mut(child) {
                 text.0.clear();
-                text.0.push_str(selector.current_string());
+                selector.push_current_string(&mut text.0);
                 break;
             }
         }

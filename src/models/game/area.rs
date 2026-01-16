@@ -1,13 +1,12 @@
+use crate::bundles::widgets::LabelBundle;
 use crate::bundles::{default, Entity, Transform, Vec3};
+use crate::components::ui::{ScoreText, UIOptionString};
 use crate::utils::{FIXED_DIMENSIONS, HALF_HEIGHT, HALF_WALL_THICKNESS, HALF_WIDTH, WALL_THICKNESS};
 use avian2d::prelude::Collider;
-use bevy::prelude::{Color, Commands, Node, PositionType, Resource, Text, TextFont};
-use bevy::text::FontSmoothing;
+use bevy::prelude::{Color, Commands, Node, PositionType, Resource};
 use bevy::ui::Val;
 use serde::{Deserialize, Serialize};
 use AreaShape::{Cuboid, Triangular, TwoSide};
-use crate::bundles::widgets::LabelBundle;
-use crate::components::ui::{ScoreText, ChangeUIOptionString, UIOptionString};
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
 pub enum AreaSide {
@@ -16,8 +15,6 @@ pub enum AreaSide {
     Top,
     Bottom,
 }
-
-
 
 
 impl AreaSide{
@@ -63,7 +60,6 @@ impl AreaSide{
 
 #[derive(Clone, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
 pub struct TeamInfo {
-    pub name: String,
     pub current_score: u32,
     pub area_side: AreaSide,
     pub players: Vec<PlayerInfo>,
@@ -71,11 +67,8 @@ pub struct TeamInfo {
 
 impl TeamInfo {
     pub fn get_positions(&self) -> Vec<Vec3> {
-
         self.area_side.get_paddle_pos(self.players.len())
-
     }
-
 }
 
 #[derive(Resource, Default)]
@@ -101,8 +94,26 @@ pub enum AreaShape {
     Cuboid([TeamInfo; 4]),
 }
 
+impl Default for AreaShape {
+    fn default() -> Self {
+        TwoSide([
+            TeamInfo{
+                players: Vec::new(),
+                area_side: AreaSide::Left,
+                current_score: 0
+            },
+            TeamInfo{
+                players: Vec::new(),
+                area_side: AreaSide::Right,
+                current_score: 0
+            },
+        ])
+    }
+}
+
+
 impl UIOptionString for AreaShape {
-    fn fill_ui_option_string(&self, string: &mut String) {
+    fn push_ui_option_string(&self, string: &mut String) {
         let s = match self {
             TwoSide(_) => "Two Side",
             Triangular(_) => "Triangular",
@@ -151,17 +162,17 @@ impl AreaShape {
 
     pub fn get_teams(&self) -> &[TeamInfo] {
         match self {
-            TwoSide(opt)     => opt.as_ref().unwrap(),
-            Triangular(opt)  => opt.as_ref().unwrap(),
-            Cuboid(opt)      => opt.as_ref().unwrap(),
+            TwoSide(opt)     => opt.as_ref(),
+            Triangular(opt)  => opt.as_ref(),
+            Cuboid(opt)      => opt.as_ref(),
         }
     }
 
     pub fn get_teams_mut(&mut self) -> &mut [TeamInfo] {
         match self {
-            TwoSide(opt)     => opt.as_mut().unwrap(),
-            Triangular(opt)  => opt.as_mut().unwrap(),
-            Cuboid(opt)      => opt.as_mut().unwrap(),
+            TwoSide(opt)     => opt.as_mut(),
+            Triangular(opt)  => opt.as_mut(),
+            Cuboid(opt)      => opt.as_mut(),
         }
     }
 }

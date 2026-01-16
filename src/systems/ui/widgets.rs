@@ -1,8 +1,6 @@
-use std::ops::Add;
-use std::sync::Arc;
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::{HoverLight, HoverLightColor};
-use crate::components::ui::{Dropdown, OptionSelector, OptionValue, SelectorButton, SelectorText};
+use crate::components::ui::{Dropdown, OptionSelector, SelectorButton, SelectorText, UIOptionProvider};
 use crate::events::widgets::{ButtonPressed, OptionChanged};
 use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT, MODERN_THEME};
 use bevy::input_focus::tab_navigation::TabIndex;
@@ -14,6 +12,7 @@ use bevy_tween::combinator::AnimationBuilderExt;
 use bevy_tween::interpolate::background_color_to;
 use bevy_tween::interpolation::EaseKind;
 use bevy_tween::prelude::IntoTarget;
+use std::sync::Arc;
 use std::time::Duration;
 
 pub const BUTTON_PADDING: Val = Val::Px(20.0);
@@ -200,11 +199,11 @@ pub fn w_slider_thumb(size: Vec2) -> impl Bundle {
     )
 }
 
-pub fn w_dropdown(options: impl Into<Arc<Vec<Box<dyn OptionValue>>>>, selected: usize, tab_index: i32) -> impl Bundle {
+pub fn w_dropdown(options: Arc<dyn UIOptionProvider>, selected: usize, tab_index: i32) -> impl Bundle {
     (
         Dropdown {
             selected,
-            options: options.into(),
+            options,
         },
         Node {
             width: Val::Px(300.0),
@@ -222,10 +221,10 @@ pub fn w_dropdown(options: impl Into<Arc<Vec<Box<dyn OptionValue>>>>, selected: 
         TabIndex(tab_index),
     )
 }
-pub fn w_selector(options: impl Into<Arc<Vec<Box<dyn OptionValue>>>>, selected: usize, label: impl Into<String>) -> impl Bundle {
+pub fn w_selector(options_provider: Arc<dyn UIOptionProvider>, selected: usize, label: impl Into<String>) -> impl Bundle {
     (
         OptionSelector {
-            options: options.into(),
+            options_provider: options_provider.into(),
             selected
         },
         Node {
@@ -333,9 +332,6 @@ pub fn update_selector(
     if let Ok((child_of, button)) = button.get(pressed.event_target()) {
         let selector_entity = child_of.parent();
         if let Ok(mut selector) = selectors.get_mut(selector_entity) {
-
-        let mut string: String = selector.current_string();
-
 
         if button.0 {
             selector.next();

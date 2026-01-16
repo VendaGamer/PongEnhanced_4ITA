@@ -1,11 +1,64 @@
-use std::fmt::Debug;
 use bevy::prelude::*;
+use derive_more::{From, Into};
+use std::any::Any;
+use std::fmt::Debug;
 use std::sync::Arc;
+
+pub trait UIOptionProvider: Send + Sync + Any {
+    fn get_option(&self, index: usize) -> Option<&dyn UIOptionValue>;
+    fn get_option_mut(&mut self, index: usize) -> Option<&mut dyn UIOptionValue>;
+    fn len(&self) -> usize;
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    fn as_any(&self) -> &dyn Any;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
+}
+
+pub trait UIOptionValue: Any + Send + Sync + Debug + UIOptionString {
+    fn as_any(&self) -> &dyn Any;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
+}
+
+impl<T> UIOptionValue for T
+where
+    T: Any + Send + Sync + Debug + UIOptionString
+{
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+}
+
+impl<T: UIOptionValue + 'static> UIOptionProvider for Vec<Box<T>> {
+    fn get_option(&self, index: usize) -> Option<&dyn UIOptionValue> {
+        self.get(index).map(|val| val.as_ref() as &dyn UIOptionValue)
+    }
+
+    fn get_option_mut(&mut self, index: usize) -> Option<&mut dyn UIOptionValue> {
+        self.get_mut(index).map(|val| val.as_mut() as &mut dyn UIOptionValue)
+    }
+
+    fn len(&self) -> usize {
+        Vec::len(self)
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+}
 
 #[derive(Component)]
 pub struct Dropdown {
     pub selected: usize,
-    pub options: Arc<Vec<Box<dyn OptionValue>>>,
+    pub options: Arc<dyn UIOptionProvider>,
 }
 
 #[derive(Component)]
@@ -22,17 +75,14 @@ pub struct SelectorButton(pub bool);
 #[require(Text)]
 pub struct SelectorText;
 
-#[derive(Component)]
+#[derive(Component, From, Into)]
 pub struct OptionSelector {
     pub selected: usize,
-    pub options: Arc<Vec<Box<dyn OptionValue>>>,
+    pub options_provider: Arc<dyn UIOptionProvider>,
 }
 
-pub trait OptionValue: Send + Sync + Debug + UIOptionString { }
-
-
 pub trait UIOptionString {
-    fn fill_ui_option_string(&self, string: &mut String);
+    fn push_ui_option_string(&self, string: &mut String);
 }
 
 #[derive(Component)]
@@ -46,40 +96,32 @@ pub enum SettingsSelector {
 
 impl OptionSelector {
 
-    pub fn new(options: Vec<Box<dyn OptionValue>>) -> Self {
-        Self {
-            selected: 0,
-            options: Arc::new(options),
+    pub fn current<T: 'static>(&self) -> Option<&T> {
+        self.options_provider
+            .get_option(self.selected)?
+            .as_any()
+            .downcast_ref::<T>()
+    }
+
+    pub fn push_current_string(&self, string: &mut String) {
+        if let Some(current) = self.options_provider.get_option(self.selected) {
+            current.push_ui_option_string(string);
+            return;
         }
-    }
 
-    pub fn with_selected(options: Vec<Box<dyn OptionValue>>, selected: usize) -> Self {
-        Self {
-            selected: selected.min(options.len().saturating_sub(1)),
-            options: Arc::new(options),
-        }
-    }
-
-    pub fn current(&self) -> Option<&dyn OptionValue> {
-        self.options.get(self.selected).map(|b| &**b)
-    }
-
-    pub fn current_string(&self) -> &str {
-        self.current()
-            .map(|v| v.fill_ui_option_string())
-            .unwrap_or_else(|| "None")
+        string.push_str("n/a");
     }
 
     pub fn next(&mut self) {
-        if !self.options.is_empty() {
-            self.selected = (self.selected + 1) % self.options.len();
+        if !self.options_provider.is_empty() {
+            self.selected = (self.selected + 1) % self.options_provider.len();
         }
     }
 
     pub fn prev(&mut self) {
-        if !self.options.is_empty() {
+        if !self.options_provider.is_empty() {
             self.selected = if self.selected == 0 {
-                self.options.len() - 1
+                self.options_provider.len() - 1
             } else {
                 self.selected - 1
             };
@@ -87,7 +129,7 @@ impl OptionSelector {
     }
 
     pub fn set(&mut self, idx: usize) {
-        if idx < self.options.len() {
+        if idx < self.options_provider.len() {
             self.selected = idx;
         }
     }

@@ -1,11 +1,11 @@
-use std::sync::{Arc, Weak};
+use crate::components::ui::UIOptionString;
 use crate::models::game::area::AreaShape;
 use crate::models::game::gameplay::GameMode;
 use bevy::prelude::{Res, Resource, UVec2};
 use bevy::window::{MonitorSelection, WindowMode};
 use derive_more::{From, Into};
 use serde::{Deserialize, Serialize};
-use crate::components::ui::UIOptionString;
+use std::sync::Arc;
 
 #[derive(Resource, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct GameSettings {
@@ -37,12 +37,19 @@ impl From<&Res<'_, GameSettings>> for PendingSettings {
 
 #[derive(Resource, Clone, Default, Debug)]
 pub struct Monitors {
-    pub monitors: Vec<MonitorInfo>,
+    pub monitors: Arc<Vec<Box<MonitorInfo>>>,
     pub selected_monitor: Option<usize>,
 }
 
+impl UIOptionString for MonitorInfo {
+    fn push_ui_option_string(&self, string: &mut String){
+        string.push_str(&*self.name);
+    }
+}
+
+
 impl Monitors {
-    pub fn get_current_monitor(&self) -> Option<&MonitorInfo> {
+    pub fn get_current_monitor(&self) -> Option<&Box<MonitorInfo>> {
         let index = self.selected_monitor.unwrap_or_default();
         self.monitors.get(index)
     }
@@ -63,7 +70,7 @@ pub struct RefreshRate(pub u32);
 
 impl UIOptionString for RefreshRate {
 
-    fn fill_ui_option_string(&self, string: &mut String) {
+    fn push_ui_option_string(&self, string: &mut String) {
         string.push_str(format!("{} Hz", self.0).as_str());
     }
 }
@@ -72,7 +79,7 @@ impl UIOptionString for RefreshRate {
 pub struct Resolution(pub UVec2);
 
 impl UIOptionString for Resolution {
-    fn fill_ui_option_string(&self, string: &mut String) {
+    fn push_ui_option_string(&self, string: &mut String) {
         string.push_str(format!("{} x {}", self.0.x, self.0.y).as_str());
     }
 }
@@ -80,7 +87,7 @@ impl UIOptionString for Resolution {
 pub struct BitDepth(pub u16);
 
 impl UIOptionString for BitDepth {
-    fn fill_ui_option_string(&self, string: &mut String) {
+    fn push_ui_option_string(&self, string: &mut String) {
         string.push_str(format!("{}-bit", self.0).as_str())
     }
 }
@@ -109,24 +116,7 @@ impl Default for GameModeConfig {
     fn default() -> Self {
         Self{
             game_mode: GameMode::Classic,
-            area_shape: AreaShape::TwoSide(
-                [
-                    // Team 1
-                    crate::models::game::area::TeamInfo {
-                        name: "Team 1".to_string(),
-                        current_score: 0,
-                        area_side: crate::models::game::area::AreaSide::Left,
-                        players: vec![],
-                    },
-                    // Team 2
-                    crate::models::game::area::TeamInfo {
-                        name: "Team 2".to_string(),
-                        current_score: 0,
-                        area_side: crate::models::game::area::AreaSide::Right,
-                        players: vec![],
-                    },
-                ]
-            ),
+            area_shape: AreaShape::default(),
             win_score: 10,
         }
     }
