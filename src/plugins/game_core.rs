@@ -28,9 +28,7 @@ impl Plugin for GameCorePlugin {
                 on_spawn_monitors,
             ))
             .insert_resource(GameModeConfig::default())
-            .insert_resource(GameSettings::default())
-            .insert_resource(Players::default())
-            .insert_resource(Monitors::default());
+            .insert_resource(Players::default());
     }
 }
 

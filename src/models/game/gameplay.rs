@@ -1,5 +1,6 @@
 use std::fmt::Write;
-use derive_more::{From, Into};
+use bevy::prelude::DerefMut;
+use derive_more::{Deref, From, Into};
 use serde::{Deserialize, Serialize};
 use crate::components::ui::{UIOptionString};
 
@@ -13,7 +14,8 @@ pub enum GameMode {
     Twisted,
 }
 
-#[derive(Clone, Debug, Copy, Eq, Hash, PartialEq, Serialize, Deserialize, Default, From, Into)]
+#[derive(Clone, Debug, Copy, Eq, Hash, PartialEq, Serialize,
+         Deserialize, Default, From, Into, Deref, DerefMut)]
 pub struct PlayerNum(pub u8);
 
 impl UIOptionString for PlayerNum {
