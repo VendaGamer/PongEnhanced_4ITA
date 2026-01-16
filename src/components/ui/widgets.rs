@@ -13,6 +13,7 @@ pub trait UIOptionProvider: Send + Sync + Any {
 }
 
 pub trait UIOptionValue: Any + Send + Sync + Debug + UIOptionString {
+
     fn as_any(&self) -> &dyn Any;
 }
 
@@ -20,36 +21,41 @@ impl<T> UIOptionValue for T
 where
     T: Any + Send + Sync + Debug + UIOptionString
 {
+    #[inline]
     fn as_any(&self) -> &dyn Any {
         self
     }
 }
 
-impl<T: UIOptionValue + 'static> UIOptionProvider for Vec<T> {
+impl<T: UIOptionValue> UIOptionProvider for Vec<T> {
+
+    #[inline]
     fn get_option(&self, index: usize) -> Option<&dyn UIOptionValue> {
         self.get(index).map(|val| val as &dyn UIOptionValue)
     }
-
+    #[inline]
     fn len(&self) -> usize {
         self.len()
     }
 }
 
-impl<T: UIOptionValue + 'static, const N: usize> UIOptionProvider for [T; N] {
+impl<T: UIOptionValue, const N: usize> UIOptionProvider for [T; N] {
+    #[inline]
     fn get_option(&self, index: usize) -> Option<&dyn UIOptionValue> {
         self.get(index).map(|val| val as &dyn UIOptionValue)
     }
-
+    #[inline]
     fn len(&self) -> usize {
         N
     }
 }
 
 impl<T: UIOptionValue + 'static> UIOptionProvider for [T] {
+    #[inline]
     fn get_option(&self, index: usize) -> Option<&dyn UIOptionValue> {
         self.get(index).map(|val| val as &dyn UIOptionValue)
     }
-
+    #[inline]
     fn len(&self) -> usize {
         self.len()
     }
@@ -61,13 +67,6 @@ pub struct Dropdown {
     pub selected: usize,
     pub options: Arc<dyn UIOptionProvider>,
 }
-
-#[derive(Component)]
-pub struct ConditionalVisibility {
-    pub depends_on: SettingsSelector,
-    pub required_values: Vec<String>,
-}
-
 #[derive(Component)]
 #[require(Button)]
 pub struct SelectorButton(pub bool);
@@ -97,7 +96,7 @@ pub enum SettingsSelector {
 
 impl OptionSelector {
 
-    pub fn current<T: 'static>(&self) -> Option<&T> {
+    pub fn current<T: Any>(&self) -> Option<&T> {
         self.options_provider
             .get_option(self.selected)?
             .as_any()
