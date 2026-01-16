@@ -1,14 +1,13 @@
-use std::sync::Arc;
 use crate::bundles::widgets::LabelBundle;
-use crate::components::ui::{Menu, MenuType, OptionSelector, SettingsSelector, UIOptionString};
+use crate::components::ui::{Menu, MenuType, OptionSelector, SettingsSelector, SourceHandle, UIOptionString};
 use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged};
-use crate::models::game::gameplay::{GameMode, PlayerNum};
-use crate::resources::{GameSettings, MonitorInfo, Monitors, PendingSettings, Resolution};
+use crate::resources::{GameSettings, Monitors, PendingSettings, Resolution};
 use crate::systems::widgets::*;
 use bevy::dev_tools::fps_overlay::FpsOverlayConfig;
 use bevy::prelude::*;
 use bevy::ui_widgets::observe;
-use bevy::window::{ScreenEdge, WindowMode};
+use bevy::window::WindowMode;
+
 
 pub fn m_main() -> impl Bundle {
     (
@@ -57,9 +56,7 @@ pub fn m_main() -> impl Bundle {
 macro_rules! boxed_vec {
     ($($x:expr),+ $(,)?) => {
         {
-            use std::sync::Arc;
-
-            Arc::new(vec![$(Box::new($x)),+])
+            Box::new(vec![$($x),+])
         }
     };
 }
@@ -225,7 +222,8 @@ pub fn spawn_m_settings(
 
                     section.spawn(
                         w_selector(
-                            Arc::new([
+                            SourceHandle::Unique(
+                            boxed_vec![
                                 WindowMode::Windowed,
                                 WindowMode::BorderlessFullscreen(monitor.monitor_selection),
                                 WindowMode::Fullscreen(monitor.monitor_selection, current_video_mode),
@@ -237,21 +235,21 @@ pub fn spawn_m_settings(
 
 
                 section.spawn(w_selector(
-                    monitors.monitors.clone(),
+                    SourceHandle::Strong(monitors.monitors.clone()),
                     monitor_index,
                     "Monitor"))
                         .insert(SettingsSelector::Monitor)
                         .observe(on_monitor_changed);
 
                     section.spawn(w_selector(
-                        monitor.resolutions.clone(),
+                        SourceHandle::Strong(monitor.resolutions.clone()),
                         0,
                         "Resolution"))
                         .insert(SettingsSelector::Resolution)
                         .observe(on_resolution_changed);
 
                     section.spawn(w_selector(
-                        monitor.refresh_rates.clone(),
+                        SourceHandle::Strong(monitor.refresh_rates.clone()),
                         0,
                         "Refresh Rate"))
                         .insert(SettingsSelector::RefreshRate)

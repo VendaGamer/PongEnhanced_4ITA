@@ -1,6 +1,6 @@
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::{HoverLight, HoverLightColor};
-use crate::components::ui::{Dropdown, OptionSelector, SelectorButton, SelectorText, UIOptionProvider};
+use crate::components::ui::{Dropdown, OptionSelector, SelectorButton, SelectorText, SourceHandle, UIOptionProvider};
 use crate::events::widgets::{ButtonPressed, OptionChanged};
 use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT, MODERN_THEME};
 use bevy::input_focus::tab_navigation::TabIndex;
@@ -221,7 +221,7 @@ pub fn w_dropdown(options: Arc<dyn UIOptionProvider>, selected: usize, tab_index
         TabIndex(tab_index),
     )
 }
-pub fn w_selector<T: UIOptionProvider>(options_provider: Arc<T>, selected: usize, label: impl Into<String>) -> impl Bundle {
+pub fn w_selector(options_provider: SourceHandle<dyn UIOptionProvider>, selected: usize, label: impl Into<String>) -> impl Bundle {
     (
         OptionSelector {
             options_provider,

@@ -4,6 +4,22 @@ use std::any::Any;
 use std::fmt::Debug;
 use std::sync::Arc;
 
+pub enum SourceHandle<T: 'static + ?Sized> {
+    Strong(Arc<T>),
+    Static(&'static T),
+    Unique(Box<T>)
+}
+
+impl<T: ?Sized> SourceHandle<T> {
+    fn get_ref(&self) -> &T {
+        match self {
+            SourceHandle::Strong(arc) => arc.as_ref(),
+            SourceHandle::Static(r) => r,
+            SourceHandle::Unique(boxed) => boxed.as_ref()
+        }
+    }
+}
+
 pub trait UIOptionProvider: Send + Sync + Any {
     fn get_option(&self, index: usize) -> Option<&dyn UIOptionValue>;
     fn len(&self) -> usize;
@@ -39,7 +55,7 @@ impl<T: UIOptionValue> UIOptionProvider for Vec<T> {
     }
 }
 
-impl<T: UIOptionValue, const N: usize> UIOptionProvider for [T; N] {
+impl<T: UIOptionValue, const N: usize> UIOptionProvider for [T; N]  {
     #[inline]
     fn get_option(&self, index: usize) -> Option<&dyn UIOptionValue> {
         self.get(index).map(|val| val as &dyn UIOptionValue)
@@ -78,7 +94,7 @@ pub struct SelectorText;
 #[derive(Component, From, Into)]
 pub struct OptionSelector {
     pub selected: usize,
-    pub options_provider: Arc<dyn UIOptionProvider>,
+    pub options_provider: SourceHandle<dyn UIOptionProvider>,
 }
 
 pub trait UIOptionString {
@@ -98,13 +114,14 @@ impl OptionSelector {
 
     pub fn current<T: Any>(&self) -> Option<&T> {
         self.options_provider
+            .get_ref()
             .get_option(self.selected)?
             .as_any()
             .downcast_ref::<T>()
     }
 
     pub fn push_current_string(&self, string: &mut String) {
-        if let Some(current) = self.options_provider.get_option(self.selected) {
+        if let Some(current) = self.options_provider.get_ref().get_option(self.selected) {
             current.push_ui_option_string(string);
             return;
         }
@@ -113,15 +130,19 @@ impl OptionSelector {
     }
 
     pub fn next(&mut self) {
-        if !self.options_provider.is_empty() {
-            self.selected = (self.selected + 1) % self.options_provider.len();
+        let provider = self.options_provider.get_ref();
+
+        if !provider.is_empty() {
+            self.selected = (self.selected + 1) % provider.len();
         }
     }
 
     pub fn prev(&mut self) {
-        if !self.options_provider.is_empty() {
+        let provider = self.options_provider.get_ref();
+
+        if !provider.is_empty() {
             self.selected = if self.selected == 0 {
-                self.options_provider.len() - 1
+                provider.len() - 1
             } else {
                 self.selected - 1
             };
@@ -129,7 +150,7 @@ impl OptionSelector {
     }
 
     pub fn set(&mut self, idx: usize) {
-        if idx < self.options_provider.len() {
+        if idx < self.options_provider.get_ref().len() {
             self.selected = idx;
         }
     }
