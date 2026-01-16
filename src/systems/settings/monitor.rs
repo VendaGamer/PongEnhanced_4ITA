@@ -45,8 +45,8 @@ pub fn on_spawn_monitors(
     window: Query<&mut Window, With<PrimaryWindow>>,
     mut commands: Commands,
 ){
-    let mut info: Vec<Box<MonitorInfo>> = Vec::new();
-    let current_monitor_index :usize = 0;
+    let mut info: Vec<MonitorInfo> = Vec::new();
+    let mut current_monitor_index:usize = 0;
     let primary_window = window.single().expect("Couldn't get primary window");
 
     let selected_monitor = match primary_window.mode{
@@ -80,31 +80,23 @@ pub fn on_spawn_monitors(
 
         if let Some(current_monitor) = selected_monitor {
             if current_monitor.eq(&selection){
-
+                current_monitor_index = index;
             }
         }
 
-
-
-        let mut refresh_rates: Vec<Box<RefreshRate>> = monitor.video_modes
+        let mut refresh_rates: Vec<RefreshRate> = monitor.video_modes
             .iter()
-            .map(|video_mode|
-                Box::new(video_mode.refresh_rate_millihertz.into())
-            )
+            .map(|video_mode| video_mode.refresh_rate_millihertz.into())
             .collect();
 
-        let mut resolutions: Vec<Box<Resolution>> = monitor.video_modes
+        let mut resolutions: Vec<Resolution> = monitor.video_modes
             .iter()
-            .map(|video_mode|
-                 Box::new(video_mode.physical_size.into())
-            )
+            .map(|video_mode| video_mode.physical_size.into())
             .collect();
 
-        let mut bit_depths: Vec<Box<BitDepth>> = monitor.video_modes
+        let mut bit_depths: Vec<BitDepth> = monitor.video_modes
             .iter()
-            .map(|video_mode|
-                 Box::new(video_mode.bit_depth.into())
-            )
+            .map(|video_mode| video_mode.bit_depth.into())
             .collect();
 
         resolutions.sort_unstable_by_key(|r| (r.0.x, r.0.y));
@@ -121,8 +113,7 @@ pub fn on_spawn_monitors(
             refresh_rates.iter().map(|x| x.0).max().expect("No Refresh rates")
         );
 
-        info.push(Box::new(
-            MonitorInfo{
+        info.push(MonitorInfo{
                 monitor_selection: selection,
                 name,
                 refresh_rates: Arc::new(refresh_rates),
@@ -133,8 +124,7 @@ pub fn on_spawn_monitors(
                     refresh_rate_millihertz: refresh_rate,
                     physical_size: monitor.physical_size(),
                 }
-            }
-        ));
+            });
     }
 
     commands.insert_resource(

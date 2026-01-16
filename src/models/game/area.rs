@@ -94,23 +94,24 @@ pub enum AreaShape {
     Cuboid([TeamInfo; 4]),
 }
 
-impl Default for AreaShape {
-    fn default() -> Self {
+impl AreaShape {
+    pub(crate) fn default() -> AreaShape {
+
         TwoSide([
-            TeamInfo{
-                players: Vec::new(),
+            TeamInfo {
+                current_score: 0,
                 area_side: AreaSide::Left,
-                current_score: 0
-            },
-            TeamInfo{
                 players: Vec::new(),
+            },
+            TeamInfo {
+                current_score: 0,
                 area_side: AreaSide::Right,
-                current_score: 0
+                players: Vec::new(),
             },
         ])
+
     }
 }
-
 
 impl UIOptionString for AreaShape {
     fn push_ui_option_string(&self, string: &mut String) {

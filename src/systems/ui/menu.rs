@@ -1,8 +1,9 @@
+use std::sync::Arc;
 use crate::bundles::widgets::LabelBundle;
 use crate::components::ui::{Menu, MenuType, OptionSelector, SettingsSelector, UIOptionString};
 use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged};
 use crate::models::game::gameplay::{GameMode, PlayerNum};
-use crate::resources::{GameSettings, MonitorInfo, Monitors, PendingSettings};
+use crate::resources::{GameSettings, MonitorInfo, Monitors, PendingSettings, Resolution};
 use crate::systems::widgets::*;
 use bevy::dev_tools::fps_overlay::FpsOverlayConfig;
 use bevy::prelude::*;
@@ -224,14 +225,16 @@ pub fn spawn_m_settings(
 
                     section.spawn(
                         w_selector(
-                boxed_vec![
+                            Arc::new([
                                 WindowMode::Windowed,
                                 WindowMode::BorderlessFullscreen(monitor.monitor_selection),
                                 WindowMode::Fullscreen(monitor.monitor_selection, current_video_mode),
-                            ],
+                            ]),
                             current_window_mode,
                             ""
                         ));
+
+
 
                 section.spawn(w_selector(
                     monitors.monitors.clone(),
@@ -245,14 +248,14 @@ pub fn spawn_m_settings(
                         0,
                         "Resolution"))
                         .insert(SettingsSelector::Resolution)
-                        .observe(on_monitor_changed);
+                        .observe(on_resolution_changed);
 
                     section.spawn(w_selector(
                         monitor.refresh_rates.clone(),
                         0,
                         "Refresh Rate"))
                         .insert(SettingsSelector::RefreshRate)
-                        .observe(on_monitor_changed);
+                        .observe(on_refresh_rate_changed);
                 });
             container.spawn(LabelBundle::button_label(""));
         });
@@ -317,6 +320,26 @@ fn on_show_fps_changed(
     mut settings: ResMut<GameSettings>,
     mut fps_overlay: ResMut<FpsOverlayConfig>,
 ) {
+    for selector in selectors.iter() {
+
+        let res = selector.current::<Resolution>();
+    }
+}
+
+fn on_resolution_changed(
+    change: On<OptionChanged>,
+    selectors: Query<&OptionSelector>,
+){
+    if let Ok(selector) = selectors.get(change.0){
+        if let Some(resolution) = selector.current::<Resolution>(){
+            println!("Changed resolution to {}x{}", resolution.x, resolution.y);
+        }
+    }
+}
+
+fn on_refresh_rate_changed(
+    change: On<OptionChanged>,
+){
 
 }
 

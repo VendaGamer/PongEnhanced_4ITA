@@ -10,8 +10,6 @@ pub trait UIOptionProvider: Send + Sync + Any {
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
-
-    fn as_any(&self) -> &dyn Any;
 }
 
 pub trait UIOptionValue: Any + Send + Sync + Debug + UIOptionString {
@@ -27,33 +25,36 @@ where
     }
 }
 
-impl<T: UIOptionValue + 'static> UIOptionProvider for Vec<Box<T>> {
+impl<T: UIOptionValue + 'static> UIOptionProvider for Vec<T> {
     fn get_option(&self, index: usize) -> Option<&dyn UIOptionValue> {
-        self.get(index).map(|val| val.as_ref() as &dyn UIOptionValue)
-    }
-
-    fn len(&self) -> usize {
-        Vec::len(self)
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
-impl<T: UIOptionValue + 'static> UIOptionProvider for Arc<[Box<T>]> {
-    fn get_option(&self, index: usize) -> Option<&dyn UIOptionValue> {
-        self.get(index).map(|val| val.as_ref() as &dyn UIOptionValue)
+        self.get(index).map(|val| val as &dyn UIOptionValue)
     }
 
     fn len(&self) -> usize {
         self.len()
     }
+}
 
-    fn as_any(&self) -> &dyn Any {
-        self
+impl<T: UIOptionValue + 'static, const N: usize> UIOptionProvider for [T; N] {
+    fn get_option(&self, index: usize) -> Option<&dyn UIOptionValue> {
+        self.get(index).map(|val| val as &dyn UIOptionValue)
+    }
+
+    fn len(&self) -> usize {
+        N
     }
 }
+
+impl<T: UIOptionValue + 'static> UIOptionProvider for [T] {
+    fn get_option(&self, index: usize) -> Option<&dyn UIOptionValue> {
+        self.get(index).map(|val| val as &dyn UIOptionValue)
+    }
+
+    fn len(&self) -> usize {
+        self.len()
+    }
+}
+
 
 #[derive(Component)]
 pub struct Dropdown {

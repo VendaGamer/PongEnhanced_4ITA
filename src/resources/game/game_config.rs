@@ -1,7 +1,7 @@
 use crate::components::ui::UIOptionString;
 use crate::models::game::area::AreaShape;
 use crate::models::game::gameplay::GameMode;
-use bevy::prelude::{Res, Resource, UVec2};
+use bevy::prelude::{Deref, Res, Resource, UVec2};
 use bevy::window::{MonitorSelection, VideoMode, WindowMode};
 use derive_more::{From, Into};
 use serde::{Deserialize, Serialize};
@@ -37,7 +37,7 @@ impl From<&Res<'_, GameSettings>> for PendingSettings {
 
 #[derive(Resource, Clone, Default, Debug)]
 pub struct Monitors {
-    pub monitors: Arc<Vec<Box<MonitorInfo>>>,
+    pub monitors: Arc<Vec<MonitorInfo>>,
     pub selected_monitor: usize,
 }
 
@@ -49,7 +49,7 @@ impl UIOptionString for MonitorInfo {
 
 
 impl Monitors {
-    pub fn get_current_monitor(&self) -> &Box<MonitorInfo> {
+    pub fn get_current_monitor(&self) -> &MonitorInfo {
         self.monitors.get(self.selected_monitor).expect("no monitor found")
     }
 }
@@ -60,9 +60,9 @@ pub struct MonitorInfo {
     pub monitor_selection: MonitorSelection,
     pub native_mode: VideoMode,
     pub name: String,
-    pub refresh_rates: Arc<Vec<Box<RefreshRate>>>,
-    pub resolutions: Arc<Vec<Box<Resolution>>>,
-    pub bit_depths: Arc<Vec<Box<BitDepth>>>,
+    pub refresh_rates: Arc<Vec<RefreshRate>>,
+    pub resolutions: Arc<Vec<Resolution>>,
+    pub bit_depths: Arc<Vec<BitDepth>>,
 }
 
 #[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, From, Into)]
@@ -75,7 +75,7 @@ impl UIOptionString for RefreshRate {
     }
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, From, Into)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, From, Into, Deref)]
 pub struct Resolution(pub UVec2);
 
 impl UIOptionString for Resolution {
