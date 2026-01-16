@@ -1,0 +1,9 @@
+{
+  "master_volume": 50.0,
+  "sfx_volume": 50.0,
+  "video_mode": {
+    "BorderlessFullscreen": "Primary"
+  },
+  "vsync": true,
+  "show_fps": true
+}

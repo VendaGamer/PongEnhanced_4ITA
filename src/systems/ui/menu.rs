@@ -1,5 +1,5 @@
 use crate::bundles::widgets::LabelBundle;
-use crate::components::ui::{Menu, MenuType, OptionSelector, SettingsSelector};
+use crate::components::ui::{Menu, MenuType, OptionSelector, SettingsSelector, UIOptionString};
 use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged};
 use crate::models::game::gameplay::{GameMode, PlayerNum};
 use crate::resources::{GameSettings, MonitorInfo, Monitors, PendingSettings};
@@ -7,7 +7,7 @@ use crate::systems::widgets::*;
 use bevy::dev_tools::fps_overlay::FpsOverlayConfig;
 use bevy::prelude::*;
 use bevy::ui_widgets::observe;
-use bevy::window::WindowMode;
+use bevy::window::{ScreenEdge, WindowMode};
 
 pub fn m_main() -> impl Bundle {
     (
@@ -57,10 +57,13 @@ macro_rules! boxed_vec {
     ($($x:expr),+ $(,)?) => {
         {
             use std::sync::Arc;
-            Arc::new(vec![$($crate::components::ui::UIOption::new($x)),+])
+
+            Arc::new(vec![$(Box::new($x)),+])
         }
     };
 }
+
+
 
 pub fn m_offline() -> impl Bundle {
 
@@ -205,9 +208,30 @@ pub fn spawn_m_settings(
             container.spawn(w_menu_section())
                 .with_children(| section |{
 
-                    let monitor_index = monitors.selected_monitor.unwrap_or(0);
-                    let monitor =
-                        monitors.get_current_monitor().unwrap_or(&monitors.monitors[0]);
+                    let monitor_index = monitors.selected_monitor;
+                    let monitor = monitors.get_current_monitor();
+
+                    let mut current_video_mode = VideoModeSelection::Current;
+
+                    let current_window_mode = match settings.video_mode {
+                        WindowMode::Windowed => 0,
+                        WindowMode::BorderlessFullscreen(..) => 1,
+                        WindowMode::Fullscreen(.., window_mode) => {
+                            current_video_mode = window_mode;
+                            2
+                        }
+                    };
+
+                    section.spawn(
+                        w_selector(
+                boxed_vec![
+                                WindowMode::Windowed,
+                                WindowMode::BorderlessFullscreen(monitor.monitor_selection),
+                                WindowMode::Fullscreen(monitor.monitor_selection, current_video_mode),
+                            ],
+                            current_window_mode,
+                            ""
+                        ));
 
                 section.spawn(w_selector(
                     monitors.monitors.clone(),
@@ -294,4 +318,17 @@ fn on_show_fps_changed(
     mut fps_overlay: ResMut<FpsOverlayConfig>,
 ) {
 
+}
+
+
+impl UIOptionString for WindowMode{
+    fn push_ui_option_string(&self, string: &mut String) {
+        let s = match self { 
+            WindowMode::Windowed => "Windowed",
+            WindowMode::BorderlessFullscreen(..) => "BorderlessFullscreen",
+            WindowMode::Fullscreen(..) => "Fullscreen",
+        };
+        
+        string.push_str(s);
+    }
 }

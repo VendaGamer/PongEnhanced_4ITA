@@ -1,5 +1,6 @@
 ﻿use std::fs;
 use bevy::prelude::*;
+use bevy::window::{PresentMode, PrimaryWindow};
 use crate::resources::GameSettings;
 
 const SETTINGS_FILE: &str = "settings.json";
@@ -12,12 +13,21 @@ pub fn save_settings(settings: Res<GameSettings>) {
     }
 }
 
-pub fn load_settings(mut commands: Commands) {
+pub fn load_settings(mut commands: Commands, mut window: Query<&mut Window, With<PrimaryWindow>>) {
+
+    let settings: GameSettings;
+    let mut primary_window = window.single_mut().expect("No Primary Window");
+
     if let Ok(contents) = fs::read_to_string(SETTINGS_FILE) {
-        if let Ok(settings) = serde_json::from_str::<GameSettings>(&contents) {
-            commands.insert_resource(settings);
-            return;
+        if let Ok(loaded) = serde_json::from_str::<GameSettings>(&contents) {
+            settings = loaded;
+        }else{
+            settings = GameSettings::default();
         }
+    }else{
+        settings = GameSettings::default();
     }
-    commands.insert_resource(GameSettings::default());
+
+    primary_window.mode = settings.video_mode.clone();
+    commands.insert_resource(settings);
 }

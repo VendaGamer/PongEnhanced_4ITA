@@ -42,11 +42,11 @@ fn get_monitor_name_windows(device_path: &str) -> Option<String> {
 
 pub fn on_spawn_monitors(
     query: Query<(Entity, &Monitor), Spawned>,
-    mut monitors: ResMut<Monitors>,
     window: Query<&mut Window, With<PrimaryWindow>>,
+    mut commands: Commands,
 ){
-
     let mut info: Vec<Box<MonitorInfo>> = Vec::new();
+    let current_monitor_index :usize = 0;
     let primary_window = window.single().expect("Couldn't get primary window");
 
     let selected_monitor = match primary_window.mode{
@@ -54,7 +54,6 @@ pub fn on_spawn_monitors(
         WindowMode::Fullscreen(monitor, _) => Some(monitor),
         _ => None,
     };
-
 
     for (index, (entity, monitor)) in query.iter().enumerate() {
 
@@ -81,7 +80,7 @@ pub fn on_spawn_monitors(
 
         if let Some(current_monitor) = selected_monitor {
             if current_monitor.eq(&selection){
-                monitors.selected_monitor = Some(index);
+
             }
         }
 
@@ -117,6 +116,11 @@ pub fn on_spawn_monitors(
         bit_depths.sort_unstable();
         bit_depths.dedup();
 
+        let bit_depth = bit_depths.iter().map(|x| x.0).max().expect("No bit depths");
+        let refresh_rate = monitor.refresh_rate_millihertz.unwrap_or(
+            refresh_rates.iter().map(|x| x.0).max().expect("No Refresh rates")
+        );
+
         info.push(Box::new(
             MonitorInfo{
                 monitor_selection: selection,
@@ -124,10 +128,20 @@ pub fn on_spawn_monitors(
                 refresh_rates: Arc::new(refresh_rates),
                 resolutions: Arc::new(resolutions),
                 bit_depths: Arc::new(bit_depths),
+                native_mode: VideoMode {
+                    bit_depth,
+                    refresh_rate_millihertz: refresh_rate,
+                    physical_size: monitor.physical_size(),
+                }
             }
         ));
     }
 
-    monitors.monitors = Arc::from(info);
+    commands.insert_resource(
+        Monitors{
+            monitors: Arc::new(info),
+            selected_monitor: current_monitor_index,
+        }
+    );
 
 }

@@ -17,13 +17,12 @@ use avian2d::prelude::*;
 use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig};
 use bevy::input_focus::InputDispatchPlugin;
 use bevy::prelude::*;
-use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
-use bevy::render::RenderPlugin;
 use bevy::ui_widgets::UiWidgetsPlugins;
 use bevy::window::PresentMode;
 use bevy_tween::DefaultTweenPlugins;
 use components::*;
 use leafwing_input_manager::plugin::InputManagerPlugin;
+use crate::plugins::state_persistence::GameStatePersistencePlugin;
 
 fn main() {
     let mut app = App::new();
@@ -40,15 +39,7 @@ fn main() {
                     ..default()
                 }
             )
-            .set(ImagePlugin::default_nearest())
-            .set(RenderPlugin {
-                render_creation: RenderCreation::Automatic(WgpuSettings {
-                    backends: Some(Backends::all()),
-                    ..default()
-                }),
-                ..default()
-            }),
-
+            .set(ImagePlugin::default_nearest()),
             PhysicsPlugins::default(),
             FpsOverlayPlugin{
                 config: FpsOverlayConfig{
@@ -65,9 +56,12 @@ fn main() {
             InputManagerPlugin::<MenuAction>::default(),
             UiWidgetsPlugins,
             InputDispatchPlugin,
-            GameCorePlugin,
             DefaultTweenPlugins,
-            GameUIPlugin
+
+            // my plugins
+            GameCorePlugin,
+            GameUIPlugin,
+            GameStatePersistencePlugin
         ));
 
     let world = app.world_mut();

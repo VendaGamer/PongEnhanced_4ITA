@@ -2,7 +2,7 @@ use crate::components::ui::UIOptionString;
 use crate::models::game::area::AreaShape;
 use crate::models::game::gameplay::GameMode;
 use bevy::prelude::{Res, Resource, UVec2};
-use bevy::window::{MonitorSelection, WindowMode};
+use bevy::window::{MonitorSelection, VideoMode, WindowMode};
 use derive_more::{From, Into};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -38,7 +38,7 @@ impl From<&Res<'_, GameSettings>> for PendingSettings {
 #[derive(Resource, Clone, Default, Debug)]
 pub struct Monitors {
     pub monitors: Arc<Vec<Box<MonitorInfo>>>,
-    pub selected_monitor: Option<usize>,
+    pub selected_monitor: usize,
 }
 
 impl UIOptionString for MonitorInfo {
@@ -49,9 +49,8 @@ impl UIOptionString for MonitorInfo {
 
 
 impl Monitors {
-    pub fn get_current_monitor(&self) -> Option<&Box<MonitorInfo>> {
-        let index = self.selected_monitor.unwrap_or_default();
-        self.monitors.get(index)
+    pub fn get_current_monitor(&self) -> &Box<MonitorInfo> {
+        self.monitors.get(self.selected_monitor).expect("no monitor found")
     }
 }
 
@@ -59,6 +58,7 @@ impl Monitors {
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct MonitorInfo {
     pub monitor_selection: MonitorSelection,
+    pub native_mode: VideoMode,
     pub name: String,
     pub refresh_rates: Arc<Vec<Box<RefreshRate>>>,
     pub resolutions: Arc<Vec<Box<Resolution>>>,
@@ -71,7 +71,7 @@ pub struct RefreshRate(pub u32);
 impl UIOptionString for RefreshRate {
 
     fn push_ui_option_string(&self, string: &mut String) {
-        string.push_str(format!("{} Hz", self.0).as_str());
+        string.push_str(format!("{} Hz", self.0/1000).as_str());
     }
 }
 

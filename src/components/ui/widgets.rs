@@ -6,19 +6,16 @@ use std::sync::Arc;
 
 pub trait UIOptionProvider: Send + Sync + Any {
     fn get_option(&self, index: usize) -> Option<&dyn UIOptionValue>;
-    fn get_option_mut(&mut self, index: usize) -> Option<&mut dyn UIOptionValue>;
     fn len(&self) -> usize;
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
     fn as_any(&self) -> &dyn Any;
-    fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
 pub trait UIOptionValue: Any + Send + Sync + Debug + UIOptionString {
     fn as_any(&self) -> &dyn Any;
-    fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
 impl<T> UIOptionValue for T
@@ -28,18 +25,11 @@ where
     fn as_any(&self) -> &dyn Any {
         self
     }
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
 }
 
 impl<T: UIOptionValue + 'static> UIOptionProvider for Vec<Box<T>> {
     fn get_option(&self, index: usize) -> Option<&dyn UIOptionValue> {
         self.get(index).map(|val| val.as_ref() as &dyn UIOptionValue)
-    }
-
-    fn get_option_mut(&mut self, index: usize) -> Option<&mut dyn UIOptionValue> {
-        self.get_mut(index).map(|val| val.as_mut() as &mut dyn UIOptionValue)
     }
 
     fn len(&self) -> usize {
@@ -49,8 +39,18 @@ impl<T: UIOptionValue + 'static> UIOptionProvider for Vec<Box<T>> {
     fn as_any(&self) -> &dyn Any {
         self
     }
+}
 
-    fn as_any_mut(&mut self) -> &mut dyn Any {
+impl<T: UIOptionValue + 'static> UIOptionProvider for Arc<[Box<T>]> {
+    fn get_option(&self, index: usize) -> Option<&dyn UIOptionValue> {
+        self.get(index).map(|val| val.as_ref() as &dyn UIOptionValue)
+    }
+
+    fn len(&self) -> usize {
+        self.len()
+    }
+
+    fn as_any(&self) -> &dyn Any {
         self
     }
 }
