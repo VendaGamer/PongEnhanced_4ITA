@@ -1,9 +1,8 @@
-﻿use std::sync::Arc;
-use crate::resources::{BitDepth, MonitorInfo, Monitors, RefreshRate, Resolution};
+﻿use crate::resources::{BitDepth, MonitorInfo, Monitors, RefreshRate, Resolution};
 use bevy::ecs::query::*;
 use bevy::prelude::*;
 use bevy::window::*;
-use crate::components::ui::UIOptionValue;
+use std::sync::Arc;
 
 #[cfg(windows)]
 fn get_monitor_name_windows(device_path: &str) -> Option<String> {
