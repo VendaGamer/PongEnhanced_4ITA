@@ -1,6 +1,7 @@
 use crate::Paddle;
 use avian2d::prelude::*;
 use bevy::prelude::*;
+use crate::models::game::area::PlayerID;
 
 #[derive(Bundle)]
 pub struct PaddleBundle {
@@ -21,12 +22,12 @@ impl PaddleBundle {
         position: Vec3,
         size: Vec2,
         goal: Entity,
-        player: Entity
+        id: PlayerID
     ) -> Self {
         Self {
             paddle: Paddle{
                 goal,
-                player
+                id
             },
             mesh: Mesh2d(meshes.add(Rectangle::new(size.x, size.y))),
             material: MeshMaterial2d(materials.add(Color::WHITE)),

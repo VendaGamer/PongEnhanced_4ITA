@@ -1,6 +1,7 @@
 use crate::components::Player;
 use bevy::prelude::Bundle;
 use leafwing_input_manager::input_map::InputMap;
+use crate::models::game::area::PlayerID;
 use crate::resources::PlayerAction;
 
 #[derive(Bundle)]
@@ -13,7 +14,7 @@ impl PlayerBundle {
     pub fn new(id: u8) -> Self {
         Self {
             player: Player {
-                id
+                id: PlayerID(id)
             },
             bindings: Player::get_default_input_map(id),
         }

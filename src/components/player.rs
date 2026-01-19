@@ -1,10 +1,11 @@
 use crate::resources::controls::PlayerAction;
 use bevy::prelude::{Component, KeyCode};
 use leafwing_input_manager::prelude::InputMap;
+use crate::models::game::area::PlayerID;
 
 #[derive(Component)]
 pub struct Player {
-    pub id: u8,
+    pub id: PlayerID,
 }
 
 impl Player {

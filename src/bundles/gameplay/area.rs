@@ -29,7 +29,7 @@ impl AreaBundle {
 
             for i in 0..team.players.len() {
                 commands.spawn(PaddleBundle::new(meshes, materials, positions[i],
-                                                 PADDLE_SIZE, goal, team.players[i].entity));
+                                                 PADDLE_SIZE, goal, team.players[i].id));
             }
             
             team.area_side.spawn_score_text(commands);

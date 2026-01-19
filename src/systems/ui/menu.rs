@@ -1,14 +1,15 @@
 use crate::bundles::widgets::LabelBundle;
-use crate::components::ui::{Menu, MenuType, OptionSelector, SettingsSelector, SourceHandle, UIOptionString};
+use crate::components::ui::{Menu, MenuType, OptionSelector, SettingsSelector, SourceHandle, UIOptionProvider, UIOptionString};
 use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged};
+use crate::models::game::gameplay::GameMode;
 use crate::resources::{GameModeConfig, GameSettings, Monitors, PendingSettings, Resolution};
+use crate::systems::settings::persistence::save_settings;
 use crate::systems::widgets::*;
+use crate::utils::MODERN_THEME;
 use bevy::dev_tools::fps_overlay::FpsOverlayConfig;
 use bevy::prelude::*;
 use bevy::ui_widgets::observe;
 use bevy::window::WindowMode;
-use crate::systems::settings::persistence::save_settings;
-use crate::utils::MODERN_THEME;
 
 pub fn m_main() -> impl Bundle {
     (
@@ -63,29 +64,56 @@ macro_rules! boxed_vec {
 }
 
 
+const GAMEMODE_OPTIONS: SourceHandle<dyn UIOptionProvider> =
+SourceHandle::Static(&[
+    GameMode::Classic,
+    GameMode::Modern,
+    GameMode::UpsideDown,
+    GameMode::Blackout,
+    GameMode::Twisted,
+]);
 
-pub fn spawn_m_offline(
-    settings: &Res<GameModeConfig>,
-    commands: &mut Commands,
-) {
-    commands.spawn(m_base(MenuType::OfflinePlayMenu))
-            .with_children(| base |{
 
-                base.spawn(w_title("Select Area Shape", 32.0));
-
-                base.spawn(w_menu_section()).with_children(| section | {
-                    
-
-                    section.spawn(w_row_container(30.0)).with_children(| cont | {
-                        cont.spawn(w_area_container(200.0, "Two Side"));
-                        cont.spawn(w_area_container(200.0, "Triangular"));
-                        cont.spawn(w_area_container(200.0, "Cuboid"));
-                    });
-                });
-
-                base.spawn(w_button(MODERN_THEME.button, Vec2::new(200.0, 50.0), "Back"))
-                    .observe(on_offline_back_main);
-            });
+pub fn m_offline() -> impl Bundle {
+    (
+        m_base(MenuType::OfflinePlayMenu),
+        children![
+            w_menu_title("Offline Play"),
+            (
+                w_menu_section(),
+                children![
+                    w_selector(
+                        GAMEMODE_OPTIONS,
+                        0,
+                        "Game Mode",
+                    ),
+                    w_slider(5.0, 30.0, 5.0)
+                ],
+            ),
+            (
+                Node {
+                    flex_direction: FlexDirection::Row,
+                    margin: UiRect::top(Val::Px(30.0)),
+                    column_gap: Val::Px(20.0),
+                    ..default()
+                },
+                children![
+                    (
+                        w_menu_button(
+                            Color::srgb(0.2, 0.7, 0.3),
+                            "Start Game"),
+                        observe(on_start_offline_game)
+                    ),
+                    (
+                        w_menu_button(
+                            Color::srgb(0.6, 0.6, 0.6),
+                            "Back"),
+                        observe(on_offline_back_main)
+                    )
+                ]
+            )
+        ],
+    )
 }
 
 // Observer callbacks
@@ -113,7 +141,7 @@ fn on_offline(
 ) {
     let entity = main_menu.single().expect("Main Menu doesn't exist");
     commands.entity(entity).despawn();
-    spawn_m_offline(&config, &mut commands);
+    commands.spawn(m_offline());
 }
 
 fn on_online(

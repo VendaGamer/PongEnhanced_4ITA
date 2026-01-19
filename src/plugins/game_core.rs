@@ -1,6 +1,6 @@
 use crate::bundles::player::PlayerBundle;
 use crate::bundles::*;
-use crate::models::game::area::{PlayerInfo, Players};
+use crate::models::game::area::{PlayerID, PlayerInfo, Players};
 use crate::resources::controls::MenuAction;
 use crate::resources::{GameModeConfig, GameSettings, Monitors};
 use crate::systems::menu::m_main;
@@ -41,7 +41,7 @@ fn setup_common(
     for i in 0..4{
         let entity = commands.spawn(PlayerBundle::new(i)).id();
         let info = PlayerInfo {
-            entity,
+            id: PlayerID(i),
             name: format!("Player {}", i + 1),
         };
         players.players.push(info);

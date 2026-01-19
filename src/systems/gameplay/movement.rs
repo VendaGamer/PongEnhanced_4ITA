@@ -9,25 +9,31 @@ const BALL_SPEED: f32 = 600.0;
 
 pub fn move_paddle(
     time: Res<Time>,
-    player_query: Query<&ActionState<PlayerAction>, With<Player>>,
+    player_query: Query<(&ActionState<PlayerAction>, &Player)>,
     mut paddle_query: Query<(&mut Transform, &Paddle)>,
 ) {
-    for (mut paddle_transform, paddle) in paddle_query.iter_mut() {
-        if let Ok(action_state) = player_query.get(paddle.player) {
-            let mut move_amount = time.delta_secs() * 400.0;
-            
-            if action_state.pressed(&PlayerAction::Speedup) {
-                move_amount *= 2.0;
-            }
+    for (mut paddle_transform, paddle) in paddle_query {
 
-            if action_state.pressed(&PlayerAction::Up){
-                paddle_transform.translation.y += move_amount;
-            }
-            
-            if action_state.pressed(&PlayerAction::Down) {
-                paddle_transform.translation.y -= move_amount;
+        for (action_state, player) in player_query {
+            if player.id.eq(&paddle.id) {
+                let mut move_amount = time.delta_secs() * 400.0;
+
+                if action_state.pressed(&PlayerAction::Speedup) {
+                    move_amount *= 2.0;
+                }
+
+                if action_state.pressed(&PlayerAction::Up){
+                    paddle_transform.translation.y += move_amount;
+                }
+
+                if action_state.pressed(&PlayerAction::Down) {
+                    paddle_transform.translation.y -= move_amount;
+                }
+
+                break;
             }
         }
+
     }
 }
 

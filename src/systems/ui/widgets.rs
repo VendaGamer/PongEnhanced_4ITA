@@ -1,4 +1,3 @@
-use std::process::Child;
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::{HoverLight, HoverLightColor};
 use crate::components::ui::{Dropdown, OptionSelector, SelectorButton, SelectorText, SourceHandle, UIOptionProvider};
@@ -180,7 +179,7 @@ pub fn w_menu_section() -> impl Bundle {
             ..default()
         },
         BackgroundColor(MODERN_THEME.section_bg),
-        BorderColor::from(MODERN_THEME.border_dark),
+        BorderColor::all(MODERN_THEME.border_dark),
         BorderRadius::ZERO,
     )
 }
@@ -354,6 +353,7 @@ pub fn w_row_container(gap: f32) -> impl Bundle {
         flex_direction: FlexDirection::Row,
         flex_wrap: FlexWrap::Wrap,
         column_gap: Val::Px(gap),
+        display: Display::Flex,
         ..default()
     }
 }
@@ -363,15 +363,15 @@ pub fn w_col_container(gap: f32) -> impl Bundle {
         flex_direction: FlexDirection::Column,
         flex_wrap: FlexWrap::Wrap,
         row_gap: Val::Px(gap),
+        display: Display::Flex,
         ..default()
     }
 }
 
-pub fn w_area_container(size: f32, text: &'static str) -> impl Bundle {
+pub fn w_area_container(size: f32, text: &'static str, visuals: impl Bundle) -> impl Bundle {
     (
         Node {
             align_items: AlignItems::Center,
-            justify_content: JustifyContent::Center,
             flex_wrap: FlexWrap::Wrap,
             flex_direction: FlexDirection::Column,
             ..default()
@@ -386,6 +386,7 @@ pub fn w_area_container(size: f32, text: &'static str) -> impl Bundle {
                 },
                 BackgroundColor(MODERN_THEME.section_bg),
                 BorderColor::from(MODERN_THEME.border),
+                Children::spawn_one(visuals)
             ),
             LabelBundle::button_label(text),
         ],

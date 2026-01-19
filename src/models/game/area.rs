@@ -79,8 +79,11 @@ pub struct Players {
 #[derive(Clone, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
 pub struct PlayerInfo {
     pub name: String,
-    pub entity: Entity,
+    pub id: PlayerID,
 }
+
+#[derive(Copy, Clone, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
+pub struct PlayerID(pub u8);
 
 pub enum ControlType{
     Keyboard,

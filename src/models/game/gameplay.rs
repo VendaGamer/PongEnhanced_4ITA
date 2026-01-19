@@ -14,16 +14,6 @@ pub enum GameMode {
     Twisted,
 }
 
-#[derive(Clone, Debug, Copy, Eq, Hash, PartialEq, Serialize,
-         Deserialize, Default, From, Into, Deref, DerefMut)]
-pub struct PlayerNum(pub u8);
-
-impl UIOptionString for PlayerNum {
-    fn push_ui_option_string(&self, string: &mut String) {
-        write!(string, "{} Players", self.0).unwrap();
-    }
-}
-
 impl UIOptionString for GameMode {
     fn push_ui_option_string(&self, string: &mut String) {
         let s = match self {
@@ -35,5 +25,16 @@ impl UIOptionString for GameMode {
         };
 
         string.push_str(s);
+    }
+}
+
+
+#[derive(Clone, Debug, Copy, Eq, Hash, PartialEq, Serialize,
+         Deserialize, Default, From, Into, Deref, DerefMut)]
+pub struct PlayerNum(pub u8);
+
+impl UIOptionString for PlayerNum {
+    fn push_ui_option_string(&self, string: &mut String) {
+        write!(string, "{} Players", self.0).unwrap();
     }
 }
