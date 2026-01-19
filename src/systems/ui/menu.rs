@@ -74,17 +74,13 @@ pub fn spawn_m_offline(
                 base.spawn(w_title("Select Area Shape", 32.0));
 
                 base.spawn(w_menu_section()).with_children(| section | {
+                    
 
                     section.spawn(w_row_container(30.0)).with_children(| cont | {
-                        cont.spawn(w_container(Vec2::new(200.0, 200.0)));
-                        cont.spawn(w_container(Vec2::new(200.0, 200.0)));
+                        cont.spawn(w_area_container(200.0, "Two Side"));
+                        cont.spawn(w_area_container(200.0, "Triangular"));
+                        cont.spawn(w_area_container(200.0, "Cuboid"));
                     });
-
-                    section.spawn(w_row_container(30.0)).with_children(| cont | {
-                        cont.spawn(w_container(Vec2::new(200.0, 200.0)));
-                        cont.spawn(w_container(Vec2::new(200.0, 200.0)));
-                    });
-
                 });
 
                 base.spawn(w_button(MODERN_THEME.button, Vec2::new(200.0, 50.0), "Back"))

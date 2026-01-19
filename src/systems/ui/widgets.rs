@@ -1,3 +1,4 @@
+use std::process::Child;
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::{HoverLight, HoverLightColor};
 use crate::components::ui::{Dropdown, OptionSelector, SelectorButton, SelectorText, SourceHandle, UIOptionProvider};
@@ -349,26 +350,45 @@ pub fn update_selector(
 }
 
 pub fn w_row_container(gap: f32) -> impl Bundle {
-    (
-        Node{
-            flex_direction: FlexDirection::Row,
-            flex_wrap: FlexWrap::Wrap,
-            row_gap: Val::Px(gap),
-            ..default()
-        }
-    )
+    Node{
+        flex_direction: FlexDirection::Row,
+        flex_wrap: FlexWrap::Wrap,
+        column_gap: Val::Px(gap),
+        ..default()
+    }
 }
 
-pub fn w_container(size: Vec2) -> impl Bundle {
+pub fn w_col_container(gap: f32) -> impl Bundle {
+    Node{
+        flex_direction: FlexDirection::Column,
+        flex_wrap: FlexWrap::Wrap,
+        row_gap: Val::Px(gap),
+        ..default()
+    }
+}
+
+pub fn w_area_container(size: f32, text: &'static str) -> impl Bundle {
     (
-        Node{
-            width: Val::Px(size.x),
-            height: Val::Px(size.y),
-            border: PIXEL_BORDER,
+        Node {
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            flex_wrap: FlexWrap::Wrap,
+            flex_direction: FlexDirection::Column,
             ..default()
         },
-        BackgroundColor(MODERN_THEME.section_bg),
-        BorderColor::from(MODERN_THEME.border),
+        children![
+            (
+                Node{
+                    width: Val::Px(size),
+                    height: Val::Px(size),
+                    border: PIXEL_BORDER,
+                    ..default()
+                },
+                BackgroundColor(MODERN_THEME.section_bg),
+                BorderColor::from(MODERN_THEME.border),
+            ),
+            LabelBundle::button_label(text),
+        ],
     )
 }
 
