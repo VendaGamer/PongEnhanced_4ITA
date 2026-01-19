@@ -1,13 +1,14 @@
 use crate::bundles::widgets::LabelBundle;
 use crate::components::ui::{Menu, MenuType, OptionSelector, SettingsSelector, SourceHandle, UIOptionString};
 use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged};
-use crate::resources::{GameSettings, Monitors, PendingSettings, Resolution};
+use crate::resources::{GameModeConfig, GameSettings, Monitors, PendingSettings, Resolution};
 use crate::systems::widgets::*;
 use bevy::dev_tools::fps_overlay::FpsOverlayConfig;
 use bevy::prelude::*;
 use bevy::ui_widgets::observe;
 use bevy::window::WindowMode;
-
+use crate::systems::settings::persistence::save_settings;
+use crate::utils::MODERN_THEME;
 
 pub fn m_main() -> impl Bundle {
     (
@@ -63,8 +64,32 @@ macro_rules! boxed_vec {
 
 
 
-pub fn m_offline() -> impl Bundle {
+pub fn spawn_m_offline(
+    settings: &Res<GameModeConfig>,
+    commands: &mut Commands,
+) {
+    commands.spawn(m_base(MenuType::OfflinePlayMenu))
+            .with_children(| base |{
 
+                base.spawn(w_title("Select Area Shape", 32.0));
+
+                base.spawn(w_menu_section()).with_children(| section | {
+
+                    section.spawn(w_row_container(30.0)).with_children(| cont | {
+                        cont.spawn(w_container(Vec2::new(200.0, 200.0)));
+                        cont.spawn(w_container(Vec2::new(200.0, 200.0)));
+                    });
+
+                    section.spawn(w_row_container(30.0)).with_children(| cont | {
+                        cont.spawn(w_container(Vec2::new(200.0, 200.0)));
+                        cont.spawn(w_container(Vec2::new(200.0, 200.0)));
+                    });
+
+                });
+
+                base.spawn(w_button(MODERN_THEME.button, Vec2::new(200.0, 50.0), "Back"))
+                    .observe(on_offline_back_main);
+            });
 }
 
 // Observer callbacks
@@ -86,12 +111,13 @@ fn on_friends_list(_press: On<ButtonPressed>) {
 
 fn on_offline(
     _press: On<ButtonPressed>,
+    config: Res<GameModeConfig>,
     mut commands: Commands,
     main_menu: Query<Entity, With<Menu>>,
 ) {
     let entity = main_menu.single().expect("Main Menu doesn't exist");
     commands.entity(entity).despawn();
-    commands.spawn(m_offline());
+    spawn_m_offline(&config, &mut commands);
 }
 
 fn on_online(
@@ -120,13 +146,25 @@ fn on_exit(_press: On<ButtonPressed>, mut exit: MessageWriter<AppExit>) {
     exit.write(AppExit::Success);
 }
 
-fn on_back_main(
+fn on_settings_back_main(
     _: On<ButtonPressed>,
     mut commands: Commands,
     settings_menu: Query<Entity, With<Menu>>,
+    settings: Res<GameSettings>,
 ) {
     let entity = settings_menu.single().expect("Settings Menu doesn't exist");
     commands.entity(entity).despawn();
+    commands.spawn(m_main());
+
+    save_settings(&settings);
+}
+
+fn on_offline_back_main(
+    _: On<ButtonPressed>,
+    mut commands: Commands,
+    main_menu: Query<Entity, With<Menu>>,
+){
+    commands.entity(main_menu.single().expect("No menu")).despawn();
     commands.spawn(m_main());
 }
 
@@ -180,7 +218,7 @@ pub fn m_online() -> impl Bundle {
                     Color::srgb(0.6, 0.6, 0.6),
                     "Back",
                 ),
-                observe(on_back_main)
+                observe(on_offline_back_main)
             )
         ],
     )
@@ -206,9 +244,23 @@ pub fn spawn_m_settings(
             container.spawn(w_menu_section())
                 .with_children(| section |{
 
+
+                    section.spawn(LabelBundle::button_label("Sound Effects"));
+                    section.spawn(w_slider(
+                        0.0,
+                        100.0,
+                        settings.sfx_volume
+                    )).observe(on_sfx_changed);
+
+                    section.spawn(LabelBundle::button_label("Master volume"));
+                    section.spawn(w_slider(
+                        0.0,
+                        100.0,
+                        settings.master_volume
+                    )).observe(on_master_changed);
+
                     let monitor_index = monitors.selected_monitor;
                     let monitor = monitors.get_current_monitor();
-
                     let mut current_video_mode = VideoModeSelection::Current;
 
                     let current_window_mode = match settings.video_mode {
@@ -233,7 +285,6 @@ pub fn spawn_m_settings(
                         ));
 
 
-
                 section.spawn(w_selector(
                     SourceHandle::Strong(monitors.monitors.clone()),
                     monitor_index,
@@ -255,9 +306,11 @@ pub fn spawn_m_settings(
                         .insert(SettingsSelector::RefreshRate)
                         .observe(on_refresh_rate_changed);
                 });
-            container.spawn(LabelBundle::button_label(""));
-        });
 
+            container.spawn(w_button(MODERN_THEME.button, Vec2::new(200.0, 20.0), "Back"))
+                    .observe(on_settings_back_main);
+
+        });
     });
 }
 
@@ -272,11 +325,11 @@ fn on_master_changed(change: On<SliderValueChanged>, mut settings: ResMut<GameSe
 }
 
 fn on_screen_mode_changed(change : On<OptionChanged>){
-
+    
 }
 
-fn on_settings_apply(){
-
+fn on_settings_apply(change : On<OptionChanged>){
+    
 }
 
 

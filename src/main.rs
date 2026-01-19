@@ -9,13 +9,12 @@ mod models;
 mod traits;
 
 use crate::plugins::game_ui::GameUIPlugin;
-use crate::plugins::state_persistence::GameStatePersistencePlugin;
 use crate::plugins::GameCorePlugin;
 use crate::resources::controls::PlayerAction;
 use crate::resources::MenuAction;
+use crate::systems::settings::persistence::load_settings;
 use crate::utils::DEFAULT_FONT;
 use avian2d::prelude::*;
-use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig};
 use bevy::input_focus::InputDispatchPlugin;
 use bevy::prelude::*;
 use bevy::render::render_resource::WgpuFeatures;
@@ -31,6 +30,8 @@ use wgpu_types::Limits;
 fn main() {
     let mut app = App::new();
 
+    let settings = load_settings();
+
     app.add_plugins((
             DefaultPlugins.set(
                 WindowPlugin {
@@ -38,6 +39,7 @@ fn main() {
                         title: "Pong Enhanced".into(),
                         present_mode: PresentMode::AutoVsync,
                         resizable: false,
+                        mode: settings.video_mode,
                         ..default()
                     }),
                     ..default()
@@ -72,8 +74,8 @@ fn main() {
             // my plugins
             GameCorePlugin,
             GameUIPlugin,
-            GameStatePersistencePlugin
-        ));
+        ))
+        .insert_resource(settings);
 
     let world = app.world_mut();
 
@@ -81,7 +83,7 @@ fn main() {
         .insert(AssetId::default(), Font::try_from_bytes(DEFAULT_FONT.into())
         .unwrap())
         .expect("UNABLE TO LOAD FONT");
-    
-    
+
+
     app.run();
 }

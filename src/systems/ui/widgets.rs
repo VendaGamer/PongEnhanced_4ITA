@@ -16,8 +16,8 @@ use std::sync::Arc;
 use std::time::Duration;
 
 pub const BUTTON_PADDING: Val = Val::Px(20.0);
-pub const PIXEL_BORDER: f32 = 3.0; // Classic pixel border width
-pub const BUTTON_OUTLINE: Outline = Outline::new(Val::Px(PIXEL_BORDER), Val::ZERO, Color::BLACK);
+pub const PIXEL_BORDER: UiRect = UiRect::all(Val::Px(3.0)); // Classic pixel border width
+pub const BUTTON_OUTLINE: Outline = Outline::new(PIXEL_BORDER.bottom, Val::ZERO, Color::BLACK);
 
 
 pub fn u_slider_visuals(
@@ -87,34 +87,37 @@ pub fn w_button(color: Color, size: Vec2, text: &str) -> impl Bundle {
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
             margin: UiRect::bottom(BUTTON_PADDING),
-            border: UiRect::all(Val::Px(PIXEL_BORDER)),
+            border: PIXEL_BORDER,
             ..default()
         },
         BackgroundColor(color),
         BorderRadius::ZERO,
         BorderColor::from(MODERN_THEME.border),
-        Outline::new(Val::Px(PIXEL_BORDER), Val::ZERO, MODERN_THEME.outline),
+        Outline::new(PIXEL_BORDER.bottom, Val::ZERO, MODERN_THEME.outline),
         HoverLight(color),
         Children::spawn_one(LabelBundle::button_label(text)),
     )
 }
 
 pub fn w_menu_title(text: &'static str) -> impl Bundle {
+    w_title(text, 72.0)
+}
+
+pub fn w_title(text: &'static str, size: f32) -> impl Bundle {
     (
         Node {
             margin: UiRect::bottom(Val::Px(40.0)),
             padding: UiRect::all(Val::Px(10.0)),
-            border: UiRect::bottom(Val::Px(PIXEL_BORDER * 2.0)),
+            border: PIXEL_BORDER,
             ..default()
         },
         BorderColor::from(MODERN_THEME.accent),
         Text::new(text),
         TextFont {
-            font_size: 72.0,
+            font_size: size,
             ..default()
         },
         TextColor(MODERN_THEME.text_bright),
-
     )
 }
 
@@ -142,7 +145,7 @@ pub fn w_slider(min: f32, max: f32, current: f32) -> impl Bundle {
             Spawn((
                 Node {
                     height: px(12),
-                    border: UiRect::all(px(PIXEL_BORDER)),
+                    border: PIXEL_BORDER,
                     ..default()
                 },
                 BackgroundColor(MODERN_THEME.slider_track),
@@ -169,9 +172,10 @@ pub fn w_menu_section() -> impl Bundle {
     (
         Node {
             flex_direction: FlexDirection::Column,
+            align_items: AlignItems::Center,
             padding: UiRect::all(Val::Px(30.0)),
             margin: UiRect::all(Val::Px(10.0)),
-            border: UiRect::all(Val::Px(PIXEL_BORDER * 1.5)),
+            border: PIXEL_BORDER,
             ..default()
         },
         BackgroundColor(MODERN_THEME.section_bg),
@@ -190,7 +194,7 @@ pub fn w_slider_thumb(size: Vec2) -> impl Bundle {
             height: px(size.y),
             position_type: PositionType::Absolute,
             left: percent(0),
-            border: UiRect::all(px(PIXEL_BORDER)),
+            border: PIXEL_BORDER,
             ..default()
         },
         BorderRadius::ZERO,
@@ -211,7 +215,7 @@ pub fn w_dropdown(options: Arc<dyn UIOptionProvider>, selected: usize, tab_index
             margin: UiRect::all(Val::Px(10.0)),
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
-            border: UiRect::all(Val::Px(PIXEL_BORDER)),
+            border: PIXEL_BORDER,
             ..default()
         },
         BackgroundColor(MODERN_THEME.panel_bg),
@@ -251,7 +255,7 @@ pub fn w_selector(options_provider: SourceHandle<dyn UIOptionProvider>, selected
                     justify_items: JustifyItems::Center,
                     align_items: AlignItems::Center,
                     padding: UiRect::all(Val::Px(15.0)),
-                    border: UiRect::all(Val::Px(PIXEL_BORDER)),
+                    border: PIXEL_BORDER,
                     ..default()
                 },
                 BackgroundColor(MODERN_THEME.panel_bg),
@@ -342,6 +346,30 @@ pub fn update_selector(
         commands.trigger(OptionChanged(selector_entity));
         }
     }
+}
+
+pub fn w_row_container(gap: f32) -> impl Bundle {
+    (
+        Node{
+            flex_direction: FlexDirection::Row,
+            flex_wrap: FlexWrap::Wrap,
+            row_gap: Val::Px(gap),
+            ..default()
+        }
+    )
+}
+
+pub fn w_container(size: Vec2) -> impl Bundle {
+    (
+        Node{
+            width: Val::Px(size.x),
+            height: Val::Px(size.y),
+            border: PIXEL_BORDER,
+            ..default()
+        },
+        BackgroundColor(MODERN_THEME.section_bg),
+        BorderColor::from(MODERN_THEME.border),
+    )
 }
 
 pub fn t_button_press(

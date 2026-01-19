@@ -7,7 +7,6 @@ pub const PIXEL_BORDER_SIZE: f32 = 3.0;
 
 #[derive(Clone, Copy)]
 pub struct RetroTheme {
-    pub name: &'static str,
     pub button: Color,
     pub button_hover: Color,
     pub button_pressed: Color,
@@ -24,7 +23,6 @@ pub struct RetroTheme {
 }
 
 pub const MODERN_THEME: RetroTheme = RetroTheme {
-    name: "Modern Dark",
     button: Color::srgb(0.15, 0.15, 0.15),
     button_hover: Color::srgb(0.25, 0.25, 0.25),
     button_pressed: Color::srgb(0.35, 0.75, 0.35),
