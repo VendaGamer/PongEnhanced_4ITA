@@ -1,15 +1,13 @@
 use crate::bundles::widgets::LabelBundle;
-use crate::bundles::{default, BallBundle, Entity, Transform, Vec3};
+use crate::bundles::{default, Entity, Transform, Vec3};
 use crate::components::ui::{ScoreText, UIOptionString};
-use crate::utils::{BALL_RADIUS, FIXED_DIMENSIONS, HALF_HEIGHT, HALF_WALL_THICKNESS, HALF_WIDTH, WALL_THICKNESS};
+use crate::utils::{FIXED_DIMENSIONS, HALF_HEIGHT, HALF_WALL_THICKNESS, HALF_WIDTH, WALL_THICKNESS};
 use avian2d::prelude::Collider;
-use bevy::prelude::{Assets, Color, ColorMaterial, Commands, Mesh, Node, PositionType, Vec2};
+use bevy::prelude::{Color, Commands, Node, PositionType, Vec2};
 use bevy::ui::Val;
 use serde::{Deserialize, Serialize};
 use std::hash::{Hash, Hasher};
 use AreaShape::{Cuboid, Triangular, TwoSide};
-use crate::bundles::area::AreaBundle;
-use crate::systems::handle_scoring;
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
 pub enum AreaSide {
@@ -90,15 +88,6 @@ pub enum AreaShape {
 }
 
 impl AreaShape {
-
-    pub fn spawn(
-        &mut self,
-         commands: &mut Commands,
-         meshes: &mut Assets<Mesh>,
-         materials: &mut Assets<ColorMaterial>,
-    ) {
-        AreaBundle::spawn(self, commands, meshes, materials);
-    }
 
     pub fn default() -> AreaShape {
 

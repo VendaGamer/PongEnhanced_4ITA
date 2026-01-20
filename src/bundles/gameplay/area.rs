@@ -2,27 +2,28 @@ use crate::bundles::paddle::PaddleBundle;
 use crate::bundles::wall::WallBundle;
 use crate::bundles::{BallBundle, GoalBundle};
 use crate::components::area::Area;
-use crate::models::game::area::AreaShape;
-use crate::utils::screen::TRANSFORM_ZERO;
-use crate::utils::{BALL_RADIUS, PADDLE_SIZE};
-use bevy::prelude::*;
+use crate::models::game::gameplay::GameMode;
+use crate::resources::GameModeConfig;
 use crate::systems::handle_scoring;
+use crate::utils::{BALL_RADIUS, FIXED_DIMENSIONS, PADDLE_SIZE};
+use bevy::prelude::*;
+use bevy_light_2d::prelude::PointLight2d;
 
 #[derive(Bundle)]
 pub struct AreaBundle {
     pub area: Area,
     pub transform: Transform,
-    pub global_transform: GlobalTransform,
+    pub mesh: Mesh2d,
+    pub material: MeshMaterial2d<ColorMaterial>,
 }
 
 impl AreaBundle {
     pub fn spawn(
-        area_shape: &AreaShape,
+        config: &GameModeConfig,
         commands: &mut Commands,
         meshes: &mut Assets<Mesh>,
         materials: &mut Assets<ColorMaterial>,
     ) {
-
         commands.spawn(BallBundle::new(
             meshes,
             materials,
@@ -30,30 +31,58 @@ impl AreaBundle {
             Vec2::new(-300.0, 300.0),
             BALL_RADIUS
         )).observe(handle_scoring);
-        
-        let teams = area_shape.get_teams();
+
+        match config.game_mode {
+            GameMode::Classic =>{
+
+            },
+            GameMode::Modern => {
+
+            },
+            GameMode::Blackout => {
+                
+                commands.spawn((
+                    Transform::from_translation(Vec3::ZERO),
+                    PointLight2d{
+                        color: Color::srgb(1.0, 1.0, 1.0),
+                        radius: 500.0,
+                        intensity: 2.0,
+                        ..default()
+                    }
+                ));
+            },
+            GameMode::Twisted => {
+
+            },
+            GameMode::UpsideDown => {
+
+            }
+        }
+
+
+        let teams = config.area_shape.get_teams();
 
         for team in teams {
             let goal = commands.spawn(GoalBundle::new(team)).id();
             let positions = team.get_positions();
 
             for i in 0..team.players.len() {
-                commands.spawn(PaddleBundle::new(meshes, materials, positions[i],
-                                                 PADDLE_SIZE, goal, team.players[i]));
+                commands.spawn(PaddleBundle::new(meshes, materials, positions[i], PADDLE_SIZE, goal, team.players[i]));
             }
             
             team.area_side.spawn_score_text(commands);
         }
 
-        let walls = area_shape.get_wall_sides();
+        let walls = config.area_shape.get_wall_sides();
         for side in walls {
             commands.spawn(WallBundle::new(*side));
         }
-        
+
         commands.spawn(AreaBundle {
-            transform: TRANSFORM_ZERO,
+            transform: Transform::from_translation(Vec3::new(0.0, 0.0, -1.0)),
             area: Area,
-            global_transform: GlobalTransform::from(TRANSFORM_ZERO)
+            mesh: Mesh2d(meshes.add(Rectangle::new(FIXED_DIMENSIONS.x, FIXED_DIMENSIONS.y))),
+            material: MeshMaterial2d(materials.add(Color::srgb(0.05, 0.05, 0.05))),
         });
     }
 }

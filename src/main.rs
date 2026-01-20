@@ -23,6 +23,7 @@ use bevy::render::settings::{Backends, PowerPreference, RenderCreation, WgpuSett
 use bevy::render::RenderPlugin;
 use bevy::ui_widgets::UiWidgetsPlugins;
 use bevy::window::PresentMode;
+use bevy_light_2d::plugin::Light2dPlugin;
 use bevy_tween::DefaultTweenPlugins;
 use components::*;
 use leafwing_input_manager::plugin::InputManagerPlugin;
@@ -72,6 +73,7 @@ fn main() {
             InputDispatchPlugin,
             DefaultTweenPlugins,
             DirectionalNavigationPlugin,
+            Light2dPlugin,
 
             // my plugins
             GameCorePlugin,

@@ -8,6 +8,7 @@ version = "0.1.0"
 dependencies = [
  "avian2d",
  "bevy",
+ "bevy_light_2d",
  "bevy_tween",
  "derive_more",
  "erased-serde",
@@ -986,6 +987,16 @@ dependencies = [
  "bevy_transform",
  "bevy_utils",
  "tracing",
+]
+
+[[package]]
+name = "bevy_light_2d"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f7f6aaac350143bafbc09ba8bf523c6319dfa9730884ed58e34f410374bcc3b"
+dependencies = [
+ "bevy",
+ "smallvec",
 ]
 
 [[package]]

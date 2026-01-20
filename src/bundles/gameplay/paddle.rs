@@ -25,7 +25,7 @@ impl PaddleBundle {
         id: PlayerID
     ) -> Self {
         Self {
-            paddle: Paddle{
+            paddle: Paddle {
                 goal,
                 id
             },

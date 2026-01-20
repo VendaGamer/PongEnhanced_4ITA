@@ -14,6 +14,7 @@ use bevy::prelude::*;
 use bevy::ui_widgets::observe;
 use bevy::window::WindowMode;
 use leafwing_input_manager::action_state::ActionState;
+use crate::bundles::area::AreaBundle;
 
 pub fn spawn_m_main(
     directional_nav_map: &mut DirectionalNavigationMap,
@@ -87,11 +88,14 @@ pub fn m_offline() -> impl Bundle {
             (
                 w_menu_section(),
                 children![
+                (
                     w_selector(
                         GAMEMODE_OPTIONS,
                         0,
                         "Game Mode",
                     ),
+                    observe(on_game_mode_changed),
+                ),
                     w_slider(5.0, 30.0, 5.0)
                 ],
             ),
@@ -104,21 +108,36 @@ pub fn m_offline() -> impl Bundle {
                 },
                 children![
                     (
-                        w_menu_button(
-                            Color::srgb(0.2, 0.7, 0.3),
-                            "Start Game"),
+                        w_menu_button(Color::srgb(0.2, 0.7, 0.3), "Start Game"),
                         observe(on_start_offline_game)
                     ),
                     (
-                        w_menu_button(
-                            Color::srgb(0.6, 0.6, 0.6),
-                            "Back"),
+                        w_menu_button(Color::srgb(0.6, 0.6, 0.6), "Back"),
                         observe(on_offline_back_main)
                     )
                 ]
             ),
         ],
     )
+}
+
+
+fn on_game_mode_changed(
+    change: On<OptionChanged>,
+    selectors: Query<(Entity, &OptionSelector)>,
+    mut config: ResMut<GameModeConfig>,
+) {
+    for (entity, selector) in selectors.iter() {
+        if change.0 == entity{
+            if let Some(change) = selector.current::<GameMode>(){
+                config.game_mode = *change;
+
+                println!("Game mode changed to {change:?}");
+            }
+
+            break;
+        }
+    }
 }
 
 // Observer callbacks
@@ -193,7 +212,17 @@ fn on_offline_back_main(
     _: On<ButtonPressed>,
     mut commands: Commands,
     mut map: ResMut<DirectionalNavigationMap>,
-    main_menu: Query<Entity, With<OfflinePlayMenu>>,
+    menu: Query<Entity, With<OfflinePlayMenu>>,
+){
+    commands.entity(menu.single().expect("No menu")).despawn();
+    spawn_m_main(map.as_mut(), &mut commands);
+}
+
+fn on_online_back_main(
+    _: On<ButtonPressed>,
+    mut commands: Commands,
+    mut map: ResMut<DirectionalNavigationMap>,
+    main_menu: Query<Entity, With<OnlinePlayMenu>>,
 ){
     commands.entity(main_menu.single().expect("No menu")).despawn();
     spawn_m_main(map.as_mut(), &mut commands);
@@ -233,12 +262,11 @@ pub fn u_join_in(
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut game_settings: ResMut<GameModeConfig>
 ) {
-    let area = &mut game_settings.area_shape;
-
     if let Ok((menu, join_in)) = menus.single(){
         let player_num = join_in.0 as usize;
 
         for (action, player) in player_query {
+            let area = &mut game_settings.area_shape;
             if !action.get_just_pressed().is_empty() && !area.contains_player(player.id) {
 
                 let teams_len = area.get_teams().len();
@@ -250,7 +278,7 @@ pub fn u_join_in(
                 if player_num < teams_len {
                     commands.spawn(m_player_join_in(join_in.0 + 1));
                 }else{
-                    area.spawn(&mut commands, meshes.as_mut(), materials.as_mut());
+                    AreaBundle::spawn(game_settings.as_ref(), &mut commands, meshes.as_mut(), materials.as_mut());
                 }
             }
         }
@@ -302,7 +330,7 @@ pub fn m_online() -> impl Bundle {
                     Color::srgb(0.6, 0.6, 0.6),
                     "Back",
                 ),
-                observe(on_offline_back_main)
+                observe(on_online_back_main)
             )
         ],
     )
@@ -466,9 +494,7 @@ fn on_resolution_changed(
     selectors: Query<&OptionSelector>,
 ){
     if let Ok(selector) = selectors.get(change.0){
-        if let Some(resolution) = selector.current::<Resolution>(){
-            println!("Changed resolution to {}x{}", resolution.x, resolution.y);
-        }
+
     }
 }
 

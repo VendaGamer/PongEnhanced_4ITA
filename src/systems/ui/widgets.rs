@@ -1,9 +1,13 @@
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::{HoverLight, HoverLightColor};
-use crate::components::ui::{Dropdown, OptionSelector, SelectorButton, SelectorText, SourceHandle, UIOptionProvider};
+use crate::components::ui::{Dropdown, Menu, OptionSelector, SelectorButton, SelectorText, SourceHandle, UIOptionProvider};
 use crate::events::widgets::{ButtonPressed, OptionChanged};
+use crate::resources::MenuAction;
 use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT, MODERN_THEME};
+use bevy::input_focus::directional_navigation::DirectionalNavigation;
 use bevy::input_focus::tab_navigation::TabIndex;
+use bevy::input_focus::{InputFocus, InputFocusVisible};
+use bevy::math::CompassOctant;
 use bevy::picking::hover::Hovered;
 use bevy::prelude::*;
 use bevy::text::FontSmoothing;
@@ -12,9 +16,9 @@ use bevy_tween::combinator::AnimationBuilderExt;
 use bevy_tween::interpolate::background_color_to;
 use bevy_tween::interpolation::EaseKind;
 use bevy_tween::prelude::IntoTarget;
+use leafwing_input_manager::action_state::ActionState;
 use std::sync::Arc;
 use std::time::Duration;
-use bevy::input_focus::{InputFocus, InputFocusVisible};
 
 pub const BUTTON_PADDING: Val = Val::Px(20.0);
 pub const PIXEL_BORDER: UiRect = UiRect::all(Val::Px(3.0)); // Classic pixel border width
@@ -409,6 +413,47 @@ pub fn t_button_press(
 }
 
 const FOCUSED_BORDER: Srgba = bevy::color::palettes::tailwind::AMBER_500;
+
+pub fn u_navigate_element(
+    query: Query<&ActionState<MenuAction>>,
+    menu: Query<&Menu>,
+    mut directional_navigation: DirectionalNavigation
+) {
+    if !menu.single().is_ok(){
+        return;
+    }
+    
+    let state = query.single().expect("Expected menu action state");
+
+    if let Some(data) = state.dual_axis_data(&MenuAction::Navigate){
+
+        if let Some(octant) = to_octant(data.pair){
+
+            match directional_navigation.navigate(octant){
+                Ok(entity) =>{
+                    println!("Navigated {octant:?} successfully. {entity} is now focused.");
+                },
+                Err(e) =>{
+                    println!("Navigation failed: {e}");
+                }
+            }
+        }
+    }
+
+}
+
+pub fn to_octant(vec: Vec2) -> Option<CompassOctant> {
+    const THRESHOLD: f32 = 0.5;
+
+    match (vec.x.abs() > THRESHOLD, vec.y.abs() > THRESHOLD) {
+        (false, true) if vec.y > 0.0 => Some(CompassOctant::North),
+        (false, true) if vec.y < 0.0 => Some(CompassOctant::South),
+        (true, false) if vec.x < 0.0 => Some(CompassOctant::West),
+        (true, false) if vec.x > 0.0 => Some(CompassOctant::East),
+        _ => None
+    }
+}
+
 
 pub fn u_highlight_focused_element(
     input_focus: Res<InputFocus>,

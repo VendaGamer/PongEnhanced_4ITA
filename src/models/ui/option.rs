@@ -1,9 +1,8 @@
-use std::fmt::Debug;
+use crate::components::ui::{SourceHandle, UIOptionProvider, UIOptionString};
 use bevy::window::PresentMode;
-use crate::components::ui::{SourceHandle, UIOptionString};
 
 
-pub const VSyncOptions: SourceHandle<[PresentMode]> = 
+pub const VSYNC_OPTIONS: SourceHandle<dyn UIOptionProvider> =
 SourceHandle::Static
 (&[
     PresentMode::AutoNoVsync,
