@@ -3,7 +3,7 @@ use crate::bundles::*;
 use crate::models::game::area::{PlayerID, PlayerInfo, Players};
 use crate::resources::controls::MenuAction;
 use crate::resources::{GameModeConfig, GameSettings, Monitors};
-use crate::systems::menu::m_main;
+use crate::systems::menu::{m_main, u_join_in};
 use crate::systems::selectors::update_selector_text;
 use crate::systems::settings::monitor::on_spawn_monitors;
 use crate::systems::*;
@@ -20,6 +20,7 @@ impl Plugin for GameCorePlugin {
                 paddle_hit_dynamics,
                 update_score_ui,
                 update_selector_text,
+                u_join_in
             ))
             .add_systems(Startup, (
                 setup_common,

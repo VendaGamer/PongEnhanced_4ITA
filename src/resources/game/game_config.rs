@@ -33,8 +33,6 @@ impl From<&Res<'_, GameSettings>> for PendingSettings {
     }
 }
 
-
-
 #[derive(Resource, Clone, Default, Debug)]
 pub struct Monitors {
     pub monitors: Arc<Vec<MonitorInfo>>,
@@ -105,7 +103,7 @@ impl Default for GameSettings {
     }
 }
 
-#[derive(Resource, Hash, PartialEq, Eq)]
+#[derive(Resource, Hash, PartialEq, Eq, Debug)]
 pub struct GameModeConfig {
     pub game_mode: GameMode,
     pub area_shape: AreaShape,

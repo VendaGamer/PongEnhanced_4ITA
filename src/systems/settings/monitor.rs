@@ -3,6 +3,7 @@ use bevy::ecs::query::*;
 use bevy::prelude::*;
 use bevy::window::*;
 use std::sync::Arc;
+use bevy::winit::{WinitMonitors, WinitWindows};
 
 #[cfg(windows)]
 fn get_monitor_name_windows(device_path: &str) -> Option<String> {
@@ -38,6 +39,7 @@ fn get_monitor_name_windows(device_path: &str) -> Option<String> {
 
     None
 }
+
 
 pub fn on_spawn_monitors(
     query: Query<(Entity, &Monitor), Spawned>,
@@ -102,7 +104,14 @@ pub fn on_spawn_monitors(
         resolutions.dedup();
 
         refresh_rates.sort_unstable();
-        refresh_rates.dedup();
+
+        {
+            let mut seen = std::collections::HashSet::new();
+            refresh_rates.retain(|rate| {
+                seen.insert((rate.0 + 500) / 1000 * 1000)
+            });
+        }
+
 
         bit_depths.sort_unstable();
         bit_depths.dedup();
@@ -113,17 +122,17 @@ pub fn on_spawn_monitors(
         );
 
         info.push(MonitorInfo{
-                monitor_selection: selection,
-                name,
-                refresh_rates: Arc::new(refresh_rates),
-                resolutions: Arc::new(resolutions),
-                bit_depths: Arc::new(bit_depths),
-                native_mode: VideoMode {
-                    bit_depth,
-                    refresh_rate_millihertz: refresh_rate,
-                    physical_size: monitor.physical_size(),
-                }
-            });
+            monitor_selection: selection,
+            name,
+            refresh_rates: Arc::new(refresh_rates),
+            resolutions: Arc::new(resolutions),
+            bit_depths: Arc::new(bit_depths),
+            native_mode: VideoMode {
+                bit_depth,
+                refresh_rate_millihertz: refresh_rate,
+                physical_size: monitor.physical_size(),
+            }
+        });
     }
 
     commands.insert_resource(
@@ -132,5 +141,4 @@ pub fn on_spawn_monitors(
             selected_monitor: current_monitor_index,
         }
     );
-
 }

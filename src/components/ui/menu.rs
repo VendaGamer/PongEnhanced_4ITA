@@ -1,26 +1,14 @@
-use std::iter::Map;
-use bevy::prelude::Entity;
 use crate::bundles::Component;
 
 #[derive(Component)]
-pub struct Menu{
-    pub selectables: Option<Map<Entity, Entity>>,
-    pub menu_type: MenuType,
-}
-
-impl Menu{
-    pub fn new(menu_type: MenuType) -> Self{
-        Self{
-            selectables: None,
-            menu_type
-        }
-    }
-
-}
-
-pub enum MenuType {
-    MainMenu,
-    SettingsMenu,
-    OfflinePlayMenu,
-    OnlinePlayMenu
-}
+pub struct SettingsMenu;
+#[derive(Component)]
+pub struct MainMenu;
+#[derive(Component)]
+pub struct OfflinePlayMenu;
+#[derive(Component)]
+pub struct OnlinePlayMenu;
+#[derive(Component)]
+pub struct PauseMenu;
+#[derive(Component)]
+pub struct PlayerJoinInMenu(pub u8);

@@ -1,8 +1,8 @@
 use crate::bundles::widgets::LabelBundle;
-use crate::components::ui::{Menu, MenuType, OptionSelector, SettingsSelector, SourceHandle, UIOptionProvider, UIOptionString};
+use crate::components::ui::{MainMenu, OfflinePlayMenu, OnlinePlayMenu, OptionSelector, PlayerJoinInMenu, SettingsMenu, SettingsSelector, SourceHandle, UIOptionProvider, UIOptionString};
 use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged};
 use crate::models::game::gameplay::GameMode;
-use crate::resources::{GameModeConfig, GameSettings, Monitors, PendingSettings, Resolution};
+use crate::resources::{GameModeConfig, GameSettings, Monitors, PendingSettings, PlayerAction, Resolution};
 use crate::systems::settings::persistence::save_settings;
 use crate::systems::widgets::*;
 use crate::utils::MODERN_THEME;
@@ -10,10 +10,13 @@ use bevy::dev_tools::fps_overlay::FpsOverlayConfig;
 use bevy::prelude::*;
 use bevy::ui_widgets::observe;
 use bevy::window::WindowMode;
+use leafwing_input_manager::action_state::ActionState;
+use crate::components::Player;
+use crate::models::game::area::{AreaShape, PlayerID, PlayerInfo};
 
 pub fn m_main() -> impl Bundle {
     (
-        m_base(MenuType::MainMenu),
+        m_base(MainMenu),
         children![
             LabelBundle::game_title(),
             (
@@ -76,7 +79,7 @@ SourceHandle::Static(&[
 
 pub fn m_offline() -> impl Bundle {
     (
-        m_base(MenuType::OfflinePlayMenu),
+        m_base(OfflinePlayMenu),
         children![
             w_menu_title("Offline Play"),
             (
@@ -111,7 +114,7 @@ pub fn m_offline() -> impl Bundle {
                         observe(on_offline_back_main)
                     )
                 ]
-            )
+            ),
         ],
     )
 }
@@ -137,7 +140,7 @@ fn on_offline(
     _press: On<ButtonPressed>,
     config: Res<GameModeConfig>,
     mut commands: Commands,
-    main_menu: Query<Entity, With<Menu>>,
+    main_menu: Query<Entity, With<MainMenu>>,
 ) {
     let entity = main_menu.single().expect("Main Menu doesn't exist");
     commands.entity(entity).despawn();
@@ -147,7 +150,7 @@ fn on_offline(
 fn on_online(
     _press: On<ButtonPressed>,
     mut commands: Commands,
-    main_menu: Query<Entity, With<Menu>>,
+    main_menu: Query<Entity, With<MainMenu>>,
 ) {
     let entity = main_menu.single().expect("Main Menu doesn't exist");
     commands.entity(entity).despawn();
@@ -157,7 +160,7 @@ fn on_online(
 fn on_settings(
     _press: On<ButtonPressed>,
     mut commands: Commands,
-    main_menu: Query<Entity, With<Menu>>,
+    main_menu: Query<Entity, With<MainMenu>>,
     settings: Res<GameSettings>,
     monitors: Res<Monitors>,
 ) {
@@ -173,7 +176,7 @@ fn on_exit(_press: On<ButtonPressed>, mut exit: MessageWriter<AppExit>) {
 fn on_settings_back_main(
     _: On<ButtonPressed>,
     mut commands: Commands,
-    settings_menu: Query<Entity, With<Menu>>,
+    settings_menu: Query<Entity, With<SettingsMenu>>,
     settings: Res<GameSettings>,
 ) {
     let entity = settings_menu.single().expect("Settings Menu doesn't exist");
@@ -186,7 +189,7 @@ fn on_settings_back_main(
 fn on_offline_back_main(
     _: On<ButtonPressed>,
     mut commands: Commands,
-    main_menu: Query<Entity, With<Menu>>,
+    main_menu: Query<Entity, With<OfflinePlayMenu>>,
 ){
     commands.entity(main_menu.single().expect("No menu")).despawn();
     commands.spawn(m_main());
@@ -194,14 +197,67 @@ fn on_offline_back_main(
 
 fn on_start_offline_game(
     _: On<ButtonPressed>,
+    mut commands: Commands,
+    menus: Query<Entity, With<OfflinePlayMenu>>,
 ) {
-
+    let entity = menus.single().expect("No menu found");
+    commands.entity(entity).despawn();
+    commands.spawn(m_player_join_in(1));
 }
+
+fn m_player_join_in(player_num: u8) -> impl Bundle {
+    (
+        m_base(PlayerJoinInMenu(player_num)),
+        children![
+            w_menu_title(format!("Player {} Join In", player_num)),
+            (
+                w_menu_section(),
+                children![
+                    LabelBundle::button_label("Press any button to join..."),
+                ],
+            ),
+        ],
+    )
+}
+
+
+pub fn u_join_in(
+    menus: Query<(Entity, &PlayerJoinInMenu)>,
+    player_query: Query<(&ActionState<PlayerAction>, &Player)>,
+    mut commands: Commands,
+    mut game_settings: ResMut<GameModeConfig>
+) {
+    if let Ok((menu, join_in)) = menus.single(){
+        let player_num = join_in.0 as usize;
+
+        for (action, player) in player_query{
+            if !action.get_just_pressed().is_empty() && !game_settings.area_shape.contains_player(player.id) {
+
+                let teams_len = game_settings.area_shape.get_teams().len();
+
+                game_settings.area_shape.get_teams_mut()[player_num - 1].players.push(PlayerInfo{
+                    id: player.id,
+                    name: format!("Player {}", join_in.0),
+                });
+
+                commands.entity(menu).despawn();
+
+                if player_num < teams_len {
+                    commands.spawn(m_player_join_in(join_in.0 + 1));
+                }else{
+                    println!("All players joined! Starting game with settings: {:?}", game_settings);
+                }
+
+            }
+        }
+    }
+}
+
 
 
 pub fn m_online() -> impl Bundle {
     (
-        m_base(MenuType::OnlinePlayMenu),
+        m_base(OnlinePlayMenu),
         children![
             w_menu_title("Online Play"),
             (
@@ -254,7 +310,7 @@ pub fn spawn_m_settings(
     commands: &mut Commands,
 ) {
     commands.insert_resource(PendingSettings::from(settings));
-    commands.spawn(m_base(MenuType::SettingsMenu)).with_children(|base| {
+    commands.spawn(m_base(SettingsMenu)).with_children(|base| {
 
         base.spawn(w_menu_title("Settings"));
 
@@ -305,7 +361,7 @@ pub fn spawn_m_settings(
                                 WindowMode::Fullscreen(monitor.monitor_selection, current_video_mode),
                             ]),
                             current_window_mode,
-                            ""
+                            "Window Mode"
                         ));
 
 
@@ -357,9 +413,9 @@ fn on_settings_apply(change : On<OptionChanged>){
 }
 
 
-fn m_base(menu_type: MenuType) -> impl Bundle {
+fn m_base(menu_type: impl Component) -> impl Bundle {
     (
-        Menu::new(menu_type),
+        menu_type,
         Node {
             width: Val::Percent(100.0),
             height: Val::Percent(100.0),

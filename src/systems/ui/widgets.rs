@@ -99,11 +99,11 @@ pub fn w_button(color: Color, size: Vec2, text: &str) -> impl Bundle {
     )
 }
 
-pub fn w_menu_title(text: &'static str) -> impl Bundle {
+pub fn w_menu_title(text: impl Into<String>) -> impl Bundle {
     w_title(text, 72.0)
 }
 
-pub fn w_title(text: &'static str, size: f32) -> impl Bundle {
+pub fn w_title(text: impl Into<String>, size: f32) -> impl Bundle {
     (
         Node {
             margin: UiRect::bottom(Val::Px(40.0)),

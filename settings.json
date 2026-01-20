@@ -1,6 +1,6 @@
 {
-  "master_volume": 45.0,
-  "sfx_volume": 69.0,
+  "master_volume": 0.0,
+  "sfx_volume": 0.0,
   "video_mode": {
     "BorderlessFullscreen": "Primary"
   },

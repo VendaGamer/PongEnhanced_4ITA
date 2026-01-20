@@ -163,6 +163,17 @@ impl AreaShape {
         
         None
     }
+    
+    pub fn contains_player(&self, player_id: PlayerID) -> bool {
+        for team in self.get_teams().iter(){
+            for player in team.players.iter(){
+                if player.id == player_id {
+                    return true;
+                }
+            }
+        }
+        false
+    }
 
     pub fn get_teams(&self) -> &[TeamInfo] {
         match self {
