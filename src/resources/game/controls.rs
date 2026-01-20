@@ -6,10 +6,10 @@ use crate::bundles::KeyCode;
 
 #[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Reflect)]
 pub enum PlayerAction {
-    Up,
-    Down,
-    Left,
-    Right,
+    #[actionlike(Axis)]
+    Move,
+    #[actionlike(Axis)]
+    Tilt,
     Speedup,
     Dash,
     Push,

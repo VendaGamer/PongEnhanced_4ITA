@@ -1,20 +1,12 @@
-use crate::components::Player;
-use crate::resources::PlayerAction;
-use bevy::input::gamepad::{GamepadConnection, GamepadConnectionEvent};
-use bevy::prelude::{MessageReader, Query, With};
-use leafwing_input_manager::input_map::InputMap;
+use crate::bundles::Query;
+use bevy::ecs::query::Spawned;
+use bevy::prelude::{Commands, Entity, Gamepad};
 
 pub fn check_connection(
-    mut events: MessageReader<GamepadConnectionEvent>,
-    mut bindings: Query<&InputMap<PlayerAction>, With<Player>>,
+    mut query: Query<(Entity, &Gamepad), Spawned>,
+    mut commands: Commands
 ) {
-    for ev in events.read() {
-
-        if let GamepadConnection::Connected{ .. } = &ev.connection {
-
-            println!("Connected Gamepad");
-
-        }
+    for (entity, gamepad) in query {
 
     }
 }

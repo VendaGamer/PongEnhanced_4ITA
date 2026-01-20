@@ -10,7 +10,7 @@ const BALL_SPEED: f32 = 600.0;
 pub fn move_paddle(
     time: Res<Time>,
     player_query: Query<(&ActionState<PlayerAction>, &Player)>,
-    mut paddle_query: Query<(&mut Transform, &Paddle)>,
+    paddle_query: Query<(&mut Transform, &Paddle)>,
 ) {
     for (mut paddle_transform, paddle) in paddle_query {
 
@@ -22,11 +22,11 @@ pub fn move_paddle(
                     move_amount *= 2.0;
                 }
 
-                if action_state.pressed(&PlayerAction::Up){
+                if action_state.pressed(&PlayerAction::Move){
                     paddle_transform.translation.y += move_amount;
                 }
 
-                if action_state.pressed(&PlayerAction::Down) {
+                if action_state.pressed(&PlayerAction::Move) {
                     paddle_transform.translation.y -= move_amount;
                 }
 

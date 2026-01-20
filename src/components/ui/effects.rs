@@ -1,4 +1,3 @@
-use bevy::prelude::Entity;
 use crate::bundles::{Color, Component};
 use crate::utils::lighten_color;
 

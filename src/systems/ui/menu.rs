@@ -12,7 +12,7 @@ use bevy::ui_widgets::observe;
 use bevy::window::WindowMode;
 use leafwing_input_manager::action_state::ActionState;
 use crate::components::Player;
-use crate::models::game::area::{AreaShape, PlayerID, PlayerInfo};
+use crate::models::game::area::{AreaShape, PlayerID};
 
 pub fn m_main() -> impl Bundle {
     (
@@ -235,10 +235,7 @@ pub fn u_join_in(
 
                 let teams_len = game_settings.area_shape.get_teams().len();
 
-                game_settings.area_shape.get_teams_mut()[player_num - 1].players.push(PlayerInfo{
-                    id: player.id,
-                    name: format!("Player {}", join_in.0),
-                });
+                game_settings.area_shape.get_teams_mut()[player_num - 1].players.insert(player.id);
 
                 commands.entity(menu).despawn();
 

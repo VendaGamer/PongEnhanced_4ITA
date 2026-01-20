@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+use std::hash::{Hash, Hasher};
 use crate::bundles::widgets::LabelBundle;
 use crate::bundles::{default, Entity, Transform, Vec3};
 use crate::components::ui::{ScoreText, UIOptionString};
@@ -62,7 +64,7 @@ impl AreaSide{
 pub struct TeamInfo {
     pub current_score: u32,
     pub area_side: AreaSide,
-    pub players: Vec<PlayerInfo>,
+    pub players: HashSet<PlayerID>,
 }
 
 impl TeamInfo {
@@ -71,23 +73,10 @@ impl TeamInfo {
     }
 }
 
-#[derive(Resource, Default)]
-pub struct Players {
-    pub players: Vec<PlayerInfo>,
-}
-
-#[derive(Clone, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
-pub struct PlayerInfo {
-    pub name: String,
-    pub id: PlayerID,
-}
-
-#[derive(Copy, Clone, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
-pub struct PlayerID(pub u8);
-
-pub enum ControlType{
-    Keyboard,
-    Gamepad(Entity),
+#[derive(Copy, Clone, Eq, Hash, PartialEq, Hash, Debug, Serialize, Deserialize)]
+pub enum PlayerID{
+    KeyboardPlayer(u8),
+    Gamepad(Entity)
 }
 
 #[derive(Clone, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
@@ -104,12 +93,12 @@ impl AreaShape {
             TeamInfo {
                 current_score: 0,
                 area_side: AreaSide::Left,
-                players: Vec::new(),
+                players: HashSet::new(),
             },
             TeamInfo {
                 current_score: 0,
                 area_side: AreaSide::Right,
-                players: Vec::new(),
+                players: HashSet::new(),
             },
         ])
 
@@ -167,7 +156,7 @@ impl AreaShape {
     pub fn contains_player(&self, player_id: PlayerID) -> bool {
         for team in self.get_teams().iter(){
             for player in team.players.iter(){
-                if player.id == player_id {
+                if player.id() == player_id {
                     return true;
                 }
             }

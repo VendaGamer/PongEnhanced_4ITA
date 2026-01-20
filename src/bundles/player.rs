@@ -1,8 +1,8 @@
 use crate::components::Player;
-use bevy::prelude::Bundle;
-use leafwing_input_manager::input_map::InputMap;
 use crate::models::game::area::PlayerID;
 use crate::resources::PlayerAction;
+use bevy::prelude::{Bundle, Entity};
+use leafwing_input_manager::input_map::InputMap;
 
 #[derive(Bundle)]
 pub struct PlayerBundle {
@@ -11,12 +11,21 @@ pub struct PlayerBundle {
 }
 
 impl PlayerBundle {
-    pub fn new(id: u8) -> Self {
+    pub fn new_keyboard(id: u8) -> Self {
         Self {
             player: Player {
-                id: PlayerID(id)
+                id: PlayerID::KeyboardPlayer(id)
             },
             bindings: Player::get_default_input_map(id),
+        }
+    }
+
+    pub fn new_gamepad(gamepad: Entity) -> Self {
+        Self {
+            player: Player {
+                id: PlayerID::Gamepad(gamepad)
+            },
+            bindings: Player::get_gamepad_input_map(gamepad),
         }
     }
 }

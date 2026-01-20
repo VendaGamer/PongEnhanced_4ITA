@@ -1,6 +1,8 @@
+use bevy::ecs::query::Spawned;
 use crate::bundles::player::PlayerBundle;
 use crate::bundles::*;
-use crate::models::game::area::{PlayerID, PlayerInfo, Players};
+use crate::components::Player;
+use crate::models::game::area::{PlayerID};
 use crate::resources::controls::MenuAction;
 use crate::resources::{GameModeConfig, GameSettings, Monitors};
 use crate::systems::menu::{m_main, u_join_in};
@@ -20,7 +22,8 @@ impl Plugin for GameCorePlugin {
                 paddle_hit_dynamics,
                 update_score_ui,
                 update_selector_text,
-                u_join_in
+                u_join_in,
+                u_spawned_gamepads
             ))
             .add_systems(Startup, (
                 setup_common,
@@ -28,24 +31,41 @@ impl Plugin for GameCorePlugin {
             .add_systems(PostStartup, (
                 on_spawn_monitors,
             ))
-            .insert_resource(GameModeConfig::default())
-            .insert_resource(Players::default());
+            .insert_resource(GameModeConfig::default());
+    }
+}
+
+
+fn u_spawned_gamepads(
+    query: Query<Entity, With<(Gamepad, Spawned)>>,
+    mut commands: Commands
+) {
+
+    for entity in query.iter() {
+
+        commands.entity(entity).observe(on_despawn_gamepad);
+    }
+}
+
+fn on_despawn_gamepad(
+    despawn :On<Despawn>,
+    mut players: Query<&mut Player>)
+{
+    for player in players.iter_mut() {
+
+        if let PlayerID::Gamepad(entity) = player.id{
+
+        }
     }
 }
 
 fn setup_common(
     mut commands: Commands,
-    mut players: ResMut<Players>
 ) {
     commands.spawn(CameraBundle::default());
 
-    for i in 0..4{
-        let entity = commands.spawn(PlayerBundle::new(i)).id();
-        let info = PlayerInfo {
-            id: PlayerID(i),
-            name: format!("Player {}", i + 1),
-        };
-        players.players.push(info);
+    for i in 1..=2 {
+        commands.spawn(PlayerBundle::new_keyboard(i));
     }
 
     commands.spawn(MenuAction::input_map());
