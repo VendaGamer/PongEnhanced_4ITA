@@ -1,6 +1,7 @@
 use crate::components::*;
 use crate::resources::controls::*;
 use crate::utils::screen::PADDLE_SIZE;
+use crate::utils::HALF_HEIGHT;
 use avian2d::prelude::*;
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::*;
@@ -9,14 +10,18 @@ const BALL_SPEED: f32 = 600.0;
 
 pub fn move_paddle(
     player_query: Query<(&ActionState<PlayerAction>, &Player)>,
-    paddle_query: Query<(&mut Transform, &Paddle)>,
+    mut paddle_query: Query<(&mut Transform, &Paddle)>,
 ) {
-    for (mut paddle_transform, paddle) in paddle_query {
+    for (mut transform, paddle) in paddle_query.iter_mut() {
 
         for (action_state, player) in player_query {
             if player.id.eq(&paddle.id) {
                 if let Some(data) = action_state.axis_data(&PlayerAction::Move){
-                    paddle_transform.translation.y += 10.0 * data.update_value;
+                    transform.translation.y += 10.0 * data.update_value;
+
+                    let half_paddle_height = PADDLE_SIZE.y / 2.0;
+                    let limit = HALF_HEIGHT - half_paddle_height;
+                    transform.translation.y = transform.translation.y.clamp(-limit, limit);
                 }
                 break;
             }
