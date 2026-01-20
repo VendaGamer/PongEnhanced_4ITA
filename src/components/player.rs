@@ -18,7 +18,6 @@ impl Player {
             (PlayerAction::Dash, GamepadButton::LeftTrigger2),
             (PlayerAction::Push, GamepadButton::RightTrigger2),
             (PlayerAction::Pause, GamepadButton::Start),
-            (PlayerAction::Speedup, GamepadButton::LeftTrigger),
         ]).with_gamepad(gamepad);
 
         map.insert_axis(PlayerAction::Move, GamepadAxis::LeftStickX)
@@ -37,7 +36,6 @@ impl Player {
                     (PlayerAction::Dash, KeyCode::ControlLeft),
                     (PlayerAction::Push, KeyCode::Space),
                     (PlayerAction::Pause, KeyCode::Escape),
-                    (PlayerAction::Speedup, KeyCode::ShiftLeft),
                 ]);
 
                 map.insert_axis(PlayerAction::Move, VirtualAxis::ws())
@@ -50,7 +48,6 @@ impl Player {
                     (PlayerAction::Dash, KeyCode::ControlRight),
                     (PlayerAction::Push, KeyCode::Enter),
                     (PlayerAction::Pause, KeyCode::End),
-                    (PlayerAction::Speedup, KeyCode::ShiftRight),
                 ]);
 
                 map.insert_axis(PlayerAction::Move, VirtualAxis::vertical_arrow_keys())

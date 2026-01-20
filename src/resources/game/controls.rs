@@ -10,10 +10,9 @@ pub enum PlayerAction {
     Move,
     #[actionlike(Axis)]
     Tilt,
-    Speedup,
     Dash,
     Push,
-    Pause
+    Pause,
 }
 
 #[derive(Actionlike, Clone, Copy, Debug, Reflect, PartialEq, Eq, Hash)]

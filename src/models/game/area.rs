@@ -1,14 +1,15 @@
-use std::collections::HashSet;
-use std::hash::{Hash, Hasher};
 use crate::bundles::widgets::LabelBundle;
-use crate::bundles::{default, Entity, Transform, Vec3};
+use crate::bundles::{default, BallBundle, Entity, Transform, Vec3};
 use crate::components::ui::{ScoreText, UIOptionString};
-use crate::utils::{FIXED_DIMENSIONS, HALF_HEIGHT, HALF_WALL_THICKNESS, HALF_WIDTH, WALL_THICKNESS};
+use crate::utils::{BALL_RADIUS, FIXED_DIMENSIONS, HALF_HEIGHT, HALF_WALL_THICKNESS, HALF_WIDTH, WALL_THICKNESS};
 use avian2d::prelude::Collider;
-use bevy::prelude::{Color, Commands, Node, PositionType, Resource};
+use bevy::prelude::{Assets, Color, ColorMaterial, Commands, Mesh, Node, PositionType, Vec2};
 use bevy::ui::Val;
 use serde::{Deserialize, Serialize};
+use std::hash::{Hash, Hasher};
 use AreaShape::{Cuboid, Triangular, TwoSide};
+use crate::bundles::area::AreaBundle;
+use crate::systems::handle_scoring;
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
 pub enum AreaSide {
@@ -30,11 +31,13 @@ impl AreaSide{
     }
 
     pub fn spawn_score_text(self, commands: &mut Commands){
+
         let position = match self {
-            AreaSide::Left => Vec3::new(-HALF_WIDTH / 2.0, 0.0, 0.0),
-            AreaSide::Right => Vec3::new(HALF_WIDTH / 2.0, 0.0, 0.0),
-            AreaSide::Top => Vec3::new(0.0, HALF_HEIGHT / 2.0, 0.0),
-            AreaSide::Bottom => Vec3::new(0.0, -HALF_HEIGHT / 2.0, 0.0),
+
+            AreaSide::Left => Vec2::new(FIXED_DIMENSIONS.x - (FIXED_DIMENSIONS.x / 3.0), 0.0),
+            AreaSide::Right => Vec2::new(FIXED_DIMENSIONS.x / 3.0, 0.0),
+            AreaSide::Top => Vec2::new(0.0, HALF_HEIGHT),
+            AreaSide::Bottom => Vec2::new(0.0, -HALF_HEIGHT),
         };
 
         commands.spawn((
@@ -64,7 +67,7 @@ impl AreaSide{
 pub struct TeamInfo {
     pub current_score: u32,
     pub area_side: AreaSide,
-    pub players: HashSet<PlayerID>,
+    pub players: Vec<PlayerID>,
 }
 
 impl TeamInfo {
@@ -73,7 +76,7 @@ impl TeamInfo {
     }
 }
 
-#[derive(Copy, Clone, Eq, Hash, PartialEq, Hash, Debug, Serialize, Deserialize)]
+#[derive(Copy, Clone, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
 pub enum PlayerID{
     KeyboardPlayer(u8),
     Gamepad(Entity)
@@ -87,18 +90,28 @@ pub enum AreaShape {
 }
 
 impl AreaShape {
-    pub(crate) fn default() -> AreaShape {
+
+    pub fn spawn(
+        &mut self,
+         commands: &mut Commands,
+         meshes: &mut Assets<Mesh>,
+         materials: &mut Assets<ColorMaterial>,
+    ) {
+        AreaBundle::spawn(self, commands, meshes, materials);
+    }
+
+    pub fn default() -> AreaShape {
 
         TwoSide([
             TeamInfo {
                 current_score: 0,
                 area_side: AreaSide::Left,
-                players: HashSet::new(),
+                players: Vec::new(),
             },
             TeamInfo {
                 current_score: 0,
                 area_side: AreaSide::Right,
-                players: HashSet::new(),
+                players: Vec::new(),
             },
         ])
 
@@ -156,7 +169,7 @@ impl AreaShape {
     pub fn contains_player(&self, player_id: PlayerID) -> bool {
         for team in self.get_teams().iter(){
             for player in team.players.iter(){
-                if player.id() == player_id {
+                if *player == player_id {
                     return true;
                 }
             }

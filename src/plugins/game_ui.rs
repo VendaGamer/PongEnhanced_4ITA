@@ -16,6 +16,7 @@ impl Plugin for GameUIPlugin {
                 u_slider_visuals,
                 t_button_press,
                 handle_ui_scaling,
+                u_highlight_focused_element
                 ))
             .add_observer(t_slider_change)
             .add_observer(update_selector);

@@ -14,6 +14,7 @@ use bevy_tween::interpolation::EaseKind;
 use bevy_tween::prelude::IntoTarget;
 use std::sync::Arc;
 use std::time::Duration;
+use bevy::input_focus::{InputFocus, InputFocusVisible};
 
 pub const BUTTON_PADDING: Val = Val::Px(20.0);
 pub const PIXEL_BORDER: UiRect = UiRect::all(Val::Px(3.0)); // Classic pixel border width
@@ -403,6 +404,22 @@ pub fn t_button_press(
             if *interaction == Interaction::Pressed {
                 commands.trigger(ButtonPressed(entity));
             }
+        }
+    }
+}
+
+const FOCUSED_BORDER: Srgba = bevy::color::palettes::tailwind::AMBER_500;
+
+pub fn u_highlight_focused_element(
+    input_focus: Res<InputFocus>,
+    input_focus_visible: Res<InputFocusVisible>,
+    mut query: Query<(Entity, &mut BorderColor)>,
+) {
+    for (entity, mut border_color) in query.iter_mut() {
+        if input_focus.0 == Some(entity) && input_focus_visible.0 {
+            *border_color = BorderColor::all(FOCUSED_BORDER);
+        } else {
+            *border_color = BorderColor::all(MODERN_THEME.border);
         }
     }
 }

@@ -1,14 +1,16 @@
 use bevy::ecs::query::Spawned;
+use bevy::input_focus::directional_navigation::DirectionalNavigationMap;
 use crate::bundles::player::PlayerBundle;
 use crate::bundles::*;
 use crate::components::Player;
 use crate::models::game::area::{PlayerID};
 use crate::resources::controls::MenuAction;
 use crate::resources::{GameModeConfig, GameSettings, Monitors};
-use crate::systems::menu::{m_main, u_join_in};
+use crate::systems::menu::{spawn_m_main, u_join_in};
 use crate::systems::selectors::update_selector_text;
 use crate::systems::settings::monitor::on_spawn_monitors;
 use crate::systems::*;
+use crate::systems::widgets::u_highlight_focused_element;
 
 pub struct GameCorePlugin;
 
@@ -32,35 +34,42 @@ impl Plugin for GameCorePlugin {
                 on_spawn_monitors,
             ))
             .insert_resource(GameModeConfig::default());
+
+
     }
 }
 
 
 fn u_spawned_gamepads(
-    query: Query<Entity, With<(Gamepad, Spawned)>>,
+    query: Query<Entity, (Spawned, With<Gamepad>)>,
     mut commands: Commands
 ) {
-
     for entity in query.iter() {
-
         commands.entity(entity).observe(on_despawn_gamepad);
+        commands.spawn(PlayerBundle::new_gamepad(entity));
     }
 }
 
 fn on_despawn_gamepad(
     despawn :On<Despawn>,
-    mut players: Query<&mut Player>)
+    mut players: Query<(Entity,&mut Player)>,
+    mut commands: Commands,
+)
 {
-    for player in players.iter_mut() {
+    for (player_entity, player) in players.iter_mut() {
 
         if let PlayerID::Gamepad(entity) = player.id{
 
+            if entity == despawn.entity{
+                commands.entity(player_entity).despawn();
+            }
         }
     }
 }
 
 fn setup_common(
     mut commands: Commands,
+    mut map: ResMut<DirectionalNavigationMap>,
 ) {
     commands.spawn(CameraBundle::default());
 
@@ -69,5 +78,5 @@ fn setup_common(
     }
 
     commands.spawn(MenuAction::input_map());
-    commands.spawn(m_main());
+    spawn_m_main(map.as_mut(), &mut commands);
 }

@@ -8,7 +8,6 @@ use leafwing_input_manager::prelude::*;
 const BALL_SPEED: f32 = 600.0;
 
 pub fn move_paddle(
-    time: Res<Time>,
     player_query: Query<(&ActionState<PlayerAction>, &Player)>,
     paddle_query: Query<(&mut Transform, &Paddle)>,
 ) {
@@ -16,32 +15,18 @@ pub fn move_paddle(
 
         for (action_state, player) in player_query {
             if player.id.eq(&paddle.id) {
-                let mut move_amount = time.delta_secs() * 400.0;
-
-                if action_state.pressed(&PlayerAction::Speedup) {
-                    move_amount *= 2.0;
+                if let Some(data) = action_state.axis_data(&PlayerAction::Move){
+                    paddle_transform.translation.y += 10.0 * data.update_value;
                 }
-
-                if action_state.pressed(&PlayerAction::Move){
-                    paddle_transform.translation.y += move_amount;
-                }
-
-                if action_state.pressed(&PlayerAction::Move) {
-                    paddle_transform.translation.y -= move_amount;
-                }
-
                 break;
             }
         }
-
     }
 }
 
 pub fn maintain_ball_speed(
     mut ball_query: Query<&mut LinearVelocity, With<Ball>>,
 ) {
-
-
     for mut velocity in ball_query.iter_mut() {
         let current_speed = velocity.length();
         if current_speed > 0.0 {

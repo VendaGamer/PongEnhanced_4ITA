@@ -1,11 +1,12 @@
 use crate::bundles::paddle::PaddleBundle;
 use crate::bundles::wall::WallBundle;
-use crate::bundles::GoalBundle;
+use crate::bundles::{BallBundle, GoalBundle};
 use crate::components::area::Area;
 use crate::models::game::area::AreaShape;
 use crate::utils::screen::TRANSFORM_ZERO;
-use crate::utils::PADDLE_SIZE;
+use crate::utils::{BALL_RADIUS, PADDLE_SIZE};
 use bevy::prelude::*;
+use crate::systems::handle_scoring;
 
 #[derive(Bundle)]
 pub struct AreaBundle {
@@ -16,12 +17,21 @@ pub struct AreaBundle {
 
 impl AreaBundle {
     pub fn spawn(
-        area_shape: &mut AreaShape,
+        area_shape: &AreaShape,
         commands: &mut Commands,
         meshes: &mut Assets<Mesh>,
         materials: &mut Assets<ColorMaterial>,
     ) {
-        let teams = area_shape.get_teams_mut();
+
+        commands.spawn(BallBundle::new(
+            meshes,
+            materials,
+            Vec3::ZERO,
+            Vec2::new(-300.0, 300.0),
+            BALL_RADIUS
+        )).observe(handle_scoring);
+        
+        let teams = area_shape.get_teams();
 
         for team in teams {
             let goal = commands.spawn(GoalBundle::new(team)).id();
@@ -29,7 +39,7 @@ impl AreaBundle {
 
             for i in 0..team.players.len() {
                 commands.spawn(PaddleBundle::new(meshes, materials, positions[i],
-                                                 PADDLE_SIZE, goal, team.players[i].id));
+                                                 PADDLE_SIZE, goal, team.players[i]));
             }
             
             team.area_side.spawn_score_text(commands);

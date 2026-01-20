@@ -1,5 +1,6 @@
 use crate::bundles::widgets::LabelBundle;
 use crate::components::ui::{MainMenu, OfflinePlayMenu, OnlinePlayMenu, OptionSelector, PlayerJoinInMenu, SettingsMenu, SettingsSelector, SourceHandle, UIOptionProvider, UIOptionString};
+use crate::components::Player;
 use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged};
 use crate::models::game::gameplay::GameMode;
 use crate::resources::{GameModeConfig, GameSettings, Monitors, PendingSettings, PlayerAction, Resolution};
@@ -7,54 +8,55 @@ use crate::systems::settings::persistence::save_settings;
 use crate::systems::widgets::*;
 use crate::utils::MODERN_THEME;
 use bevy::dev_tools::fps_overlay::FpsOverlayConfig;
+use bevy::input_focus::directional_navigation::DirectionalNavigationMap;
+use bevy::math::CompassOctant;
 use bevy::prelude::*;
 use bevy::ui_widgets::observe;
 use bevy::window::WindowMode;
 use leafwing_input_manager::action_state::ActionState;
-use crate::components::Player;
-use crate::models::game::area::{AreaShape, PlayerID};
 
-pub fn m_main() -> impl Bundle {
-    (
-        m_base(MainMenu),
-        children![
-            LabelBundle::game_title(),
-            (
-                Node {
-                    flex_direction: FlexDirection::Column,
-                    flex_wrap: FlexWrap::Wrap,
-                    padding: UiRect::new(BUTTON_PADDING, BUTTON_PADDING, BUTTON_PADDING, Val::ZERO),
-                    width: Val::Auto,
-                    height: Val::Auto,
-                    ..default()
-                },
-                Outline::new(Val::Px(5.0), Val::ZERO, Color::linear_rgb(0.5, 0.5, 0.5)),
-                BackgroundColor::from(Color::srgb(0.1, 0.1, 0.1)),
-                children![
-                    (
-                        w_menu_button(Color::srgb(0.2, 0.6, 0.9),
-                                      "Offline Play"),
-                        observe(on_offline),
-                    ),
-                    (
-                        w_menu_button(Color::srgb(0.6, 0.3, 0.9),
-                                      "Online Play"),
-                        observe(on_online)
-                    ),
-                    (
-                        w_menu_button(Color::srgb(0.5, 0.5, 0.5),
-                                      "Settings"),
-                        observe(on_settings)
-                    ),
-                    (
-                        w_menu_button(Color::srgb(0.8, 0.2, 0.2),
-                                          "Exit"),
-                        observe(on_exit)
-                    )
-                ]
-            )
-        ]
-    )
+pub fn spawn_m_main(
+    directional_nav_map: &mut DirectionalNavigationMap,
+    commands: &mut Commands,
+) {
+
+    commands.spawn(m_base(MainMenu)).with_children(| base |{
+
+        base.spawn(LabelBundle::game_title());
+        base.spawn((
+            Node {
+                flex_direction: FlexDirection::Column,
+                flex_wrap: FlexWrap::Wrap,
+                padding: UiRect::new(BUTTON_PADDING, BUTTON_PADDING, BUTTON_PADDING, Val::ZERO),
+                width: Val::Auto,
+                height: Val::Auto,
+                ..default()
+            },
+            Outline::new(Val::Px(5.0), Val::ZERO, Color::linear_rgb(0.5, 0.5, 0.5)),
+            BackgroundColor::from(Color::srgb(0.1, 0.1, 0.1))
+        )).with_children(| cont |{
+
+            let but1 =
+            cont.spawn(w_menu_button(Color::srgb(0.2, 0.6, 0.9), "Offline Play"))
+                .observe(on_offline).id();
+
+            let but2 =
+            cont.spawn(w_menu_button(Color::srgb(0.6, 0.3, 0.9), "Online Play"))
+                .observe(on_online).id();
+
+            let but3 =
+            cont.spawn(w_menu_button(Color::srgb(0.5, 0.5, 0.5), "Settings"))
+                .observe(on_settings).id();
+
+            let but4 =
+            cont.spawn(w_menu_button(Color::srgb(0.8, 0.2, 0.2), "Exit"))
+                .observe(on_exit).id();
+
+            directional_nav_map.add_looping_edges(
+                &[but1,but2,but3,but4],
+                CompassOctant::South);
+        });
+    });
 }
 
 #[macro_export]
@@ -177,22 +179,24 @@ fn on_settings_back_main(
     _: On<ButtonPressed>,
     mut commands: Commands,
     settings_menu: Query<Entity, With<SettingsMenu>>,
+    mut nam_map: ResMut<DirectionalNavigationMap>,
     settings: Res<GameSettings>,
 ) {
     let entity = settings_menu.single().expect("Settings Menu doesn't exist");
     commands.entity(entity).despawn();
-    commands.spawn(m_main());
 
+    spawn_m_main(nam_map.as_mut(), &mut commands);
     save_settings(&settings);
 }
 
 fn on_offline_back_main(
     _: On<ButtonPressed>,
     mut commands: Commands,
+    mut map: ResMut<DirectionalNavigationMap>,
     main_menu: Query<Entity, With<OfflinePlayMenu>>,
 ){
     commands.entity(main_menu.single().expect("No menu")).despawn();
-    commands.spawn(m_main());
+    spawn_m_main(map.as_mut(), &mut commands);
 }
 
 fn on_start_offline_game(
@@ -225,26 +229,29 @@ pub fn u_join_in(
     menus: Query<(Entity, &PlayerJoinInMenu)>,
     player_query: Query<(&ActionState<PlayerAction>, &Player)>,
     mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
     mut game_settings: ResMut<GameModeConfig>
 ) {
+    let area = &mut game_settings.area_shape;
+
     if let Ok((menu, join_in)) = menus.single(){
         let player_num = join_in.0 as usize;
 
-        for (action, player) in player_query{
-            if !action.get_just_pressed().is_empty() && !game_settings.area_shape.contains_player(player.id) {
+        for (action, player) in player_query {
+            if !action.get_just_pressed().is_empty() && !area.contains_player(player.id) {
 
-                let teams_len = game_settings.area_shape.get_teams().len();
+                let teams_len = area.get_teams().len();
 
-                game_settings.area_shape.get_teams_mut()[player_num - 1].players.insert(player.id);
+                area.get_teams_mut()[player_num - 1].players.push(player.id);
 
                 commands.entity(menu).despawn();
 
                 if player_num < teams_len {
                     commands.spawn(m_player_join_in(join_in.0 + 1));
                 }else{
-                    println!("All players joined! Starting game with settings: {:?}", game_settings);
+                    area.spawn(&mut commands, meshes.as_mut(), materials.as_mut());
                 }
-
             }
         }
     }
