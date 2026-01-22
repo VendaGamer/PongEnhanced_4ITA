@@ -50,7 +50,6 @@ pub fn paddle_hit_dynamics(
         let entity1 = contacts.collider1;
         let entity2 = contacts.collider2;
 
-        // Determine which is ball and which is paddle
         let (ball_entity, paddle_entity) =
             if ball_query.contains(entity1) && paddle_query.contains(entity2) {
                 (entity1, entity2)
@@ -65,7 +64,6 @@ pub fn paddle_hit_dynamics(
              paddle_query.get(paddle_entity),
              ball_transform_query.get(ball_entity)) {
 
-            // Calculate hit offset from paddle center (-1.0 to 1.0)
             let paddle_half_height = PADDLE_SIZE.y/2.0;
             let offset = (ball_transform.translation.y - paddle_transform.translation.y)
                 / paddle_half_height;
@@ -74,7 +72,6 @@ pub fn paddle_hit_dynamics(
             let new_y_vel = offset * speed * 0.75;
 
             ball_vel.y = new_y_vel;
-            // Maintain speed
             ball_vel.0 = ball_vel.normalize() * speed;
         }
     }

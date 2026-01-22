@@ -2,7 +2,7 @@ use crate::components::ui::UIOptionString;
 use crate::models::game::area::AreaShape;
 use crate::models::game::gameplay::GameMode;
 use bevy::prelude::{Deref, Res, Resource, UVec2};
-use bevy::window::{MonitorSelection, PresentMode, VideoMode, WindowMode};
+use bevy::window::{MonitorSelection, PresentMode, VideoMode, WindowMode, WindowResolution};
 use derive_more::{From, Into};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -12,6 +12,7 @@ pub struct GameSettings {
     pub master_volume: f32,
     pub sfx_volume: f32,
     pub video_mode: WindowMode,
+    pub window_resolution: WindowResolution,
     pub vsync: PresentMode,
     pub show_fps: bool,
 }
@@ -98,6 +99,7 @@ impl Default for GameSettings {
             sfx_volume: 50.0,
             video_mode: WindowMode::BorderlessFullscreen(MonitorSelection::Primary),
             vsync: PresentMode::AutoVsync,
+            window_resolution: WindowResolution::default(),
             show_fps: true,
         }
     }

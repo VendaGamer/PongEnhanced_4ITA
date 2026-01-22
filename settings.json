@@ -1,8 +1,14 @@
 {
-  "master_volume": 43.0,
-  "sfx_volume": 89.0,
+  "master_volume": 50.0,
+  "sfx_volume": 50.0,
   "video_mode": {
     "BorderlessFullscreen": "Primary"
+  },
+  "window_resolution": {
+    "physical_width": 1280,
+    "physical_height": 720,
+    "scale_factor_override": null,
+    "scale_factor": 1.0
   },
   "vsync": "AutoVsync",
   "show_fps": true

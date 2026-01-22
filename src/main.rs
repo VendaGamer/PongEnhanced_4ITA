@@ -18,21 +18,18 @@ use avian2d::prelude::*;
 use bevy::input_focus::directional_navigation::DirectionalNavigationPlugin;
 use bevy::input_focus::InputDispatchPlugin;
 use bevy::prelude::*;
-use bevy::render::render_resource::WgpuFeatures;
-use bevy::render::settings::{Backends, PowerPreference, RenderCreation, WgpuSettings, WgpuSettingsPriority};
-use bevy::render::RenderPlugin;
 use bevy::ui_widgets::UiWidgetsPlugins;
-use bevy::window::PresentMode;
-use bevy_light_2d::plugin::Light2dPlugin;
+use bevy::window::{PresentMode, WindowResolution};
 use bevy_tween::DefaultTweenPlugins;
 use components::*;
 use leafwing_input_manager::plugin::InputManagerPlugin;
-use wgpu_types::Limits;
 
 fn main() {
     let mut app = App::new();
 
     let settings = load_settings();
+    let window_resolution: WindowResolution = settings.window_resolution.clone();
+    let video_mode = settings.video_mode;
 
     app.add_plugins((
             DefaultPlugins.set(
@@ -41,31 +38,15 @@ fn main() {
                         title: "Pong Enhanced".into(),
                         present_mode: PresentMode::AutoVsync,
                         resizable: false,
-                        mode: settings.video_mode,
+                        mode: video_mode,
+                        resolution: window_resolution,
                         ..default()
                     }),
                     ..default()
                 }
             )
             .set(ImagePlugin::default_nearest())
-            .disable::<bevy::pbr::PbrPlugin>()
-            .set(RenderPlugin {
-                render_creation: RenderCreation::Automatic(
-                    WgpuSettings {
-                        backends: Some(Backends::all()),
-                        priority: WgpuSettingsPriority::Functionality,
-                        power_preference: PowerPreference::HighPerformance,
-                        features: WgpuFeatures::default()
-                            .difference(WgpuFeatures::VERTEX_WRITABLE_STORAGE),
-                        limits: Limits {
-                            max_storage_buffers_per_shader_stage: 10,
-                            ..default()
-                        },
-                        ..default()
-                    }
-                ),
-                ..default()
-            }),
+            .disable::<bevy::pbr::PbrPlugin>(),
             PhysicsPlugins::default(),
             InputManagerPlugin::<PlayerAction>::default(),
             InputManagerPlugin::<MenuAction>::default(),
@@ -73,7 +54,6 @@ fn main() {
             InputDispatchPlugin,
             DefaultTweenPlugins,
             DirectionalNavigationPlugin,
-            Light2dPlugin,
 
             // my plugins
             GameCorePlugin,
