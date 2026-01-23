@@ -20,10 +20,10 @@ pub const FPS_LOCK_OPTIONS_RAW: [u16; 3] = [
     120
 ];
 
-impl<T: Write> UIOptionString for T {
+impl UIOptionString for u16 {
     #[inline]
     fn push_ui_option_string(&self, string: &mut String) {
-        _ = string.write_str(self);
+        write!(string, "{}", self).unwrap();
     }
 }
 

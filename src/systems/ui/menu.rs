@@ -529,21 +529,21 @@ fn on_monitor_changed(
     monitors: Res<Monitors>,
     mut settings: ResMut<PendingSettings>,
 ) {
-    let monitor_sel: &mut OptionSelector;
-    let resolution_sel: &mut OptionSelector;
-    let refresh_rate_sel: &mut OptionSelector;
+    let mut monitor_sel: &mut OptionSelector;
+    let mut resolution_sel: &mut OptionSelector;
+    let mut refresh_rate_sel: &mut OptionSelector;
 
 
     for (mut selector, monitor_selector, resolution_selector, refresh_rate_selector) in selectors.iter_mut() {
-        if let Some(_) = monitor_selector {
+        if monitor_selector.is_some() {
             monitor_sel = selector.as_mut();
             continue;
         }
-        if let Some(_) = resolution_selector {
+        if resolution_selector.is_some() {
             resolution_sel = selector.as_mut();
             continue;
         }
-        if let Some(_) = refresh_rate_selector {
+        if refresh_rate_selector.is_some() {
             refresh_rate_sel = selector.as_mut();
             continue;
         }
@@ -551,11 +551,10 @@ fn on_monitor_changed(
 
     let current_monitor = monitor_sel.current::<MonitorInfo>().unwrap_or(monitors.get_current_monitor());
     let current_res = resolution_sel.current::<Resolution>().unwrap_or(&Resolution(settings.window_resolution));
-    
-    
+
+
     refresh_rate_sel.set(SourceHandle::Strong(current_monitor.refresh_rates.clone()), 0);
     resolution_sel.set(SourceHandle::Strong(current_monitor.resolutions.clone()), 0);
-
 }
 
 fn on_vsync_changed(
