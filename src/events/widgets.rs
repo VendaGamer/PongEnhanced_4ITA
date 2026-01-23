@@ -14,3 +14,9 @@ pub struct SliderValueChanged{
     pub entity: Entity,
     pub value: f32,
 }
+
+#[derive(EntityEvent)]
+pub struct CheckboxChanged {
+    pub entity: Entity,
+    pub state: bool,
+}

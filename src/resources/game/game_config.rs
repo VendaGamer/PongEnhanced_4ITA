@@ -1,8 +1,8 @@
 use crate::components::ui::UIOptionString;
 use crate::models::game::area::AreaShape;
 use crate::models::game::gameplay::GameMode;
-use bevy::prelude::{Deref, Res, Resource, UVec2};
-use bevy::window::{MonitorSelection, PresentMode, VideoMode, WindowMode, WindowResolution};
+use bevy::prelude::{Deref, Resource, UVec2};
+use bevy::window::{MonitorSelection, PresentMode, VideoMode, WindowMode};
 use derive_more::{From, Into};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;

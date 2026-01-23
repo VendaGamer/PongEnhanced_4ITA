@@ -11,7 +11,7 @@ use bevy::math::CompassOctant;
 use bevy::picking::hover::Hovered;
 use bevy::prelude::*;
 use bevy::text::FontSmoothing;
-use bevy::ui_widgets::{Slider, SliderPrecision, SliderRange, SliderThumb, SliderValue, TrackClick};
+use bevy::ui_widgets::{Checkbox, Slider, SliderPrecision, SliderRange, SliderThumb, SliderValue, ToggleChecked, TrackClick};
 use bevy_tween::combinator::AnimationBuilderExt;
 use bevy_tween::interpolate::background_color_to;
 use bevy_tween::interpolation::EaseKind;
@@ -19,6 +19,7 @@ use bevy_tween::prelude::IntoTarget;
 use leafwing_input_manager::action_state::ActionState;
 use std::sync::Arc;
 use std::time::Duration;
+use bevy::ui::Checked;
 
 pub const BUTTON_PADDING: Val = Val::Px(20.0);
 pub const PIXEL_BORDER: UiRect = UiRect::all(Val::Px(3.0)); // Classic pixel border width
@@ -312,20 +313,13 @@ pub fn w_section_header(text: &'static str) -> impl Bundle {
     )
 }
 
-pub fn w_labeled_slider(min: f32, max: f32, current: f32, label: &str) -> impl Bundle {
+pub fn w_checkbox(state: bool) -> impl Bundle {
     (
-        Node {
-            flex_direction: FlexDirection::Column,
-            margin: UiRect::all(Val::Px(10.0)),
-            row_gap: Val::Px(10.0),
-            ..default()
-        },
-        Children::spawn((
-            Spawn(LabelBundle::button_label(label)),
-            Spawn(w_slider(min, max, current)),
-        )),
+        Checkbox,
+        Checked::default(),
     )
 }
+
 
 pub fn w_menu_button(color: Color, text: &str) -> impl Bundle {
     w_button(color, Vec2::new(350.0, 70.0), text)
@@ -337,7 +331,6 @@ pub fn update_selector(
     button: Query<(&ChildOf, &SelectorButton)>,
     mut commands: Commands)
 {
-
     if let Ok((child_of, button)) = button.get(pressed.event_target()) {
         let selector_entity = child_of.parent();
         if let Ok(mut selector) = selectors.get_mut(selector_entity) {
@@ -442,7 +435,6 @@ pub fn u_navigate_element(
             }
         }
     }
-
 }
 
 pub fn to_octant(vec: Vec2) -> Option<CompassOctant> {

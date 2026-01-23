@@ -1,8 +1,10 @@
+use crate::bundles::area::AreaBundle;
 use crate::bundles::widgets::LabelBundle;
-use crate::components::ui::{FPSLockSelector, MainMenu, MonitorSelector, OfflinePlayMenu, OnlinePlayMenu, OptionSelector, PlayerJoinInMenu, RefreshRateSelector, ResolutionSelector, SettingsMenu, ShowFPSSelector, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector};
+use crate::components::ui::{MainMenu, MonitorSelector, OfflinePlayMenu, OnlinePlayMenu, OptionSelector, PlayerJoinInMenu, RefreshRateSelector, ResolutionSelector, SettingsMenu, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector};
 use crate::components::Player;
-use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged};
+use crate::events::widgets::{ButtonPressed, CheckboxChanged, OptionChanged, SliderValueChanged};
 use crate::models::game::gameplay::GameMode;
+use crate::models::ui::option::{VSYNC_OPTIONS, VSYNC_OPTIONS_RAW};
 use crate::resources::{GameModeConfig, GameSettings, MonitorInfo, Monitors, PendingSettings, PlayerAction, Resolution};
 use crate::systems::settings::persistence::save_settings;
 use crate::systems::widgets::*;
@@ -14,8 +16,6 @@ use bevy::prelude::*;
 use bevy::ui_widgets::observe;
 use bevy::window::{PrimaryWindow, WindowMode};
 use leafwing_input_manager::action_state::ActionState;
-use crate::bundles::area::AreaBundle;
-use crate::models::ui::option::{VSYNC_OPTIONS, VSYNC_OPTIONS_RAW};
 
 pub fn spawn_m_main(
     directional_nav_map: &mut DirectionalNavigationMap,
@@ -488,26 +488,21 @@ fn on_settings_apply(
     mut fps_overlay: ResMut<FpsOverlayConfig>,
     mut windows: Query<&mut Window, With<PrimaryWindow>>,
 ){
-    let mut primaryWindow = windows.single_mut().expect("No primary window found");
-
-    if pending.show_fps != settings.show_fps {
-        settings.show_fps = pending.show_fps;
-        fps_overlay.enabled = settings.show_fps;
-    }
+    let mut primary_window = windows.single_mut().expect("No primary window found");
 
     if pending.vsync != settings.vsync {
         settings.vsync = pending.vsync;
-        primaryWindow.present_mode = settings.vsync;
+        primary_window.present_mode = settings.vsync;
     }
 
     if pending.video_mode != settings.video_mode {
         settings.video_mode = pending.video_mode;
-        primaryWindow.mode = settings.video_mode;
+        primary_window.mode = settings.video_mode;
     }
 
     if pending.window_resolution != settings.window_resolution {
         settings.window_resolution = pending.window_resolution;
-        primaryWindow.resolution.set(settings.window_resolution.x as f32, settings.window_resolution.y as f32);
+        primary_window.resolution.set(settings.window_resolution.x as f32, settings.window_resolution.y as f32);
     }
 
 }
@@ -558,12 +553,8 @@ fn on_monitor_changed(
     let current_res = resolution_sel.current::<Resolution>().unwrap_or(&Resolution(settings.window_resolution));
     
     
-    refresh_rate_sel.set(SourceHandle::Strong(current_monitor.refresh_rates.clone()), );
-    resolution_sel.options_provider = SourceHandle::Strong(current_monitor.resolutions.clone());
-    
-
-
-
+    refresh_rate_sel.set(SourceHandle::Strong(current_monitor.refresh_rates.clone()), 0);
+    resolution_sel.set(SourceHandle::Strong(current_monitor.resolutions.clone()), 0);
 
 }
 
@@ -575,13 +566,12 @@ fn on_vsync_changed(
 }
 
 fn on_show_fps_changed(
-    change: On<OptionChanged>,
-    selectors: Query<&OptionSelector, With<ShowFPSSelector>>,
-    mut settings: ResMut<PendingSettings>,
+    change: On<CheckboxChanged>,
+    settings: Res<GameSettings>,
+    mut fps_overlay: ResMut<FpsOverlayConfig>,
 ) {
-    let selector = selectors.iter().single().expect("No Show FPS selector found");
-    
-    settings.
+    settings.show_fps = change.state;
+    fps_overlay.enabled = settings.show_fps;
 }
 
 
