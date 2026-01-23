@@ -342,13 +342,16 @@ pub fn update_selector(
         let selector_entity = child_of.parent();
         if let Ok(mut selector) = selectors.get_mut(selector_entity) {
 
-        if button.0 {
-            selector.next();
-        } else {
-            selector.prev();
-        }
+            if button.0 {
+                selector.next();
+            } else {
+                selector.prev();
+            }
 
-        commands.trigger(OptionChanged(selector_entity));
+            commands.trigger(OptionChanged {
+                entity: selector_entity,
+                selected_index: selector.selected
+            });
         }
     }
 }

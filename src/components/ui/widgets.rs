@@ -101,14 +101,28 @@ pub trait UIOptionString {
     fn push_ui_option_string(&self, string: &mut String);
 }
 
+
 #[derive(Component)]
-pub enum SettingsSelector {
-    WindowMode,
-    Monitor,
-    Resolution,
-    RefreshRate,
-    ShowFPS,
-}
+pub struct MonitorSelector;
+
+#[derive(Component)]
+pub struct WindowModeSelector;
+
+#[derive(Component)]
+pub struct ResolutionSelector;
+
+#[derive(Component)]
+pub struct RefreshRateSelector;
+
+#[derive(Component)]
+pub struct VSyncSelector;
+
+#[derive(Component)]
+pub struct FPSLockSelector;
+
+#[derive(Component)]
+pub struct ShowFPSSelector;
+
 
 impl OptionSelector {
 
@@ -118,6 +132,11 @@ impl OptionSelector {
             .get_option(self.selected)?
             .as_any()
             .downcast_ref::<T>()
+    }
+
+    pub fn set(&mut self, provider: SourceHandle<dyn UIOptionProvider>, index: usize) {
+        self.options_provider = provider;
+        self.selected = index;
     }
 
     pub fn push_current_string(&self, string: &mut String) {
@@ -146,12 +165,6 @@ impl OptionSelector {
             } else {
                 self.selected - 1
             };
-        }
-    }
-
-    pub fn set(&mut self, idx: usize) {
-        if idx < self.options_provider.get_ref().len() {
-            self.selected = idx;
         }
     }
 }

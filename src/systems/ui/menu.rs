@@ -1,9 +1,9 @@
 use crate::bundles::widgets::LabelBundle;
-use crate::components::ui::{MainMenu, OfflinePlayMenu, OnlinePlayMenu, OptionSelector, PlayerJoinInMenu, SettingsMenu, SettingsSelector, SourceHandle, UIOptionProvider, UIOptionString};
+use crate::components::ui::{FPSLockSelector, MainMenu, MonitorSelector, OfflinePlayMenu, OnlinePlayMenu, OptionSelector, PlayerJoinInMenu, RefreshRateSelector, ResolutionSelector, SettingsMenu, ShowFPSSelector, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector};
 use crate::components::Player;
 use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged};
 use crate::models::game::gameplay::GameMode;
-use crate::resources::{GameModeConfig, GameSettings, Monitors, PendingSettings, PlayerAction, Resolution};
+use crate::resources::{GameModeConfig, GameSettings, MonitorInfo, Monitors, PendingSettings, PlayerAction, Resolution};
 use crate::systems::settings::persistence::save_settings;
 use crate::systems::widgets::*;
 use crate::utils::MODERN_THEME;
@@ -12,9 +12,10 @@ use bevy::input_focus::directional_navigation::DirectionalNavigationMap;
 use bevy::math::CompassOctant;
 use bevy::prelude::*;
 use bevy::ui_widgets::observe;
-use bevy::window::WindowMode;
+use bevy::window::{PrimaryWindow, WindowMode};
 use leafwing_input_manager::action_state::ActionState;
 use crate::bundles::area::AreaBundle;
+use crate::models::ui::option::{VSYNC_OPTIONS, VSYNC_OPTIONS_RAW};
 
 pub fn spawn_m_main(
     directional_nav_map: &mut DirectionalNavigationMap,
@@ -128,7 +129,7 @@ fn on_game_mode_changed(
     mut config: ResMut<GameModeConfig>,
 ) {
     for (entity, selector) in selectors.iter() {
-        if change.0 == entity{
+        if change.entity == entity{
             if let Some(change) = selector.current::<GameMode>(){
                 config.game_mode = *change;
 
@@ -341,7 +342,7 @@ pub fn spawn_m_settings(
     monitors: &Res<Monitors>,
     commands: &mut Commands,
 ) {
-    commands.insert_resource(PendingSettings::from(settings));
+    commands.insert_resource(PendingSettings::from(settings.as_ref()));
     commands.spawn(m_base(SettingsMenu)).with_children(|base| {
 
         base.spawn(w_menu_title("Settings"));
@@ -376,51 +377,91 @@ pub fn spawn_m_settings(
                     let mut current_video_mode = VideoModeSelection::Current;
 
                     let current_window_mode = match settings.video_mode {
-                        WindowMode::Windowed => 0,
-                        WindowMode::BorderlessFullscreen(..) => 1,
-                        WindowMode::Fullscreen(.., window_mode) => {
-                            current_video_mode = window_mode;
-                            2
-                        }
-                    };
+                        WindowMode::Windowed => {
 
-                    section.spawn(
-                        w_selector(
-                            SourceHandle::Unique(
-                            boxed_vec![
+                        section.spawn(
+                            w_selector(
+                                SourceHandle::Unique(boxed_vec![
                                 WindowMode::Windowed,
                                 WindowMode::BorderlessFullscreen(monitor.monitor_selection),
                                 WindowMode::Fullscreen(monitor.monitor_selection, current_video_mode),
                             ]),
-                            current_window_mode,
+                            0,
                             "Window Mode"
                         ));
 
 
-                section.spawn(w_selector(
-                    SourceHandle::Strong(monitors.monitors.clone()),
-                    monitor_index,
-                    "Monitor"))
-                        .insert(SettingsSelector::Monitor)
-                        .observe(on_monitor_changed);
+
+                        },
+                        WindowMode::BorderlessFullscreen(..) => {
+
+
+                            section.spawn(
+                                w_selector(SourceHandle::Unique(boxed_vec![
+                                    WindowMode::Windowed,
+                                    WindowMode::BorderlessFullscreen(monitor.monitor_selection),
+                                    WindowMode::Fullscreen(monitor.monitor_selection, current_video_mode),
+                                ]),
+                                0,
+                                "Window Mode"
+                            ));
+
+                            section.spawn(
+                                w_selector(
+                                SourceHandle::Strong(monitors.monitors.clone()),
+                                monitor_index,
+                                "Monitor"))
+                                .insert(MonitorSelector)
+                                .observe(on_monitor_changed);
+
+                        },
+                        WindowMode::Fullscreen(.., window_mode) => {
+                            current_video_mode = window_mode;
+
+                            section.spawn(
+                                w_selector(SourceHandle::Unique(boxed_vec![
+                                    WindowMode::Windowed,
+                                    WindowMode::BorderlessFullscreen(monitor.monitor_selection),
+                                    WindowMode::Fullscreen(monitor.monitor_selection, current_video_mode),
+                                ]),
+                                0,
+                                "Window Mode"
+                                ));
+
+                            section.spawn(w_selector(
+                                SourceHandle::Strong(monitors.monitors.clone()),
+                                monitor_index,
+                                "Monitor"))
+                                .insert(MonitorSelector)
+                                .observe(on_monitor_changed);
+                        }
+                    };
+
 
                     section.spawn(w_selector(
                         SourceHandle::Strong(monitor.resolutions.clone()),
                         0,
                         "Resolution"))
-                        .insert(SettingsSelector::Resolution)
+                        .insert(ResolutionSelector)
                         .observe(on_resolution_changed);
 
                     section.spawn(w_selector(
-                        SourceHandle::Strong(monitor.refresh_rates.clone()),
+                        VSYNC_OPTIONS,
                         0,
-                        "Refresh Rate"))
-                        .insert(SettingsSelector::RefreshRate)
-                        .observe(on_refresh_rate_changed);
+                        "VSync"))
+                        .insert(VSyncSelector)
+                        .observe(on_vsync_changed);
                 });
 
-            container.spawn(w_button(MODERN_THEME.button, Vec2::new(200.0, 20.0), "Back"))
+
+            container.spawn(w_col_container(10.0)).with_children(| container |{
+
+                container.spawn(w_button(MODERN_THEME.button, Vec2::new(200.0, 60.0), "Back"))
                     .observe(on_settings_back_main);
+
+                container.spawn(w_button(MODERN_THEME.button, Vec2::new(200.0, 60.0), "Apply"))
+                    .observe(on_settings_apply);
+            });
 
         });
     });
@@ -440,8 +481,35 @@ fn on_screen_mode_changed(change : On<OptionChanged>){
     
 }
 
-fn on_settings_apply(change : On<OptionChanged>){
-    
+fn on_settings_apply(
+    _ : On<ButtonPressed>,
+    pending: Res<PendingSettings>,
+    mut settings: ResMut<GameSettings>,
+    mut fps_overlay: ResMut<FpsOverlayConfig>,
+    mut windows: Query<&mut Window, With<PrimaryWindow>>,
+){
+    let mut primaryWindow = windows.single_mut().expect("No primary window found");
+
+    if pending.show_fps != settings.show_fps {
+        settings.show_fps = pending.show_fps;
+        fps_overlay.enabled = settings.show_fps;
+    }
+
+    if pending.vsync != settings.vsync {
+        settings.vsync = pending.vsync;
+        primaryWindow.present_mode = settings.vsync;
+    }
+
+    if pending.video_mode != settings.video_mode {
+        settings.video_mode = pending.video_mode;
+        primaryWindow.mode = settings.video_mode;
+    }
+
+    if pending.window_resolution != settings.window_resolution {
+        settings.window_resolution = pending.window_resolution;
+        primaryWindow.resolution.set(settings.window_resolution.x as f32, settings.window_resolution.y as f32);
+    }
+
 }
 
 
@@ -462,40 +530,66 @@ fn m_base(menu_type: impl Component) -> impl Bundle {
 
 fn on_monitor_changed(
     change: On<OptionChanged>,
-    selectors: Query<&OptionSelector>,
-    mut windows: Query<&mut Window>,
+    mut selectors: Query<(&mut OptionSelector, Option<&MonitorSelector>, Option<&ResolutionSelector>, Option<&RefreshRateSelector>)>,
+    monitors: Res<Monitors>,
+    mut settings: ResMut<PendingSettings>,
 ) {
+    let monitor_sel: &mut OptionSelector;
+    let resolution_sel: &mut OptionSelector;
+    let refresh_rate_sel: &mut OptionSelector;
+
+
+    for (mut selector, monitor_selector, resolution_selector, refresh_rate_selector) in selectors.iter_mut() {
+        if let Some(_) = monitor_selector {
+            monitor_sel = selector.as_mut();
+            continue;
+        }
+        if let Some(_) = resolution_selector {
+            resolution_sel = selector.as_mut();
+            continue;
+        }
+        if let Some(_) = refresh_rate_selector {
+            refresh_rate_sel = selector.as_mut();
+            continue;
+        }
+    }
+
+    let current_monitor = monitor_sel.current::<MonitorInfo>().unwrap_or(monitors.get_current_monitor());
+    let current_res = resolution_sel.current::<Resolution>().unwrap_or(&Resolution(settings.window_resolution));
+    
+    
+    refresh_rate_sel.set(SourceHandle::Strong(current_monitor.refresh_rates.clone()), );
+    resolution_sel.options_provider = SourceHandle::Strong(current_monitor.resolutions.clone());
+    
+
+
+
 
 }
 
 fn on_vsync_changed(
     change: On<OptionChanged>,
-    selectors: Query<&OptionSelector>,
-    mut settings: ResMut<GameSettings>,
-    mut windows: Query<&mut Window>,
+    mut settings: ResMut<PendingSettings>,
 ) {
-
+    settings.vsync = VSYNC_OPTIONS_RAW[change.selected_index];
 }
 
 fn on_show_fps_changed(
     change: On<OptionChanged>,
-    selectors: Query<&OptionSelector>,
-    mut settings: ResMut<GameSettings>,
-    mut fps_overlay: ResMut<FpsOverlayConfig>,
+    selectors: Query<&OptionSelector, With<ShowFPSSelector>>,
+    mut settings: ResMut<PendingSettings>,
 ) {
-    for selector in selectors.iter() {
-
-        let res = selector.current::<Resolution>();
-    }
+    let selector = selectors.iter().single().expect("No Show FPS selector found");
+    
+    settings.
 }
+
 
 fn on_resolution_changed(
     change: On<OptionChanged>,
     selectors: Query<&OptionSelector>,
 ){
-    if let Ok(selector) = selectors.get(change.0){
 
-    }
 }
 
 fn on_refresh_rate_changed(

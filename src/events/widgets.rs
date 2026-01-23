@@ -4,10 +4,10 @@ use bevy::prelude::{Entity, EntityEvent};
 pub struct ButtonPressed(pub Entity);
 
 #[derive(EntityEvent)]
-pub struct SelectorValueChanged(pub Entity);
-
-#[derive(EntityEvent)]
-pub struct OptionChanged(pub Entity);
+pub struct OptionChanged {
+    pub entity: Entity,
+    pub selected_index: usize,
+}
 
 #[derive(EntityEvent)]
 pub struct SliderValueChanged{

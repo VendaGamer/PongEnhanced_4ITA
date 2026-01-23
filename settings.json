@@ -4,12 +4,10 @@
   "video_mode": {
     "BorderlessFullscreen": "Primary"
   },
-  "window_resolution": {
-    "physical_width": 1280,
-    "physical_height": 720,
-    "scale_factor_override": null,
-    "scale_factor": 1.0
-  },
+  "window_resolution": [
+    1280,
+    720
+  ],
   "vsync": "AutoVsync",
   "show_fps": true
 }
