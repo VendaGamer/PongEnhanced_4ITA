@@ -33,7 +33,7 @@ fn main() {
 
     window_resolution.set(settings.window_resolution.x as f32, settings.window_resolution.y as f32);
 
-    let video_mode = settings.video_mode;
+    let video_mode = settings.window_mode;
 
     app.add_plugins((
             DefaultPlugins.set(

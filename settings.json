@@ -1,0 +1,13 @@
+{
+  "master_volume": 39.0,
+  "sfx_volume": 49.0,
+  "window_mode": {
+    "BorderlessFullscreen": "Primary"
+  },
+  "window_resolution": [
+    1920,
+    1080
+  ],
+  "vsync": "AutoVsync",
+  "show_fps": true
+}

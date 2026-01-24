@@ -231,7 +231,17 @@ pub fn w_dropdown(options: Arc<dyn UIOptionProvider>, selected: usize, tab_index
         TabIndex(tab_index),
     )
 }
+
 pub fn w_selector(options_provider: SourceHandle<dyn UIOptionProvider>, selected: usize, label: impl Into<String>) -> impl Bundle {
+    w_selector_(options_provider, selected, label, Display::Flex)
+}
+
+pub fn w_selector_hidden(options_provider: SourceHandle<dyn UIOptionProvider>, selected: usize, label: impl Into<String>) -> impl Bundle {
+    w_selector_(options_provider, selected, label, Display::None)
+}
+
+
+fn w_selector_(options_provider: SourceHandle<dyn UIOptionProvider>, selected: usize, label: impl Into<String>, display: Display) -> impl Bundle {
     (
         OptionSelector {
             options_provider,
@@ -241,7 +251,7 @@ pub fn w_selector(options_provider: SourceHandle<dyn UIOptionProvider>, selected
             flex_wrap: FlexWrap::Wrap,
             flex_direction: FlexDirection::Row,
             row_gap: Val::Px(20.0),
-            display: Display::Flex,
+            display,
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
             justify_items: JustifyItems::Center,

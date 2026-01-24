@@ -10,7 +10,7 @@ pub struct OptionChanged {
 }
 
 #[derive(EntityEvent)]
-pub struct SliderValueChanged{
+pub struct SliderValueChanged {
     pub entity: Entity,
     pub value: f32,
 }

@@ -11,7 +11,7 @@ use std::sync::Arc;
 pub struct GameSettings {
     pub master_volume: f32,
     pub sfx_volume: f32,
-    pub video_mode: WindowMode,
+    pub window_mode: WindowMode,
     pub window_resolution: UVec2,
     pub vsync: PresentMode,
     pub show_fps: bool,
@@ -20,7 +20,7 @@ pub struct GameSettings {
 
 #[derive(Resource, Clone, Eq, PartialEq, Debug)]
 pub struct PendingSettings {
-    pub video_mode: WindowMode,
+    pub window_mode: WindowMode,
     pub window_resolution: UVec2,
     pub vsync: PresentMode,
 }
@@ -28,7 +28,7 @@ pub struct PendingSettings {
 impl From<&GameSettings> for PendingSettings {
     fn from(settings: &GameSettings) -> Self {
         Self{
-            video_mode: settings.video_mode,
+            window_mode: settings.window_mode,
             window_resolution: settings.window_resolution,
             vsync: settings.vsync,
         }
@@ -98,7 +98,7 @@ impl Default for GameSettings {
         Self {
             master_volume: 50.0,
             sfx_volume: 50.0,
-            video_mode: WindowMode::BorderlessFullscreen(MonitorSelection::Primary),
+            window_mode: WindowMode::BorderlessFullscreen(MonitorSelection::Primary),
             vsync: PresentMode::AutoVsync,
             window_resolution: UVec2::new(1280, 720),
             show_fps: true,
