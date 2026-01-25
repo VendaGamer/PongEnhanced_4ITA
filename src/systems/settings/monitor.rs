@@ -77,8 +77,6 @@ pub fn on_spawn_monitors(
             format!("Monitor {}", index + 1)
         };
 
-        let ok: WinitWindows;
-        ok.inde
         let selection = MonitorSelection::Index(index);
 
 
