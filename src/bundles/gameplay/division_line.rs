@@ -1,5 +1,5 @@
-use bevy::prelude::*;
 use crate::components::DivisionLine;
+use bevy::prelude::*;
 
 #[derive(Bundle)]
 pub struct DivisionLineBundle {

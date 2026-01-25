@@ -1,8 +1,8 @@
-use avian2d::prelude::{Collider, Restitution, RigidBody};
-use bevy::prelude::Transform;
 use crate::bundles::Bundle;
 use crate::components::*;
 use crate::models::game::area::AreaSide;
+use avian2d::prelude::{Collider, Restitution, RigidBody};
+use bevy::prelude::Transform;
 
 #[derive(Bundle)]
 pub struct WallBundle {

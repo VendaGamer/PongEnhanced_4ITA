@@ -1,16 +1,15 @@
-use bevy::ecs::query::Spawned;
-use bevy::input_focus::directional_navigation::DirectionalNavigationMap;
 use crate::bundles::player::PlayerBundle;
 use crate::bundles::*;
 use crate::components::Player;
-use crate::models::game::area::{PlayerID};
+use crate::models::game::area::PlayerID;
 use crate::resources::controls::MenuAction;
-use crate::resources::{GameModeConfig, GameSettings, Monitors};
+use crate::resources::GameModeConfig;
 use crate::systems::menu::{spawn_m_main, u_join_in};
 use crate::systems::selectors::update_selector_text;
 use crate::systems::settings::monitor::on_spawn_monitors;
 use crate::systems::*;
-use crate::systems::widgets::u_highlight_focused_element;
+use bevy::ecs::query::Spawned;
+use bevy::input_focus::directional_navigation::DirectionalNavigationMap;
 
 pub struct GameCorePlugin;
 

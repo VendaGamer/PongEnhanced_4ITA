@@ -31,7 +31,9 @@ fn main() {
     let settings = load_settings();
     let mut window_resolution: WindowResolution = WindowResolution::default();
 
-    window_resolution.set(settings.window_resolution.x as f32, settings.window_resolution.y as f32);
+    if let Some(res) = settings.window_resolution {
+        window_resolution.set_physical_resolution(res.x, res.y);
+    }
 
     let video_mode = settings.window_mode;
 

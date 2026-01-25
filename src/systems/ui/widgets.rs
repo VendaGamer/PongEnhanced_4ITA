@@ -11,15 +11,13 @@ use bevy::math::CompassOctant;
 use bevy::picking::hover::Hovered;
 use bevy::prelude::*;
 use bevy::text::FontSmoothing;
-use bevy::ui_widgets::{Checkbox, Slider, SliderPrecision, SliderRange, SliderThumb, SliderValue, ToggleChecked, TrackClick};
-use bevy_tween::combinator::AnimationBuilderExt;
+use bevy::ui::Checked;
+use bevy::ui_widgets::{Checkbox, Slider, SliderPrecision, SliderRange, SliderThumb, SliderValue, TrackClick};
 use bevy_tween::interpolate::background_color_to;
-use bevy_tween::interpolation::EaseKind;
-use bevy_tween::prelude::IntoTarget;
+use bevy_tween::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
 use std::sync::Arc;
 use std::time::Duration;
-use bevy::ui::Checked;
 
 pub const BUTTON_PADDING: Val = Val::Px(20.0);
 pub const PIXEL_BORDER: UiRect = UiRect::all(Val::Px(3.0)); // Classic pixel border width

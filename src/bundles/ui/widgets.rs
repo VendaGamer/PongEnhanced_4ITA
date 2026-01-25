@@ -1,5 +1,4 @@
-use crate::bundles::{children, default, BackgroundColor, BorderRadius, Bundle, ChildOf, Color, Node, Spawn, Text, TextColor, TextFont, UiRect, Val};
-use bevy::ecs::spawn::SpawnRelatedBundle;
+use crate::bundles::{default, Bundle, Color, Node, Text, TextColor, TextFont, UiRect, Val};
 use bevy::prelude::*;
 use bevy::text::FontSmoothing;
 

@@ -1,10 +1,10 @@
 ﻿use crate::bundles::{App, Commands, MessageReader, On, Plugin, ResMut, UiScale, Update};
 use crate::events::widgets::SliderValueChanged;
 use crate::systems::widgets::*;
+use crate::utils::FIXED_DIMENSIONS;
 use bevy::prelude::Query;
 use bevy::ui_widgets::{SliderValue, ValueChange};
 use bevy::window::WindowResized;
-use crate::utils::FIXED_DIMENSIONS;
 
 pub struct GameUIPlugin;
 

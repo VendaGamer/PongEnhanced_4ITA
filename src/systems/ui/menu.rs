@@ -1,4 +1,3 @@
-use bevy::asset::AssetContainer;
 use crate::bundles::area::AreaBundle;
 use crate::bundles::widgets::LabelBundle;
 use crate::components::ui::{MainMenu, MonitorSelector, OfflinePlayMenu, OnlinePlayMenu, OptionSelector, PlayerJoinInMenu, RefreshRateSelector, ResolutionSelector, SettingsMenu, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector, WindowModeSelector};
@@ -15,7 +14,7 @@ use bevy::input_focus::directional_navigation::DirectionalNavigationMap;
 use bevy::math::CompassOctant;
 use bevy::prelude::*;
 use bevy::ui_widgets::observe;
-use bevy::window::{PrimaryWindow, VideoMode, WindowMode};
+use bevy::window::{PrimaryWindow, WindowMode, WindowResolution};
 use leafwing_input_manager::action_state::ActionState;
 
 pub fn spawn_m_main(
@@ -518,7 +517,13 @@ fn on_settings_apply(
 
     if pending.window_resolution != settings.window_resolution {
         settings.window_resolution = pending.window_resolution;
-        primary_window.resolution.set(settings.window_resolution.x as f32, settings.window_resolution.y as f32);
+
+        if let Some(res) = settings.window_resolution {
+            primary_window.resolution.set_physical_resolution(res.x, res.y);
+        }else {
+            primary_window.resolution = WindowResolution::default();
+        }
+
     }
 
 }
@@ -541,65 +546,52 @@ fn m_base(menu_type: impl Component) -> impl Bundle {
 
 
 fn on_window_mode_changed(
-    change: On<OptionChanged>,
-    mut selectors: Query<(&mut OptionSelector, Option<&MonitorSelector>, Option<&ResolutionSelector>, Option<&RefreshRateSelector>)>,
+    _: On<OptionChanged>,
+    mod_sel: Single<&OptionSelector, With<WindowModeSelector>>,
+    mut selectors: ParamSet<(
+        Single<(&mut Node, &OptionSelector), With<MonitorSelector>>,
+        Single<(&mut Node, &OptionSelector), With<ResolutionSelector>>,
+        Single<(&mut Node, &OptionSelector), With<RefreshRateSelector>>,
+    )>,
     mut settings: ResMut<PendingSettings>,
 ){
-    let (mon_sel, res_sel, ref_sel) = get_selectors(&mut selectors);
-    
-}
-
-
-fn get_selectors(selectors: &mut Query<(&mut OptionSelector, Option<&MonitorSelector>, Option<&ResolutionSelector>, Option<&RefreshRateSelector>)>)
- -> (Mut<OptionSelector>, Mut<OptionSelector>, Mut<OptionSelector>)
-{
-    let mut monitor_sel: Option<Mut<OptionSelector>> = None;
-    let mut resolution_sel: Option<Mut<OptionSelector>> = None;
-    let mut refresh_rate_sel: Option<Mut<OptionSelector>> = None;
-
-
-    for (selector, monitor_selector, resolution_selector, refresh_rate_selector) in
-        selectors.iter_mut()
-    {
-        if monitor_selector.is_some() {
-            monitor_sel = Some(selector);
-        } else if resolution_selector.is_some() {
-            resolution_sel = Some(selector);
-        } else if refresh_rate_selector.is_some() {
-            refresh_rate_sel = Some(selector);
+    match *mod_sel.current::<WindowMode>().unwrap() {
+        WindowMode::Windowed => {
+            selectors.p0().0.display = Display::None;
+            selectors.p1().0.display = Display::Flex;
+            selectors.p2().0.display = Display::None;
+        },
+        WindowMode::Fullscreen(..) => {
+            selectors.p0().0.display = Display::Flex;
+            selectors.p1().0.display = Display::Flex;
+            selectors.p2().0.display = Display::Flex;
+        },
+        WindowMode::BorderlessFullscreen(..) => {
+            selectors.p0().0.display = Display::Flex;
+            selectors.p1().0.display = Display::Flex;
+            selectors.p2().0.display = Display::None;
         }
     }
 
-
-    (
-        monitor_sel.expect("MonitorSelector missing"),
-        resolution_sel.expect("ResolutionSelector missing"),
-        refresh_rate_sel.expect("RefreshRateSelector missing"),
-    )
 }
 
 
 fn on_monitor_changed(
-    change: On<OptionChanged>,
-    mut selectors: Query<(&mut OptionSelector, Option<&MonitorSelector>, Option<&ResolutionSelector>, Option<&RefreshRateSelector>)>,
-    monitors: Res<Monitors>,
+    _: On<OptionChanged>,
+    mon_sel: Single<&OptionSelector, With<MonitorSelector>>,
     mut settings: ResMut<PendingSettings>,
 ) {
-
-    let (mon_sel, res_sel, ref_sel) = get_selectors(&mut selectors);
+    let current_monitor = mon_sel.current::<MonitorInfo>().unwrap();
 
     match settings.window_mode {
-        WindowMode::Fullscreen(mut monitor, ..) => {
-            monitor = current_monitor.monitor_selection;
+        WindowMode::Fullscreen(ref mut monitor, ..) => {
+            *monitor = current_monitor.monitor_selection;
         },
-        WindowMode::BorderlessFullscreen(mut monitor) => {
-            monitor = current_monitor.monitor_selection;
+        WindowMode::BorderlessFullscreen(ref mut monitor) => {
+            *monitor = current_monitor.monitor_selection;
         },
         WindowMode::Windowed => {}
     };
-
-
-
 }
 
 fn on_vsync_changed(
@@ -634,7 +626,7 @@ fn on_resolution_changed(
             }
         }
 
-        settings.window_resolution = res.0;
+        settings.window_resolution = Some(res.0);
     }
 }
 

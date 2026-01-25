@@ -1,7 +1,7 @@
+use crate::models::game::area::PlayerID;
 use crate::Paddle;
 use avian2d::prelude::*;
 use bevy::prelude::*;
-use crate::models::game::area::PlayerID;
 
 #[derive(Bundle)]
 pub struct PaddleBundle {

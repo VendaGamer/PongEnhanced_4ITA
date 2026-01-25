@@ -3,7 +3,6 @@ use bevy::ecs::query::*;
 use bevy::prelude::*;
 use bevy::window::*;
 use std::sync::Arc;
-use bevy::winit::{WinitMonitors, WinitWindows};
 
 #[cfg(windows)]
 fn get_monitor_name_windows(device_path: &str) -> Option<String> {
@@ -58,7 +57,6 @@ pub fn on_spawn_monitors(
 
     for (index, (entity, monitor)) in query.iter().enumerate() {
 
-        let selection = MonitorSelection::Entity(entity);
         let name = if let Some(real_name) = monitor.name.clone(){
 
             #[cfg(windows)]
@@ -77,6 +75,8 @@ pub fn on_spawn_monitors(
         }else{
             format!("Monitor {}", index + 1)
         };
+
+        let selection = MonitorSelection::Index(index);
 
 
         if let Some(current_monitor) = selected_monitor {

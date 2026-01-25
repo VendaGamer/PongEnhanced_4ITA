@@ -1,8 +1,8 @@
-use std::fmt::Write;
+use crate::components::ui::UIOptionString;
 use bevy::prelude::DerefMut;
 use derive_more::{Deref, From, Into};
 use serde::{Deserialize, Serialize};
-use crate::components::ui::{UIOptionString};
+use std::fmt::Write;
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq, Serialize, Deserialize, Default, Debug)]
 pub enum GameMode {

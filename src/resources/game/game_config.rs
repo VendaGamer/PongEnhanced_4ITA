@@ -12,7 +12,7 @@ pub struct GameSettings {
     pub master_volume: f32,
     pub sfx_volume: f32,
     pub window_mode: WindowMode,
-    pub window_resolution: UVec2,
+    pub window_resolution: Option<UVec2>,
     pub vsync: PresentMode,
     pub show_fps: bool,
 }
@@ -21,7 +21,7 @@ pub struct GameSettings {
 #[derive(Resource, Clone, Eq, PartialEq, Debug)]
 pub struct PendingSettings {
     pub window_mode: WindowMode,
-    pub window_resolution: UVec2,
+    pub window_resolution: Option<UVec2>,
     pub vsync: PresentMode,
 }
 
@@ -100,7 +100,7 @@ impl Default for GameSettings {
             sfx_volume: 50.0,
             window_mode: WindowMode::BorderlessFullscreen(MonitorSelection::Primary),
             vsync: PresentMode::AutoVsync,
-            window_resolution: UVec2::new(1280, 720),
+            window_resolution: None,
             show_fps: true,
         }
     }

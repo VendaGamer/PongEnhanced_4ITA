@@ -1,10 +1,10 @@
 use crate::utils::screen::ZERO_DAMPING;
 use crate::Ball;
+use avian2d::prelude::*;
 use bevy::asset::Assets;
 use bevy::color::Color;
 use bevy::math::*;
 use bevy::prelude::*;
-use avian2d::prelude::*;
 
 #[derive(Bundle)]
 pub struct BallBundle {

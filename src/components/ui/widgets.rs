@@ -126,7 +126,7 @@ pub struct ShowFPSSelector;
 
 impl OptionSelector {
 
-    pub fn current<T: Any>(&self) -> Option<&T> {
+    pub fn current<T: Any + UIOptionString>(&self) -> Option<&T> {
         self.options_provider
             .get_ref()
             .get_option(self.selected)?

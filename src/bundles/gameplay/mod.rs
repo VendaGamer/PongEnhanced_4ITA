@@ -9,5 +9,4 @@ pub mod division_line;
 pub use ball::*;
 pub use bevy::prelude::*;
 pub use camera::*;
-pub use division_line::*;
 pub use goal::*;

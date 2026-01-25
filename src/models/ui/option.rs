@@ -1,6 +1,6 @@
-use std::fmt::Write;
 use crate::components::ui::{SourceHandle, UIOptionProvider, UIOptionString};
 use bevy::window::PresentMode;
+use std::fmt::Write;
 
 pub const VSYNC_OPTIONS: SourceHandle<dyn UIOptionProvider> =
 SourceHandle::Static(&VSYNC_OPTIONS_RAW);

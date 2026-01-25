@@ -1,6 +1,6 @@
-use bevy::prelude::Component;
 use crate::bundles::{App, Entity, Vec2};
 use crate::models::game::area::PlayerID;
+use bevy::prelude::Component;
 
 #[derive(Component)]
 pub struct Ball {

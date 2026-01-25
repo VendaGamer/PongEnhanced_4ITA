@@ -1,8 +1,8 @@
-use bevy::prelude::{GamepadButton};
-use bevy::reflect::Reflect;
-use leafwing_input_manager::Actionlike;
-use leafwing_input_manager::prelude::*;
 use crate::bundles::KeyCode;
+use bevy::prelude::GamepadButton;
+use bevy::reflect::Reflect;
+use leafwing_input_manager::prelude::*;
+use leafwing_input_manager::Actionlike;
 
 #[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Reflect)]
 pub enum PlayerAction {
