@@ -3,6 +3,7 @@ use bevy::ecs::query::*;
 use bevy::prelude::*;
 use bevy::window::*;
 use std::sync::Arc;
+use bevy::winit::WinitWindows;
 
 #[cfg(windows)]
 fn get_monitor_name_windows(device_path: &str) -> Option<String> {
@@ -76,6 +77,8 @@ pub fn on_spawn_monitors(
             format!("Monitor {}", index + 1)
         };
 
+        let ok: WinitWindows;
+        ok.inde
         let selection = MonitorSelection::Index(index);
 
 

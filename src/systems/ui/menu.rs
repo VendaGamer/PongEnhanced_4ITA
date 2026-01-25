@@ -11,6 +11,7 @@ use crate::systems::widgets::*;
 use crate::utils::MODERN_THEME;
 use bevy::dev_tools::fps_overlay::FpsOverlayConfig;
 use bevy::input_focus::directional_navigation::DirectionalNavigationMap;
+use bevy::input_focus::set_initial_focus;
 use bevy::math::CompassOctant;
 use bevy::prelude::*;
 use bevy::ui_widgets::observe;
@@ -555,7 +556,9 @@ fn on_window_mode_changed(
     )>,
     mut settings: ResMut<PendingSettings>,
 ){
-    match *mod_sel.current::<WindowMode>().unwrap() {
+
+    let current = *mod_sel.current::<WindowMode>().unwrap();
+    match current {
         WindowMode::Windowed => {
             selectors.p0().0.display = Display::None;
             selectors.p1().0.display = Display::Flex;
@@ -568,10 +571,12 @@ fn on_window_mode_changed(
         },
         WindowMode::BorderlessFullscreen(..) => {
             selectors.p0().0.display = Display::Flex;
-            selectors.p1().0.display = Display::Flex;
+            selectors.p1().0.display = Display::None;
             selectors.p2().0.display = Display::None;
         }
     }
+
+    settings.window_mode = current;
 
 }
 

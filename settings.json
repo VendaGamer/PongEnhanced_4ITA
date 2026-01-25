@@ -3,12 +3,12 @@
   "sfx_volume": 49.0,
   "window_mode": {
     "BorderlessFullscreen": {
-      "Index": 1
+      "Index": 0
     }
   },
   "window_resolution": [
-    1280,
-    800
+    1152,
+    864
   ],
   "vsync": "AutoVsync",
   "show_fps": true
