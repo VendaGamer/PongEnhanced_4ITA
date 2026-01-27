@@ -11,7 +11,6 @@ use crate::systems::widgets::*;
 use crate::utils::MODERN_THEME;
 use bevy::dev_tools::fps_overlay::FpsOverlayConfig;
 use bevy::input_focus::directional_navigation::DirectionalNavigationMap;
-use bevy::input_focus::set_initial_focus;
 use bevy::math::CompassOctant;
 use bevy::prelude::*;
 use bevy::ui_widgets::observe;
@@ -22,7 +21,6 @@ pub fn spawn_m_main(
     directional_nav_map: &mut DirectionalNavigationMap,
     commands: &mut Commands,
 ) {
-
     commands.spawn(m_base(MainMenu)).with_children(| base |{
 
         base.spawn(LabelBundle::game_title());
@@ -348,14 +346,7 @@ pub fn spawn_m_settings(
 
         base.spawn(w_menu_title("Settings"));
 
-        base.spawn(Node {
-                flex_direction: FlexDirection::Column,
-                width: Val::Px(1000.0),
-                max_height: Val::Px(600.0),
-                overflow: Overflow::clip_y(),
-                ..default()
-            }).with_children(|container| {
-            container.spawn(w_menu_section())
+        base.spawn(w_menu_section())
                 .with_children(| section |{
 
 
@@ -382,8 +373,7 @@ pub fn spawn_m_settings(
                                 WindowMode::Windowed,
                                 WindowMode::BorderlessFullscreen(monitor.monitor_selection),
                                 WindowMode::Fullscreen(monitor.monitor_selection, VideoModeSelection::Current)
-                            ]
-                            ),
+                            ]),
                             0,
                             "Window Mode"))
                         .insert(WindowModeSelector)
@@ -470,7 +460,7 @@ pub fn spawn_m_settings(
                 });
 
 
-            container.spawn(w_row_container(10.0)).with_children(| container |{
+            base.spawn(w_row_container(10.0)).with_children(| container |{
 
                 container.spawn(w_button(MODERN_THEME.button, Vec2::new(200.0, 60.0), "Back"))
                     .observe(on_settings_back_main);
@@ -479,7 +469,6 @@ pub fn spawn_m_settings(
                     .observe(on_settings_apply);
             });
 
-        });
     });
 }
 
@@ -506,25 +495,17 @@ fn on_settings_apply(
 ){
     let mut primary_window = windows.single_mut().expect("No primary window found");
 
-    if pending.vsync != settings.vsync {
-        settings.vsync = pending.vsync;
-        primary_window.present_mode = settings.vsync;
-    }
+    settings.vsync = pending.vsync;
+    settings.window_mode = pending.window_mode;
+    settings.window_resolution = pending.window_resolution;
+    primary_window.present_mode = settings.vsync;
+    primary_window.mode = settings.window_mode;
 
-    if pending.window_mode != settings.window_mode {
-        settings.window_mode = pending.window_mode;
-        primary_window.mode = settings.window_mode;
-    }
 
-    if pending.window_resolution != settings.window_resolution {
-        settings.window_resolution = pending.window_resolution;
-
-        if let Some(res) = settings.window_resolution {
-            primary_window.resolution.set_physical_resolution(res.x, res.y);
-        }else {
-            primary_window.resolution = WindowResolution::default();
-        }
-
+    if let Some(res) = settings.window_resolution {
+        primary_window.resolution.set_physical_resolution(res.x, res.y);
+    }else {
+        primary_window.resolution = WindowResolution::default();
     }
 
 }

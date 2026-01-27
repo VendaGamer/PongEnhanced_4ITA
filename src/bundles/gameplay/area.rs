@@ -8,6 +8,7 @@ use crate::systems::handle_scoring;
 use crate::utils::{BALL_RADIUS, FIXED_DIMENSIONS, PADDLE_SIZE};
 use bevy::prelude::*;
 use bevy_light_2d::prelude::PointLight2d;
+use crate::components::game_modes::FlashyLight;
 
 #[derive(Bundle)]
 pub struct AreaBundle {
@@ -43,6 +44,7 @@ impl AreaBundle {
                 
                 commands.spawn((
                     Transform::from_translation(Vec3::ZERO),
+                    FlashyLight,
                     PointLight2d{
                         color: Color::srgb(1.0, 1.0, 1.0),
                         radius: 500.0,

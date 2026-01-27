@@ -42,7 +42,7 @@ fn main() {
                 WindowPlugin {
                     primary_window: Some(Window {
                         title: "Pong Enhanced".into(),
-                        present_mode: PresentMode::AutoVsync,
+                        present_mode: settings.vsync,
                         resizable: false,
                         mode: video_mode,
                         resolution: window_resolution,
@@ -51,8 +51,7 @@ fn main() {
                     ..default()
                 }
             )
-            .set(ImagePlugin::default_nearest())
-            .disable::<bevy::pbr::PbrPlugin>(),
+            .set(ImagePlugin::default_nearest()),
             FpsOverlayPlugin{
                 config: FpsOverlayConfig {
                     enabled: settings.show_fps,
