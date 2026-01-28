@@ -20,7 +20,6 @@ impl Plugin for GameCorePlugin {
                 move_paddle,
                 check_connection,
                 maintain_ball_speed,
-                paddle_hit_dynamics,
                 update_score_ui,
                 update_selector_text,
                 u_join_in,
@@ -32,6 +31,7 @@ impl Plugin for GameCorePlugin {
             .add_systems(PostStartup, (
                 on_spawn_monitors,
             ))
+            .add_observer(paddle_hit_dynamics)
             .insert_resource(GameModeConfig::default());
 
 

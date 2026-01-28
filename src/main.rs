@@ -20,7 +20,9 @@ use bevy::input_focus::directional_navigation::DirectionalNavigationPlugin;
 use bevy::input_focus::InputDispatchPlugin;
 use bevy::prelude::*;
 use bevy::ui_widgets::UiWidgetsPlugins;
-use bevy::window::{PresentMode, WindowResolution};
+use bevy::window::WindowResolution;
+use bevy_quinnet::client::QuinnetClientPlugin;
+use bevy_quinnet::server::QuinnetServerPlugin;
 use bevy_tween::DefaultTweenPlugins;
 use components::*;
 use leafwing_input_manager::plugin::InputManagerPlugin;
@@ -66,6 +68,8 @@ fn main() {
             PhysicsPlugins::default(),
             InputManagerPlugin::<PlayerAction>::default(),
             InputManagerPlugin::<MenuAction>::default(),
+            QuinnetClientPlugin::default(),
+            QuinnetServerPlugin::default(),
             UiWidgetsPlugins,
             InputDispatchPlugin,
             DefaultTweenPlugins,

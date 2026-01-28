@@ -1,8 +1,11 @@
 ﻿use bevy::prelude::{Entity, Event};
 use crate::bundles::EntityEvent;
 
-#[derive(EntityEvent)]
-pub struct GoalScored(pub Entity);
+#[derive(Event)]
+pub struct GoalScored {
+    pub ball: Entity,
+    pub goal: Entity,
+}
 
 #[derive(Event)]
 pub struct BallBounced {
