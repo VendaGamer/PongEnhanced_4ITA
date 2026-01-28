@@ -1,13 +1,11 @@
 use crate::components::*;
+use crate::events::gameplay::{BallBounced, GoalScored};
 use crate::resources::controls::*;
 use crate::utils::screen::PADDLE_SIZE;
 use crate::utils::HALF_HEIGHT;
 use avian2d::prelude::*;
 use bevy::prelude::*;
-use bevy_quinnet::client::QuinnetClient;
-use bevy_quinnet::server::QuinnetServer;
 use leafwing_input_manager::prelude::*;
-use crate::events::gameplay::{BallBounced, GoalScored};
 
 const BALL_SPEED: f32 = 600.0;
 

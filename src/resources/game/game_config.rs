@@ -17,7 +17,6 @@ pub struct GameSettings {
     pub show_fps: bool,
 }
 
-
 #[derive(Resource, Clone, Eq, PartialEq, Debug)]
 pub struct PendingSettings {
     pub window_mode: WindowMode,

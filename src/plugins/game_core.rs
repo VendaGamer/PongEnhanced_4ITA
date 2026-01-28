@@ -32,6 +32,7 @@ impl Plugin for GameCorePlugin {
                 on_spawn_monitors,
             ))
             .add_observer(paddle_hit_dynamics)
+            .add_observer(t_ball_events)
             .insert_resource(GameModeConfig::default());
 
 

@@ -13,6 +13,7 @@ use bevy::dev_tools::fps_overlay::FpsOverlayConfig;
 use bevy::input_focus::directional_navigation::DirectionalNavigationMap;
 use bevy::math::CompassOctant;
 use bevy::prelude::*;
+use bevy::reflect::Enum;
 use bevy::ui_widgets::observe;
 use bevy::window::{PrimaryWindow, WindowMode, WindowResolution};
 use leafwing_input_manager::action_state::ActionState;
@@ -503,11 +504,11 @@ fn on_settings_apply(
 
 
     if let Some(res) = settings.window_resolution {
-        primary_window.resolution.set_physical_resolution(res.x, res.y);
-    }else {
-        primary_window.resolution = WindowResolution::default();
+        if matches!(settings.window_mode, WindowMode::Windowed){
+            primary_window.resolution.set_physical_resolution(res.x, res.y);
+            return;
+        }
     }
-
 }
 
 
