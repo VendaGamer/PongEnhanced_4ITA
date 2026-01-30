@@ -8,7 +8,7 @@ use crate::systems::handle_scoring;
 use crate::utils::{BALL_RADIUS, FIXED_DIMENSIONS, PADDLE_SIZE};
 use bevy::prelude::*;
 use bevy_light_2d::prelude::PointLight2d;
-use crate::components::game_modes::FlashyLight;
+use crate::components::game_modes::{FlashyLight, PaddleTilt};
 
 #[derive(Bundle)]
 pub struct AreaBundle {
@@ -69,7 +69,12 @@ impl AreaBundle {
             let positions = team.get_positions();
 
             for i in 0..team.players.len() {
+                let mut paddle =
                 commands.spawn(PaddleBundle::new(meshes, materials, positions[i], PADDLE_SIZE, goal, team.players[i]));
+
+                if matches!(config.game_mode, GameMode::Twisted){
+                    paddle.insert(PaddleTilt {tilt: 0.0});
+                }
             }
             
             team.area_side.spawn_score_text(commands);

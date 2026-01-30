@@ -63,7 +63,7 @@ pub fn u_ui_hover_light(
             Interaction::Hovered => {
 
 
-                commands.entity(entity).animation().insert_tween_here(
+                commands.animation().insert_tween_here(
                     Duration::from_millis(250),
                     EaseKind::CubicInOut,
                     target.state(base_color).with(background_color_to(hover_color))
@@ -71,7 +71,7 @@ pub fn u_ui_hover_light(
             },
             Interaction::None => {
 
-                commands.entity(entity).animation().insert_tween_here(
+                commands.animation().insert_tween_here(
                     Duration::from_millis(250),
                     EaseKind::CubicInOut,
                     target.state(hover_color).with(background_color_to(base_color))

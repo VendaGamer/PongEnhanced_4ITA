@@ -1,3 +1,4 @@
+use avian2d::prelude::Gravity;
 use crate::bundles::player::PlayerBundle;
 use crate::bundles::*;
 use crate::components::Player;
@@ -17,13 +18,14 @@ impl Plugin for GameCorePlugin {
     fn build(&self, app: &mut App) {
         app
             .add_systems(Update, (
-                move_paddle,
+                u_move_paddle_i,
                 check_connection,
                 maintain_ball_speed,
                 update_score_ui,
                 update_selector_text,
                 u_join_in,
-                u_spawned_gamepads
+                u_spawned_gamepads,
+                u_tilt_i,
             ))
             .add_systems(Startup, (
                 setup_common,
@@ -33,7 +35,8 @@ impl Plugin for GameCorePlugin {
             ))
             .add_observer(paddle_hit_dynamics)
             .add_observer(t_ball_events)
-            .insert_resource(GameModeConfig::default());
+            .insert_resource(GameModeConfig::default())
+            .insert_resource(Gravity::ZERO);
 
 
     }
@@ -52,12 +55,11 @@ fn u_spawned_gamepads(
 
 fn on_despawn_gamepad(
     despawn :On<Despawn>,
-    mut players: Query<(Entity,&mut Player)>,
+    mut players: Query<(Entity, &mut Player)>,
     mut commands: Commands,
 )
 {
     for (player_entity, player) in players.iter_mut() {
-
         if let PlayerID::Gamepad(entity) = player.id{
 
             if entity == despawn.entity{

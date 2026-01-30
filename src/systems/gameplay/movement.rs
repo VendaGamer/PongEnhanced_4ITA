@@ -1,3 +1,4 @@
+use std::time::Duration;
 use crate::components::*;
 use crate::events::gameplay::{BallBounced, GoalScored};
 use crate::resources::controls::*;
@@ -5,11 +6,16 @@ use crate::utils::screen::PADDLE_SIZE;
 use crate::utils::HALF_HEIGHT;
 use avian2d::prelude::*;
 use bevy::prelude::*;
+use bevy_tween::interpolate::rotation_delta_by;
+use bevy_tween::interpolation::EaseKind;
+use bevy_tween::prelude::AnimationBuilderExt;
+use bevy_tween::tween::IntoTarget;
 use leafwing_input_manager::prelude::*;
+use crate::components::game_modes::{PaddleTilt, MAX_ABS_TILT};
 
 const BALL_SPEED: f32 = 600.0;
 
-pub fn move_paddle(
+pub fn u_move_paddle_i(
     player_query: Query<(&ActionState<PlayerAction>, &Player)>,
     mut paddle_query: Query<(&mut Transform, &Paddle)>,
     time: Res<Time>
@@ -30,6 +36,36 @@ pub fn move_paddle(
         }
     }
 }
+
+pub fn u_tilt_i(
+    player_query: Query<(&ActionState<PlayerAction>, &Player)>,
+    mut paddle_query: Query<(Entity, &mut Transform, &Paddle)>,
+    mut commands: Commands
+) {
+    for (paddle_e, mut tilt, paddle) in paddle_query.iter_mut() {
+
+        for (action_state, player) in player_query {
+            if player.id.eq(&paddle.id) {
+                    if let Some(data) = action_state.axis_data(&PlayerAction::Tilt){
+
+                        let target = paddle_e.into_target();
+
+                        commands.animation().insert_tween_here(
+                            Duration::from_secs_f32(0.3),
+                            EaseKind::CubicInOut,
+                            target.state(Quat::from_rotation_z(0.0)).with(rotation_delta_by(
+                                Quat::from_rotation_z(data.value.signum() * MAX_ABS_TILT))
+                            )
+                        );
+
+                    }
+
+                }
+            break;
+        }
+    }
+}
+
 
 pub fn maintain_ball_speed(
     mut ball_query: Query<&mut LinearVelocity, With<Ball>>,

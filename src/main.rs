@@ -7,6 +7,7 @@ mod utils;
 mod events;
 mod models;
 mod traits;
+mod networking;
 
 use crate::plugins::game_ui::GameUIPlugin;
 use crate::plugins::GameCorePlugin;
@@ -15,17 +16,18 @@ use crate::resources::MenuAction;
 use crate::systems::settings::persistence::load_settings;
 use crate::utils::DEFAULT_FONT;
 use avian2d::prelude::*;
-use bevy::dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig};
 use bevy::input_focus::directional_navigation::DirectionalNavigationPlugin;
 use bevy::input_focus::InputDispatchPlugin;
 use bevy::prelude::*;
 use bevy::ui_widgets::UiWidgetsPlugins;
 use bevy::window::WindowResolution;
-use bevy_quinnet::client::QuinnetClientPlugin;
-use bevy_quinnet::server::QuinnetServerPlugin;
 use bevy_tween::DefaultTweenPlugins;
 use components::*;
 use leafwing_input_manager::plugin::InputManagerPlugin;
+use lightyear::prelude::client::ClientPlugins;
+use lightyear::prelude::server::ServerPlugins;
+use lightyear::prelude::*;
+use crate::networking::shared::GameNetworking;
 
 fn main() {
     let mut app = App::new();
@@ -54,22 +56,12 @@ fn main() {
                 }
             )
             .set(ImagePlugin::default_nearest()),
-            FpsOverlayPlugin{
-                config: FpsOverlayConfig {
-                    enabled: settings.show_fps,
-                    text_color: Srgba::rgb(1.0, 0.73, 0.23).into(),
-                    frame_time_graph_config: FrameTimeGraphConfig{
-                        enabled: false,
-                        ..default()
-                    },
-                    ..default()
-                },
-            },
-            PhysicsPlugins::default(),
+            PhysicsPlugins::default()
+                .build()
+                .disable::<PhysicsTransformPlugin>()
+                .disable::<PhysicsInterpolationPlugin>(),
             InputManagerPlugin::<PlayerAction>::default(),
             InputManagerPlugin::<MenuAction>::default(),
-            QuinnetClientPlugin::default(),
-            QuinnetServerPlugin::default(),
             UiWidgetsPlugins,
             InputDispatchPlugin,
             DefaultTweenPlugins,
@@ -78,6 +70,7 @@ fn main() {
             // my plugins
             GameCorePlugin,
             GameUIPlugin,
+            GameNetworking
         ))
         .insert_resource(settings);
 
