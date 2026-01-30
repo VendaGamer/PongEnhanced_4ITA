@@ -1,12 +1,12 @@
 use crate::bundles::{Entity, GamepadAxis};
-use crate::models::game::area::PlayerID;
+use crate::models::game::area::LocalPlayerID;
 use crate::resources::controls::PlayerAction;
 use bevy::prelude::{Component, GamepadButton, KeyCode};
 use leafwing_input_manager::prelude::{InputMap, VirtualAxis};
 
 #[derive(Component)]
 pub struct Player {
-    pub id: PlayerID,
+    pub id: LocalPlayerID,
 }
 
 

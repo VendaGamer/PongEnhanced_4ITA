@@ -16,6 +16,3 @@ impl Plugin for GameNetworking {
 
     }
 }
-
-
-pub fn 

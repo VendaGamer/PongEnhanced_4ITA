@@ -57,27 +57,26 @@ pub fn u_ui_hover_light(
         };
 
 
-        let mut target = entity.into_target();
+        let target = entity.into_target();
 
         match *interaction {
             Interaction::Hovered => {
-
-
-                commands.animation().insert_tween_here(
+                commands.entity(entity).animation().insert_tween_here(
                     Duration::from_millis(250),
                     EaseKind::CubicInOut,
                     target.state(base_color).with(background_color_to(hover_color))
                 );
             },
             Interaction::None => {
-
-                commands.animation().insert_tween_here(
+                commands.entity(entity).animation().insert_tween_here(
                     Duration::from_millis(250),
                     EaseKind::CubicInOut,
                     target.state(hover_color).with(background_color_to(base_color))
                 );
             }
-            _ => {}
+            _ => {
+                
+            }
         };
     }
 }

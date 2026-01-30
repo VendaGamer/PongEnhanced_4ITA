@@ -504,7 +504,7 @@ fn on_settings_apply(
 
 
     if let Some(res) = settings.window_resolution {
-        if matches!(settings.window_mode, WindowMode::Windowed){
+        if matches!(settings.window_mode, WindowMode::Windowed) {
             primary_window.resolution.set_physical_resolution(res.x, res.y);
             return;
         }

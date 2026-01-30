@@ -1,5 +1,5 @@
 use crate::bundles::{App, Entity, Vec2};
-use crate::models::game::area::PlayerID;
+use crate::models::game::area::LocalPlayerID;
 use bevy::prelude::Component;
 
 #[derive(Component)]
@@ -17,5 +17,5 @@ pub trait GameModeRules: Send + Sync {
 #[derive(Component, Copy, Clone)]
 pub struct Paddle {
     pub goal: Entity,
-    pub id: PlayerID,
+    pub id: LocalPlayerID,
 }

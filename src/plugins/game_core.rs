@@ -2,7 +2,7 @@ use avian2d::prelude::Gravity;
 use crate::bundles::player::PlayerBundle;
 use crate::bundles::*;
 use crate::components::Player;
-use crate::models::game::area::PlayerID;
+use crate::models::game::area::LocalPlayerID;
 use crate::resources::controls::MenuAction;
 use crate::resources::GameModeConfig;
 use crate::systems::menu::{spawn_m_main, u_join_in};
@@ -60,7 +60,7 @@ fn on_despawn_gamepad(
 )
 {
     for (player_entity, player) in players.iter_mut() {
-        if let PlayerID::Gamepad(entity) = player.id{
+        if let LocalPlayerID::Gamepad(entity) = player.id{
 
             if entity == despawn.entity{
                 commands.entity(player_entity).despawn();

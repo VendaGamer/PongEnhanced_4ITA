@@ -3,8 +3,9 @@ use bevy::prelude::GamepadButton;
 use bevy::reflect::Reflect;
 use leafwing_input_manager::prelude::*;
 use leafwing_input_manager::Actionlike;
+use serde::*;
 
-#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Reflect)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Hash, Reflect, Actionlike)]
 pub enum PlayerAction {
     #[actionlike(Axis)]
     Move,

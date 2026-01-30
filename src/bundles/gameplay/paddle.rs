@@ -1,4 +1,4 @@
-use crate::models::game::area::PlayerID;
+use crate::models::game::area::LocalPlayerID;
 use crate::Paddle;
 use avian2d::prelude::*;
 use bevy::prelude::*;
@@ -22,7 +22,7 @@ impl PaddleBundle {
         position: Vec3,
         size: Vec2,
         goal: Entity,
-        id: PlayerID
+        id: LocalPlayerID
     ) -> Self {
         Self {
             paddle: Paddle {

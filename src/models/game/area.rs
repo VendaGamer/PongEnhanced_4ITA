@@ -65,7 +65,7 @@ impl AreaSide{
 pub struct TeamInfo {
     pub current_score: u32,
     pub area_side: AreaSide,
-    pub players: Vec<PlayerID>,
+    pub players: Vec<LocalPlayerID>,
 }
 
 impl TeamInfo {
@@ -75,7 +75,7 @@ impl TeamInfo {
 }
 
 #[derive(Copy, Clone, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
-pub enum PlayerID{
+pub enum LocalPlayerID {
     KeyboardPlayer(u8),
     Gamepad(Entity)
 }
@@ -155,7 +155,7 @@ impl AreaShape {
         None
     }
     
-    pub fn contains_player(&self, player_id: PlayerID) -> bool {
+    pub fn contains_player(&self, player_id: LocalPlayerID) -> bool {
         for team in self.get_teams().iter(){
             for player in team.players.iter(){
                 if *player == player_id {
