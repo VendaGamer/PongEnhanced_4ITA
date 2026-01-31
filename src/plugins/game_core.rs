@@ -38,7 +38,7 @@ impl Plugin for GameCorePlugin {
             .add_observer(t_ball_events)
             .insert_resource(GameModeConfig::default())
             .insert_resource(Gravity::ZERO)
-            .insert_resource(InputFocusVisible(true));
+            .insert_resource(InputFocusVisible(false));
     }
 }
 

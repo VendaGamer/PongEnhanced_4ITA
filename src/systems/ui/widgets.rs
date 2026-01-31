@@ -7,7 +7,7 @@ use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT, MODERN_THEME};
 use bevy::input_focus::directional_navigation::DirectionalNavigation;
 use bevy::input_focus::tab_navigation::TabIndex;
 use bevy::input_focus::{AutoFocus, InputFocus, InputFocusVisible};
-use bevy::math::CompassOctant;
+use bevy::math::{CompassOctant, I8Vec2};
 use bevy::picking::hover::Hovered;
 use bevy::prelude::*;
 use bevy::text::FontSmoothing;
@@ -20,7 +20,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 pub const BUTTON_PADDING: Val = Val::Px(20.0);
-pub const PIXEL_BORDER: UiRect = UiRect::all(Val::Px(3.0)); // Classic pixel border width
+pub const PIXEL_BORDER: UiRect = UiRect::all(Val::Px(3.0));
 pub const BUTTON_OUTLINE: Outline = Outline::new(PIXEL_BORDER.bottom, Val::ZERO, Color::BLACK);
 
 
@@ -99,7 +99,7 @@ pub fn w_button(color: Color, size: Vec2, text: &str) -> impl Bundle {
         Outline::new(PIXEL_BORDER.bottom, Val::ZERO, MODERN_THEME.outline),
         HoverLight(color),
         Children::spawn_one(LabelBundle::button_label(text)),
-        AutoFocus
+        AutoFocus,
     )
 }
 
@@ -419,16 +419,15 @@ pub fn t_button_press(
 const FOCUSED_BORDER: Srgba = bevy::color::palettes::tailwind::AMBER_500;
 
 pub fn u_navigate_element(
-    query: Query<&ActionState<MenuAction>>,
+    state: Single<&ActionState<MenuAction>>,
+    mut input_focus: ResMut<InputFocusVisible>,
     mut navigation: DirectionalNavigation,
-    mut last_axis: Local<Vec2>,
+    mut last_axis: Local<I8Vec2>,
     mut auto_nav_delay: Local<f32>,
     time: Res<Time>,
 ) {
-    let state = query.single().expect("Expected menu action state");
-
     if let Some(data) = state.dual_axis_data(&MenuAction::Navigate){
-        let current = snap_axis(data.pair, 0.1);
+        let current = data.pair.as_i8vec2();
 
         *auto_nav_delay -= time.delta_secs();
 
@@ -438,7 +437,13 @@ pub fn u_navigate_element(
             return;
         }
 
-        if current.eq(&*last_axis){
+        if current.eq(&*last_axis) {
+            return;
+        }
+
+        if !input_focus.0 {
+            input_focus.0 = true;
+            *last_axis = current;
             return;
         }
 
@@ -448,16 +453,9 @@ pub fn u_navigate_element(
     }
 }
 
-#[inline]
-fn snap_axis(v: Vec2, deadzone: f32) -> Vec2 {
-    Vec2::new(
-        if v.x.abs() < deadzone { 0.0 } else { v.x.signum() },
-        if v.y.abs() < deadzone { 0.0 } else { v.y.signum() },
-    )
-}
 
 #[inline]
-fn navigate(dir: Vec2, navigation: &mut DirectionalNavigation){
+fn navigate(dir: I8Vec2, navigation: &mut DirectionalNavigation){
     if let Some(octant) = to_octant(dir){
 
         match navigation.navigate(octant){
@@ -471,17 +469,33 @@ fn navigate(dir: Vec2, navigation: &mut DirectionalNavigation){
     }
 }
 
-pub fn to_octant(vec: Vec2) -> Option<CompassOctant> {
-    const THRESHOLD: f32 = 0.5;
-
-    match (vec.x.abs() > THRESHOLD, vec.y.abs() > THRESHOLD) {
-        (false, true) if vec.y > 0.0 => Some(CompassOctant::North),
-        (false, true) if vec.y < 0.0 => Some(CompassOctant::South),
-        (true, false) if vec.x < 0.0 => Some(CompassOctant::West),
-        (true, false) if vec.x > 0.0 => Some(CompassOctant::East),
-        _ => None
+pub fn to_octant(vec: I8Vec2) -> Option<CompassOctant> {
+    match (vec.x.signum(), vec.y.signum()) {
+        (0, 1) => Some(CompassOctant::North),
+        (1, 0) => Some(CompassOctant::East),
+        (0, -1) => Some(CompassOctant::South),
+        (-1, 0) => Some(CompassOctant::West),
+        _ => None,
     }
 }
+
+pub fn u_button_press(
+    focused: Res<InputFocus>,
+    visible: Res<InputFocusVisible>,
+    state: Single<&ActionState<MenuAction>>,
+    mut commands: Commands,
+) {
+    if !visible.0 {
+        return;
+    }
+
+    if state.just_pressed(&MenuAction::Confirm) {
+        if let Some(entity) = focused.0 {
+            commands.entity(entity).insert(Interaction::Pressed);
+        }
+    }
+}
+
 
 
 pub fn u_highlight_focused_element(

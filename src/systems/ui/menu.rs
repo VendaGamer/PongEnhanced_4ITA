@@ -11,6 +11,7 @@ use crate::systems::widgets::*;
 use crate::utils::MODERN_THEME;
 use bevy::dev_tools::fps_overlay::FpsOverlayConfig;
 use bevy::input_focus::directional_navigation::DirectionalNavigationMap;
+use bevy::input_focus::{FocusedInput, InputFocus};
 use bevy::math::CompassOctant;
 use bevy::prelude::*;
 use bevy::reflect::Enum;
@@ -60,6 +61,7 @@ pub fn spawn_m_main(
         });
     });
 }
+
 
 #[macro_export]
 macro_rules! boxed_vec {
@@ -223,19 +225,18 @@ fn on_online_back_main(
     _: On<ButtonPressed>,
     mut commands: Commands,
     mut map: ResMut<DirectionalNavigationMap>,
-    main_menu: Query<Entity, With<OnlinePlayMenu>>,
+    main_menu: Single<Entity, With<OnlinePlayMenu>>,
 ){
-    commands.entity(main_menu.single().expect("No menu")).despawn();
+    commands.entity(*main_menu).despawn();
     spawn_m_main(map.as_mut(), &mut commands);
 }
 
 fn on_start_offline_game(
     _: On<ButtonPressed>,
     mut commands: Commands,
-    menus: Query<Entity, With<OfflinePlayMenu>>,
+    menu: Single<Entity, With<OfflinePlayMenu>>,
 ) {
-    let entity = menus.single().expect("No menu found");
-    commands.entity(entity).despawn();
+    commands.entity(*menu).despawn();
     commands.spawn(m_player_join_in(1));
 }
 
@@ -256,31 +257,29 @@ fn m_player_join_in(player_num: u8) -> impl Bundle {
 
 
 pub fn u_join_in(
-    menus: Query<(Entity, &PlayerJoinInMenu)>,
+    menus: Single<(Entity, &PlayerJoinInMenu)>,
     player_query: Query<(&ActionState<PlayerAction>, &Player)>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut game_settings: ResMut<GameModeConfig>
 ) {
-    if let Ok((menu, join_in)) = menus.single(){
-        let player_num = join_in.0 as usize;
+    let player_num = menus.1.0 as usize;
 
-        for (action, player) in player_query {
-            let area = &mut game_settings.area_shape;
-            if !action.get_just_pressed().is_empty() && !area.contains_player(player.id) {
+    for (action, player) in player_query {
+        let area = &mut game_settings.area_shape;
+        if !action.get_just_pressed().is_empty() && !area.contains_player(player.id) {
 
-                let teams_len = area.get_teams().len();
+            let teams_len = area.get_teams().len();
 
-                area.get_teams_mut()[player_num - 1].players.push(player.id);
+            area.get_teams_mut()[player_num - 1].players.push(player.id);
 
-                commands.entity(menu).despawn();
+            commands.entity(menus.0).despawn();
 
-                if player_num < teams_len {
-                    commands.spawn(m_player_join_in(join_in.0 + 1));
-                }else{
-                    AreaBundle::spawn(game_settings.as_ref(), &mut commands, meshes.as_mut(), materials.as_mut());
-                }
+            if player_num < teams_len {
+                commands.spawn(m_player_join_in((player_num + 1) as u8));
+            }else{
+                AreaBundle::spawn(game_settings.as_ref(), &mut commands, meshes.as_mut(), materials.as_mut());
             }
         }
     }
@@ -338,11 +337,11 @@ pub fn m_online() -> impl Bundle {
 }
 
 pub fn spawn_m_settings(
-    settings: &Res<GameSettings>,
-    monitors: &Res<Monitors>,
+    settings: &GameSettings,
+    monitors: &Monitors,
     commands: &mut Commands,
 ) {
-    commands.insert_resource(PendingSettings::from(settings.as_ref()));
+    commands.insert_resource(PendingSettings::from(settings));
     commands.spawn(m_base(SettingsMenu)).with_children(|base| {
 
         base.spawn(w_menu_title("Settings"));
