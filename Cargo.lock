@@ -297,6 +297,9 @@ name = "arrayvec"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "as-raw-xcb-connection"
@@ -478,10 +481,10 @@ dependencies = [
  "nalgebra",
  "parry2d",
  "parry2d-f64",
+ "serde",
  "slab",
  "smallvec",
  "thiserror 2.0.17",
- "thread_local",
 ]
 
 [[package]]
@@ -948,6 +951,7 @@ dependencies = [
  "bevy_math",
  "bevy_reflect",
  "glam_matrix_extras",
+ "serde",
 ]
 
 [[package]]
@@ -1494,7 +1498,6 @@ dependencies = [
  "async-task",
  "atomic-waker",
  "bevy_platform",
- "concurrent-queue",
  "crossbeam-queue",
  "derive_more",
  "futures-lite",
@@ -1581,6 +1584,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "284738382605476667bbe80cf0959f4dffb61adbdb0149e22e67f4dbf97a5bc2"
 dependencies = [
  "bevy",
+ "serde",
 ]
 
 [[package]]
@@ -1613,6 +1617,7 @@ dependencies = [
  "bevy_image",
  "bevy_input",
  "bevy_math",
+ "bevy_picking",
  "bevy_platform",
  "bevy_reflect",
  "bevy_sprite",
@@ -1626,6 +1631,7 @@ dependencies = [
  "taffy",
  "thiserror 2.0.17",
  "tracing",
+ "uuid",
 ]
 
 [[package]]
@@ -2209,16 +2215,6 @@ version = "0.5.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "82b8f8f868b36967f9606790d1903570de9ceaf870a7bf9fbbd3016d636a2cb2"
 dependencies = [
- "crossbeam-utils",
-]
-
-[[package]]
-name = "crossbeam-deque"
-version = "0.8.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9dd111b7b7f7d55b72c0a6ae361660ee5853c9af73f70c3c2ef6858b950e2e51"
-dependencies = [
- "crossbeam-epoch",
  "crossbeam-utils",
 ]
 
@@ -3035,6 +3031,7 @@ checksum = "6cb141d04d0bbebc52c325352ae0c930a6d42c77ccd02b7c591a73bd7bc1d859"
 dependencies = [
  "bevy_reflect",
  "glam 0.30.10",
+ "serde",
 ]
 
 [[package]]
@@ -4441,6 +4438,7 @@ dependencies = [
  "num-complex",
  "num-rational",
  "num-traits",
+ "serde",
  "simba",
  "typenum",
 ]
@@ -4564,6 +4562,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73f88a1307638156682bada9d7604135552957b7818057dcef22705b4d509495"
 dependencies = [
  "num-traits",
+ "serde",
 ]
 
 [[package]]
@@ -5010,7 +5009,8 @@ dependencies = [
  "num-derive",
  "num-traits",
  "ordered-float 5.1.0",
- "rayon",
+ "serde",
+ "serde_arrays",
  "simba",
  "slab",
  "smallvec",
@@ -5037,7 +5037,8 @@ dependencies = [
  "num-derive",
  "num-traits",
  "ordered-float 5.1.0",
- "rayon",
+ "serde",
+ "serde_arrays",
  "simba",
  "slab",
  "smallvec",
@@ -5369,7 +5370,7 @@ dependencies = [
  "once_cell",
  "socket2 0.6.2",
  "tracing",
- "windows-sys 0.60.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -5492,26 +5493,6 @@ name = "rawpointer"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "60a357793950651c4ed0f3f52338f53b2f809f32d83a07f72909fa13e4c6c1e3"
-
-[[package]]
-name = "rayon"
-version = "1.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "368f01d005bf8fd9b1206fb6fa653e6c4a81ceb1466406b81792d87c5677a58f"
-dependencies = [
- "either",
- "rayon-core",
-]
-
-[[package]]
-name = "rayon-core"
-version = "1.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "22e18b0f0062d30d4230b2e85ff77fdfe4326feb054b9783a3460d8435c8ab91"
-dependencies = [
- "crossbeam-deque",
- "crossbeam-utils",
-]
 
 [[package]]
 name = "rcgen"
@@ -5908,6 +5889,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_arrays"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "94a16b99c5ea4fe3daccd14853ad260ec00ea043b2708d1fd1da3106dcd8d9df"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "serde_core"
 version = "1.0.228"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6103,6 +6093,7 @@ dependencies = [
  "hashbrown 0.15.5",
  "num-traits",
  "robust",
+ "serde",
  "smallvec",
 ]
 

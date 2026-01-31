@@ -3,10 +3,11 @@ use crate::models::game::area::LocalPlayerID;
 use crate::resources::controls::PlayerAction;
 use bevy::prelude::{Component, GamepadButton, KeyCode};
 use leafwing_input_manager::prelude::{InputMap, VirtualAxis};
+use crate::models::game::gameplay::PlayerId;
 
 #[derive(Component)]
 pub struct Player {
-    pub id: LocalPlayerID,
+    pub id: PlayerId,
 }
 
 
@@ -27,9 +28,8 @@ impl Player {
 
         map
     }
-
-
-    pub fn get_default_input_map(id: u8) -> InputMap<PlayerAction> {
+    
+    pub fn get_keyboard_input_map(id: u8) -> InputMap<PlayerAction> {
         match id {
             1 => {
                 let mut map = InputMap::new([
@@ -56,6 +56,13 @@ impl Player {
                 map
             },
             _ => panic!("Invalid id: {}", id),
+        }
+    }
+    
+    pub fn get_input_map(id: LocalPlayerID) -> InputMap<PlayerAction> {
+        match id {
+            LocalPlayerID::Gamepad(id) => Self::get_gamepad_input_map(id),
+            LocalPlayerID::Keyboard(id) => Self::get_keyboard_input_map(id),
         }
     }
 }

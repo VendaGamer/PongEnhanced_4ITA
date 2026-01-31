@@ -3,6 +3,9 @@ use crate::models::game::area::LocalPlayerID;
 use crate::resources::PlayerAction;
 use bevy::prelude::{Bundle, Entity};
 use leafwing_input_manager::input_map::InputMap;
+use lightyear::prelude::{NetworkTarget, Replicate};
+use crate::models::game::gameplay::PlayerId;
+use crate::networking::protocol::RemotePlayerId;
 
 #[derive(Bundle)]
 pub struct PlayerBundle {
@@ -11,21 +14,19 @@ pub struct PlayerBundle {
 }
 
 impl PlayerBundle {
-    pub fn new_keyboard(id: u8) -> Self {
+    pub fn new(id: LocalPlayerID) -> Self {
         Self {
             player: Player {
-                id: LocalPlayerID::KeyboardPlayer(id)
+                id: PlayerId::Local(id)
             },
-            bindings: Player::get_default_input_map(id),
+            bindings: Player::get_input_map(id),
         }
     }
 
-    pub fn new_gamepad(gamepad: Entity) -> Self {
-        Self {
-            player: Player {
-                id: LocalPlayerID::Gamepad(gamepad)
-            },
-            bindings: Player::get_gamepad_input_map(gamepad),
-        }
+    pub fn new_network(id: RemotePlayerId) -> impl Bundle {
+        (
+            Replicate::to_clients(NetworkTarget::All),
+            PlayerBundle::new(id.1)
+        )
     }
 }

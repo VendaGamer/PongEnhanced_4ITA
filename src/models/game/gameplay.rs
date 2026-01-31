@@ -3,6 +3,8 @@ use bevy::prelude::DerefMut;
 use derive_more::{Deref, From, Into};
 use serde::{Deserialize, Serialize};
 use std::fmt::Write;
+use crate::models::game::area::LocalPlayerID;
+use crate::networking::protocol::RemotePlayerId;
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq, Serialize, Deserialize, Default, Debug)]
 pub enum GameMode {
@@ -12,6 +14,23 @@ pub enum GameMode {
     Modern,
     Blackout,
     Twisted,
+}
+
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug, Serialize, Deserialize)]
+pub enum PlayerId {
+    Network(RemotePlayerId),
+    Local(LocalPlayerID),
+}
+
+impl PlayerId {
+    pub fn local(&self) -> LocalPlayerID {
+        match self { 
+            PlayerId::Network(id) =>{
+                id.1
+            },
+            PlayerId::Local(id) => *id,
+        }
+    }
 }
 
 impl UIOptionString for GameMode {

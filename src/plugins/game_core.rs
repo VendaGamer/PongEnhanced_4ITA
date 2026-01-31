@@ -11,6 +11,7 @@ use crate::systems::settings::monitor::on_spawn_monitors;
 use crate::systems::*;
 use bevy::ecs::query::Spawned;
 use bevy::input_focus::directional_navigation::DirectionalNavigationMap;
+use bevy::input_focus::InputFocusVisible;
 
 pub struct GameCorePlugin;
 
@@ -36,9 +37,8 @@ impl Plugin for GameCorePlugin {
             .add_observer(paddle_hit_dynamics)
             .add_observer(t_ball_events)
             .insert_resource(GameModeConfig::default())
-            .insert_resource(Gravity::ZERO);
-
-
+            .insert_resource(Gravity::ZERO)
+            .insert_resource(InputFocusVisible(true));
     }
 }
 
@@ -49,7 +49,7 @@ fn u_spawned_gamepads(
 ) {
     for entity in query.iter() {
         commands.entity(entity).observe(on_despawn_gamepad);
-        commands.spawn(PlayerBundle::new_gamepad(entity));
+        commands.spawn(PlayerBundle::new(LocalPlayerID::Gamepad(entity)));
     }
 }
 
@@ -57,12 +57,11 @@ fn on_despawn_gamepad(
     despawn :On<Despawn>,
     mut players: Query<(Entity, &mut Player)>,
     mut commands: Commands,
-)
-{
+) {
     for (player_entity, player) in players.iter_mut() {
-        if let LocalPlayerID::Gamepad(entity) = player.id{
+        if let LocalPlayerID::Gamepad(entity) = player.id.local() {
 
-            if entity == despawn.entity{
+            if entity == despawn.entity {
                 commands.entity(player_entity).despawn();
             }
         }
@@ -76,7 +75,7 @@ fn setup_common(
     commands.spawn(CameraBundle::default());
 
     for i in 1..=2 {
-        commands.spawn(PlayerBundle::new_keyboard(i));
+        commands.spawn(PlayerBundle::new(LocalPlayerID::Keyboard(i)));
     }
 
     commands.spawn(MenuAction::input_map());

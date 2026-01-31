@@ -1,12 +1,12 @@
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::{HoverLight, HoverLightColor};
-use crate::components::ui::{Dropdown, Menu, OptionSelector, SelectorButton, SelectorText, SourceHandle, UIOptionProvider};
+use crate::components::ui::{Dropdown, OptionSelector, SelectorButton, SelectorText, SourceHandle, UIOptionProvider};
 use crate::events::widgets::{ButtonPressed, OptionChanged};
 use crate::resources::MenuAction;
 use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT, MODERN_THEME};
 use bevy::input_focus::directional_navigation::DirectionalNavigation;
 use bevy::input_focus::tab_navigation::TabIndex;
-use bevy::input_focus::{InputFocus, InputFocusVisible};
+use bevy::input_focus::{AutoFocus, InputFocus, InputFocusVisible};
 use bevy::math::CompassOctant;
 use bevy::picking::hover::Hovered;
 use bevy::prelude::*;
@@ -99,6 +99,7 @@ pub fn w_button(color: Color, size: Vec2, text: &str) -> impl Bundle {
         Outline::new(PIXEL_BORDER.bottom, Val::ZERO, MODERN_THEME.outline),
         HoverLight(color),
         Children::spawn_one(LabelBundle::button_label(text)),
+        AutoFocus
     )
 }
 
@@ -419,26 +420,52 @@ const FOCUSED_BORDER: Srgba = bevy::color::palettes::tailwind::AMBER_500;
 
 pub fn u_navigate_element(
     query: Query<&ActionState<MenuAction>>,
-    menu: Query<&Menu>,
-    mut directional_navigation: DirectionalNavigation
+    mut navigation: DirectionalNavigation,
+    mut last_axis: Local<Vec2>,
+    mut auto_nav_delay: Local<f32>,
+    time: Res<Time>,
 ) {
-    if !menu.single().is_ok(){
-        return;
-    }
-    
     let state = query.single().expect("Expected menu action state");
 
     if let Some(data) = state.dual_axis_data(&MenuAction::Navigate){
+        let current = snap_axis(data.pair, 0.1);
 
-        if let Some(octant) = to_octant(data.pair){
+        *auto_nav_delay -= time.delta_secs();
 
-            match directional_navigation.navigate(octant){
-                Ok(entity) =>{
-                    println!("Navigated {octant:?} successfully. {entity} is now focused.");
-                },
-                Err(e) =>{
-                    println!("Navigation failed: {e}");
-                }
+        if *auto_nav_delay < 0.0 {
+            *auto_nav_delay = 0.15;
+            navigate(current, &mut navigation);
+            return;
+        }
+
+        if current.eq(&*last_axis){
+            return;
+        }
+
+        *auto_nav_delay = 0.7;
+        navigate(current, &mut navigation);
+        *last_axis = current;
+    }
+}
+
+#[inline]
+fn snap_axis(v: Vec2, deadzone: f32) -> Vec2 {
+    Vec2::new(
+        if v.x.abs() < deadzone { 0.0 } else { v.x.signum() },
+        if v.y.abs() < deadzone { 0.0 } else { v.y.signum() },
+    )
+}
+
+#[inline]
+fn navigate(dir: Vec2, navigation: &mut DirectionalNavigation){
+    if let Some(octant) = to_octant(dir){
+
+        match navigation.navigate(octant){
+            Ok(entity) =>{
+                println!("Navigated {octant:?} successfully. {entity} is now focused.");
+            },
+            Err(e) =>{
+                println!("Navigation failed: {e}");
             }
         }
     }

@@ -9,9 +9,9 @@ mod models;
 mod traits;
 mod networking;
 
+use crate::networking::shared::GameNetworking;
 use crate::plugins::game_ui::GameUIPlugin;
 use crate::plugins::GameCorePlugin;
-use crate::resources::controls::PlayerAction;
 use crate::resources::MenuAction;
 use crate::systems::settings::persistence::load_settings;
 use crate::utils::DEFAULT_FONT;
@@ -24,10 +24,7 @@ use bevy::window::WindowResolution;
 use bevy_tween::DefaultTweenPlugins;
 use components::*;
 use leafwing_input_manager::plugin::InputManagerPlugin;
-use lightyear::prelude::client::ClientPlugins;
-use lightyear::prelude::server::ServerPlugins;
 use lightyear::prelude::*;
-use crate::networking::shared::GameNetworking;
 
 fn main() {
     let mut app = App::new();
@@ -60,7 +57,6 @@ fn main() {
                 .build()
                 .disable::<PhysicsTransformPlugin>()
                 .disable::<PhysicsInterpolationPlugin>(),
-            InputManagerPlugin::<PlayerAction>::default(),
             InputManagerPlugin::<MenuAction>::default(),
             UiWidgetsPlugins,
             InputDispatchPlugin,
