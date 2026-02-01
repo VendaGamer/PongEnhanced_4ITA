@@ -7,7 +7,7 @@ use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT, MODERN_THEME};
 use bevy::input_focus::directional_navigation::DirectionalNavigation;
 use bevy::input_focus::tab_navigation::TabIndex;
 use bevy::input_focus::{AutoFocus, InputFocus, InputFocusVisible};
-use bevy::math::{CompassOctant, I8Vec2};
+use bevy::math::{CompassOctant, CompassQuadrant, I8Vec2};
 use bevy::picking::hover::Hovered;
 use bevy::prelude::*;
 use bevy::text::FontSmoothing;
@@ -188,7 +188,6 @@ pub fn w_menu_section() -> impl Bundle {
     )
 }
 
-
 pub fn w_slider_thumb(size: Vec2) -> impl Bundle {
     (
         SliderThumb,
@@ -201,6 +200,7 @@ pub fn w_slider_thumb(size: Vec2) -> impl Bundle {
             border: PIXEL_BORDER,
             ..default()
         },
+        AutoFocus,
         BorderRadius::ZERO,
         BorderColor::from(MODERN_THEME.border),
         BackgroundColor(MODERN_THEME.slider_thumb),
@@ -231,15 +231,6 @@ pub fn w_dropdown(options: Arc<dyn UIOptionProvider>, selected: usize, tab_index
 }
 
 pub fn w_selector(options_provider: SourceHandle<dyn UIOptionProvider>, selected: usize, label: impl Into<String>) -> impl Bundle {
-    w_selector_(options_provider, selected, label, Display::Flex)
-}
-
-pub fn w_selector_hidden(options_provider: SourceHandle<dyn UIOptionProvider>, selected: usize, label: impl Into<String>) -> impl Bundle {
-    w_selector_(options_provider, selected, label, Display::None)
-}
-
-
-fn w_selector_(options_provider: SourceHandle<dyn UIOptionProvider>, selected: usize, label: impl Into<String>, display: Display) -> impl Bundle {
     (
         OptionSelector {
             options_provider,
@@ -249,7 +240,6 @@ fn w_selector_(options_provider: SourceHandle<dyn UIOptionProvider>, selected: u
             flex_wrap: FlexWrap::Wrap,
             flex_direction: FlexDirection::Row,
             row_gap: Val::Px(20.0),
-            display,
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
             justify_items: JustifyItems::Center,
@@ -272,6 +262,8 @@ fn w_selector_(options_provider: SourceHandle<dyn UIOptionProvider>, selected: u
                     border: PIXEL_BORDER,
                     ..default()
                 },
+                AutoFocus,
+                SelectorBar,
                 BackgroundColor(MODERN_THEME.panel_bg),
                 BorderColor::from(MODERN_THEME.border),
                 BorderRadius::ZERO,
@@ -306,6 +298,9 @@ fn w_selector_(options_provider: SourceHandle<dyn UIOptionProvider>, selected: u
     )
 }
 
+#[derive(Component)]
+pub struct SelectorBar;
+
 pub fn w_section_header(text: &'static str) -> impl Bundle {
     (
         Node {
@@ -327,7 +322,6 @@ pub fn w_checkbox(state: bool) -> impl Bundle {
         Checked::default(),
     )
 }
-
 
 pub fn w_menu_button(color: Color, text: &str) -> impl Bundle {
     w_button(color, Vec2::new(350.0, 70.0), text)
@@ -358,7 +352,7 @@ pub fn update_selector(
 }
 
 pub fn w_row_container(gap: f32) -> impl Bundle {
-    Node{
+    Node {
         flex_direction: FlexDirection::Row,
         flex_wrap: FlexWrap::Wrap,
         column_gap: Val::Px(gap),
@@ -368,7 +362,7 @@ pub fn w_row_container(gap: f32) -> impl Bundle {
 }
 
 pub fn w_col_container(gap: f32) -> impl Bundle {
-    Node{
+    Node {
         flex_direction: FlexDirection::Column,
         flex_wrap: FlexWrap::Wrap,
         row_gap: Val::Px(gap),
@@ -417,67 +411,97 @@ pub fn t_button_press(
 }
 
 const FOCUSED_BORDER: Srgba = bevy::color::palettes::tailwind::AMBER_500;
+const INITIAL_REPEAT_DELAY: f32 = 0.5;
+const REPEAT_DELAY: f32 = 0.15;
+const DEADZONE: f32 = 0.3;
 
 pub fn u_navigate_element(
     state: Single<&ActionState<MenuAction>>,
     mut input_focus: ResMut<InputFocusVisible>,
     mut navigation: DirectionalNavigation,
-    mut last_axis: Local<I8Vec2>,
+    mut last_direction: Local<Option<CompassQuadrant>>,
     mut auto_nav_delay: Local<f32>,
     time: Res<Time>,
 ) {
-    if let Some(data) = state.dual_axis_data(&MenuAction::Navigate){
-        let current = data.pair.as_i8vec2();
+    if let Some(data) = state.dual_axis_data(&MenuAction::Navigate) {
+        let current = get_quadrant(data.pair);
 
         *auto_nav_delay -= time.delta_secs();
 
-        if *auto_nav_delay < 0.0 {
+        if *auto_nav_delay < -0.001 {
             *auto_nav_delay = 0.15;
-            navigate(current, &mut navigation);
+            try_navigate(current, &mut navigation);
             return;
         }
 
-        if current.eq(&*last_axis) {
+        if current.eq(&*last_direction) {
             return;
         }
 
         if !input_focus.0 {
             input_focus.0 = true;
-            *last_axis = current;
+            *last_direction = current;
             return;
         }
 
         *auto_nav_delay = 0.7;
-        navigate(current, &mut navigation);
-        *last_axis = current;
+        try_navigate(current, &mut navigation);
+        *last_direction = current;
     }
 }
 
+fn get_quadrant(input: Vec2) -> Option<CompassQuadrant> {
+    let magnitude = input.length();
+
+    if magnitude < DEADZONE {
+        return None;
+    }
+
+    let normalized = input / magnitude;
+
+    let abs_x = normalized.x.abs();
+    let abs_y = normalized.y.abs();
+
+    if abs_x > abs_y {
+        if normalized.x > 0.0 {
+            Some(CompassQuadrant::East)
+        } else {
+            Some(CompassQuadrant::West)
+        }
+    } else {
+        if normalized.y > 0.0 {
+            Some(CompassQuadrant::North)
+        } else {
+            Some(CompassQuadrant::South)
+        }
+    }
+}
 
 #[inline]
-fn navigate(dir: I8Vec2, navigation: &mut DirectionalNavigation){
-    if let Some(octant) = to_octant(dir){
+fn try_navigate(dir: Option<CompassQuadrant>, navigation: &mut DirectionalNavigation) {
+    if let Some(dir) = dir {
+        let octant = quadrant_to_octant(dir);
 
-        match navigation.navigate(octant){
-            Ok(entity) =>{
+        match navigation.navigate(octant) {
+            Ok(entity) => {
                 println!("Navigated {octant:?} successfully. {entity} is now focused.");
-            },
-            Err(e) =>{
+            }
+            Err(e) => {
                 println!("Navigation failed: {e}");
             }
         }
     }
 }
 
-pub fn to_octant(vec: I8Vec2) -> Option<CompassOctant> {
-    match (vec.x.signum(), vec.y.signum()) {
-        (0, 1) => Some(CompassOctant::North),
-        (1, 0) => Some(CompassOctant::East),
-        (0, -1) => Some(CompassOctant::South),
-        (-1, 0) => Some(CompassOctant::West),
-        _ => None,
+fn quadrant_to_octant(quadrant: CompassQuadrant) -> CompassOctant {
+    match quadrant {
+        CompassQuadrant::North => CompassOctant::North,
+        CompassQuadrant::East => CompassOctant::East,
+        CompassQuadrant::South => CompassOctant::South,
+        CompassQuadrant::West => CompassOctant::West,
     }
 }
+
 
 pub fn u_button_press(
     focused: Res<InputFocus>,
@@ -495,8 +519,6 @@ pub fn u_button_press(
         }
     }
 }
-
-
 
 pub fn u_highlight_focused_element(
     input_focus: Res<InputFocus>,

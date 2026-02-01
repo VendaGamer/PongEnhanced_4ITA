@@ -5,7 +5,7 @@ use crate::components::Player;
 use crate::models::game::area::LocalPlayerID;
 use crate::resources::controls::MenuAction;
 use crate::resources::GameModeConfig;
-use crate::systems::menu::{spawn_m_main, u_join_in};
+use crate::systems::menu::{spawn_m_main, u_join_in, u_settings_visibility};
 use crate::systems::selectors::update_selector_text;
 use crate::systems::settings::monitor::on_spawn_monitors;
 use crate::systems::*;
@@ -36,12 +36,12 @@ impl Plugin for GameCorePlugin {
             ))
             .add_observer(paddle_hit_dynamics)
             .add_observer(t_ball_events)
+            .add_observer(u_settings_visibility)
             .insert_resource(GameModeConfig::default())
             .insert_resource(Gravity::ZERO)
             .insert_resource(InputFocusVisible(false));
     }
 }
-
 
 fn u_spawned_gamepads(
     query: Query<Entity, (Spawned, With<Gamepad>)>,
@@ -60,7 +60,6 @@ fn on_despawn_gamepad(
 ) {
     for (player_entity, player) in players.iter_mut() {
         if let LocalPlayerID::Gamepad(entity) = player.id.local() {
-
             if entity == despawn.entity {
                 commands.entity(player_entity).despawn();
             }

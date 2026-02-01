@@ -10,6 +10,7 @@ use crate::systems::settings::persistence::save_settings;
 use crate::systems::widgets::*;
 use crate::utils::MODERN_THEME;
 use bevy::dev_tools::fps_overlay::FpsOverlayConfig;
+use bevy::ecs::query::Spawned;
 use bevy::input_focus::directional_navigation::DirectionalNavigationMap;
 use bevy::input_focus::{FocusedInput, InputFocus};
 use bevy::math::CompassOctant;
@@ -184,13 +185,14 @@ fn on_online(
 fn on_settings(
     _press: On<ButtonPressed>,
     mut commands: Commands,
+    mut nav_map: ResMut<DirectionalNavigationMap>,
     main_menu: Query<Entity, With<MainMenu>>,
     settings: Res<GameSettings>,
     monitors: Res<Monitors>,
 ) {
     let entity = main_menu.single().expect("Main Menu doesn't exist");
     commands.entity(entity).despawn();
-    spawn_m_settings(&settings, &monitors, &mut commands);
+    spawn_m_settings(&settings, &monitors, &mut commands, &mut nav_map);
 }
 
 fn on_exit(_press: On<ButtonPressed>, mut exit: MessageWriter<AppExit>) {
@@ -336,140 +338,102 @@ pub fn m_online() -> impl Bundle {
     )
 }
 
+fn index_for_window_mode(
+    window_mode: &WindowMode
+) -> usize {
+    match window_mode {
+        WindowMode::Windowed => 0,
+        WindowMode::BorderlessFullscreen(..) => 1,
+        WindowMode::Fullscreen(..) => 2
+    }
+}
+
 pub fn spawn_m_settings(
     settings: &GameSettings,
     monitors: &Monitors,
     commands: &mut Commands,
+    nav_map: &mut DirectionalNavigationMap
 ) {
+    let mut entities: Vec<Entity> = Vec::with_capacity(7);
+    let cur_window_mode = index_for_window_mode(&settings.window_mode);
     commands.insert_resource(PendingSettings::from(settings));
-    commands.spawn(m_base(SettingsMenu)).with_children(|base| {
+    commands.spawn(m_base(SettingsMenu)).with_children(| base | {
 
         base.spawn(w_menu_title("Settings"));
 
         base.spawn(w_menu_section())
-                .with_children(| section |{
+            .with_children(| section |{
+
+                section.spawn(LabelBundle::button_label("Sound Effects"));
+                entities.push(section.spawn(w_slider(
+                    0.0,
+                    100.0,
+                    settings.sfx_volume
+                )).observe(on_sfx_changed)
+                  .id());
+
+                section.spawn(LabelBundle::button_label("Master volume"));
+                entities.push(section.spawn(w_slider(
+                    0.0,
+                    100.0,
+                    settings.master_volume
+                )).observe(on_master_changed)
+                  .id());
+
+                let monitor_index = monitors.selected_monitor;
+                let monitor = monitors.get_current_monitor();
+
+                entities.push(section.spawn(
+                    w_selector(
+                        SourceHandle::Unique(boxed_vec![
+                            WindowMode::Windowed,
+                            WindowMode::BorderlessFullscreen(monitor.monitor_selection),
+                            WindowMode::Fullscreen(monitor.monitor_selection, VideoModeSelection::Current)
+                        ]), cur_window_mode, "Window Mode")
+                ).insert(WindowModeSelector)
+                 .observe(on_window_mode_changed)
+                 .id());
+
+                entities.push(section.spawn(w_selector(
+                    SourceHandle::Strong(monitors.monitors.clone()), monitor_index, "Monitor")
+                ).insert(MonitorSelector)
+                 .observe(on_monitor_changed)
+                 .id());
 
 
-                    section.spawn(LabelBundle::button_label("Sound Effects"));
-                    section.spawn(w_slider(
-                        0.0,
-                        100.0,
-                        settings.sfx_volume
-                    )).observe(on_sfx_changed);
+                entities.push(section.spawn(w_selector(
+                    SourceHandle::Strong(monitor.resolutions.clone()), 0, "Resolution")
+                ).insert(ResolutionSelector)
+                 .observe(on_resolution_changed)
+                 .id());
 
-                    section.spawn(LabelBundle::button_label("Master volume"));
-                    section.spawn(w_slider(
-                        0.0,
-                        100.0,
-                        settings.master_volume
-                    )).observe(on_master_changed);
+                entities.push(section.spawn(w_selector(
+                    SourceHandle::Strong(monitor.refresh_rates.clone()), 0, "Refresh Rate")
+                ).insert(RefreshRateSelector)
+                 .observe(on_refresh_rate_changed)
+                 .id());
 
-                    let monitor_index = monitors.selected_monitor;
-                    let monitor = monitors.get_current_monitor();
-
-                    section.spawn(
-                        w_selector(
-                            SourceHandle::Unique(boxed_vec![
-                                WindowMode::Windowed,
-                                WindowMode::BorderlessFullscreen(monitor.monitor_selection),
-                                WindowMode::Fullscreen(monitor.monitor_selection, VideoModeSelection::Current)
-                            ]),
-                            0,
-                            "Window Mode"))
-                        .insert(WindowModeSelector)
-                        .observe(on_window_mode_changed);
-
-
-                    match settings.window_mode {
-                        WindowMode::Windowed => {
-
-                            section.spawn(
-                                w_selector_hidden(
-                                    SourceHandle::Strong(monitors.monitors.clone()),
-                                    monitor_index,
-                                    "Monitor"))
-                                .insert(MonitorSelector)
-                                .observe(on_monitor_changed);
-
-                            section.spawn(
-                                w_selector_hidden(
-                                    SourceHandle::Strong(monitor.refresh_rates.clone()),
-                                    0,
-                                    "Refresh Rate"
-                                ))
-                            .insert(RefreshRateSelector)
-                            .observe(on_refresh_rate_changed);
-
-                        },
-                        WindowMode::BorderlessFullscreen(..) => {
-
-                            section.spawn(
-                                w_selector(
-                                    SourceHandle::Strong(monitors.monitors.clone()),
-                                    monitor_index,
-                                    "Monitor"))
-                                .insert(MonitorSelector)
-                                .observe(on_monitor_changed);
-
-                            section.spawn(
-                                w_selector_hidden(
-                                    SourceHandle::Strong(monitor.refresh_rates.clone()),
-                                    0,
-                                    "Refresh Rate"
-                                ))
-                                .insert(RefreshRateSelector)
-                                .observe(on_refresh_rate_changed);
-
-                        },
-                        WindowMode::Fullscreen(.., window_mode) => {
-
-
-                            section.spawn(w_selector(
-                                SourceHandle::Strong(monitors.monitors.clone()),
-                                monitor_index,
-                                "Monitor"))
-                                .insert(MonitorSelector)
-                                .observe(on_monitor_changed);
-
-
-                            section.spawn(
-                                w_selector(
-                                    SourceHandle::Strong(monitor.refresh_rates.clone()),
-                                    0,
-                                    "Refresh Rate"
-                                ))
-                                .insert(RefreshRateSelector)
-                                .observe(on_refresh_rate_changed);
-
-                        }
-                    };
-
-                    section.spawn(w_selector(
-                        SourceHandle::Strong(monitor.resolutions.clone()),
-                        0,
-                        "Resolution"))
-                        .insert(ResolutionSelector)
-                        .observe(on_resolution_changed);
-
-                    section.spawn(w_selector(
-                        VSYNC_OPTIONS,
-                        0,
-                        "VSync"))
-                        .insert(VSyncSelector)
-                        .observe(on_vsync_changed);
-                });
-
+                entities.push(section.spawn(w_selector(VSYNC_OPTIONS, 0, "VSync"))
+                    .insert(VSyncSelector)
+                    .observe(on_vsync_changed)
+                    .id());
+            });
 
             base.spawn(w_row_container(10.0)).with_children(| container |{
 
-                container.spawn(w_button(MODERN_THEME.button, Vec2::new(200.0, 60.0), "Back"))
-                    .observe(on_settings_back_main);
+                let b1 = container.spawn(w_button(MODERN_THEME.button, Vec2::new(200.0, 60.0), "Back"))
+                    .observe(on_settings_back_main)
+                    .id();
 
-                container.spawn(w_button(MODERN_THEME.button, Vec2::new(200.0, 60.0), "Apply"))
-                    .observe(on_settings_apply);
+                let b2 = container.spawn(w_button(MODERN_THEME.button, Vec2::new(200.0, 60.0), "Apply"))
+                    .observe(on_settings_apply)
+                    .id();
+
+                nav_map.add_looping_edges(&[b1, b2], CompassOctant::East);
             });
-
     });
+
+    nav_map.add_looping_edges(&entities, CompassOctant::North);
 }
 
 fn on_sfx_changed(change: On<SliderValueChanged>, mut settings: ResMut<GameSettings>){
@@ -526,20 +490,27 @@ fn m_base(menu_type: impl Component) -> impl Bundle {
     )
 }
 
-
-fn on_window_mode_changed(
-    _: On<OptionChanged>,
-    mod_sel: Single<&OptionSelector, With<WindowModeSelector>>,
+pub fn u_settings_visibility(
+    _ : On<Add, MainMenu>,
     mut selectors: ParamSet<(
         Single<(&mut Node, &OptionSelector), With<MonitorSelector>>,
         Single<(&mut Node, &OptionSelector), With<ResolutionSelector>>,
         Single<(&mut Node, &OptionSelector), With<RefreshRateSelector>>,
     )>,
-    mut settings: ResMut<PendingSettings>,
-){
+    settings: Res<PendingSettings>,
+) {
+    change_selector_visibility(&settings.window_mode, &mut selectors);
+}
 
-    let current = *mod_sel.current::<WindowMode>().unwrap();
-    match current {
+fn change_selector_visibility(
+    window_mode: &WindowMode,
+    selectors: &mut ParamSet<(
+        Single<(&mut Node, &OptionSelector), With<MonitorSelector>>,
+        Single<(&mut Node, &OptionSelector), With<ResolutionSelector>>,
+        Single<(&mut Node, &OptionSelector), With<RefreshRateSelector>>,
+    )>
+){
+    match window_mode {
         WindowMode::Windowed => {
             selectors.p0().0.display = Display::None;
             selectors.p1().0.display = Display::Flex;
@@ -556,9 +527,21 @@ fn on_window_mode_changed(
             selectors.p2().0.display = Display::None;
         }
     }
+}
 
-    settings.window_mode = current;
-
+fn on_window_mode_changed(
+    _: On<OptionChanged>,
+    mod_sel: Single<&OptionSelector, With<WindowModeSelector>>,
+    mut selectors: ParamSet<(
+        Single<(&mut Node, &OptionSelector), With<MonitorSelector>>,
+        Single<(&mut Node, &OptionSelector), With<ResolutionSelector>>,
+        Single<(&mut Node, &OptionSelector), With<RefreshRateSelector>>,
+    )>,
+    mut settings: ResMut<PendingSettings>,
+){
+    let current = mod_sel.current::<WindowMode>().unwrap();
+    change_selector_visibility(current, &mut selectors);
+    settings.window_mode = *current;
 }
 
 
