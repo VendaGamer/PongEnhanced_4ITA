@@ -1,3 +1,4 @@
+use bevy::asset::uuid::Version::Sha1;
 use crate::bundles::area::AreaBundle;
 use crate::bundles::widgets::LabelBundle;
 use crate::components::ui::{MainMenu, MonitorSelector, OfflinePlayMenu, OnlinePlayMenu, OptionSelector, PlayerJoinInMenu, RefreshRateSelector, ResolutionSelector, SettingsMenu, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector, WindowModeSelector};
@@ -100,7 +101,7 @@ pub fn m_offline() -> impl Bundle {
                     ),
                     observe(on_game_mode_changed),
                 ),
-                    w_slider(5.0, 30.0, 5.0)
+
                 ],
             ),
             (
@@ -354,7 +355,6 @@ pub fn spawn_m_settings(
     commands: &mut Commands,
     nav_map: &mut DirectionalNavigationMap
 ) {
-    let mut entities: Vec<Entity> = Vec::with_capacity(7);
     let cur_window_mode = index_for_window_mode(&settings.window_mode);
     commands.insert_resource(PendingSettings::from(settings));
     commands.spawn(m_base(SettingsMenu)).with_children(| base | {
@@ -364,59 +364,65 @@ pub fn spawn_m_settings(
         base.spawn(w_menu_section())
             .with_children(| section |{
 
-                section.spawn(LabelBundle::button_label("Sound Effects"));
-                entities.push(section.spawn(w_slider(
-                    0.0,
-                    100.0,
-                    settings.sfx_volume
-                )).observe(on_sfx_changed)
-                  .id());
+                
+                let s1: Entity;
+                {
+                    section.spawn(LabelBundle::button_label("Sound Effects"));
+                    let mut sfx = section.append_slider(
+                        0.0,
+                        100.0,
+                        settings.sfx_volume
+                    );
 
-                section.spawn(LabelBundle::button_label("Master volume"));
-                entities.push(section.spawn(w_slider(
-                    0.0,
-                    100.0,
-                    settings.master_volume
-                )).observe(on_master_changed)
-                  .id());
+                    sfx.root.observe(on_sfx_changed);
+                    s1 = sfx.thumb;
+                }
+                
+                let s2: Entity;
+                {
+                    section.spawn(LabelBundle::button_label("Master volume"));
+                    let mut mas = section.append_slider(
+                        0.0,
+                        100.0,
+                        settings.master_volume
+                    );
+                    
+                    mas.root.observe(on_master_changed);
+                    s2 = mas.thumb;
+                }
 
+                nav_map.add_looping_edges(&[s1, s2], CompassOctant::North);
+                
                 let monitor_index = monitors.selected_monitor;
                 let monitor = monitors.get_current_monitor();
 
-                entities.push(section.spawn(
-                    w_selector(
-                        SourceHandle::Unique(boxed_vec![
-                            WindowMode::Windowed,
-                            WindowMode::BorderlessFullscreen(monitor.monitor_selection),
-                            WindowMode::Fullscreen(monitor.monitor_selection, VideoModeSelection::Current)
-                        ]), cur_window_mode, "Window Mode")
+                section.spawn(w_selector(SourceHandle::Unique(
+                    boxed_vec![
+                        WindowMode::Windowed,
+                        WindowMode::BorderlessFullscreen(monitor.monitor_selection),
+                        WindowMode::Fullscreen(monitor.monitor_selection, VideoModeSelection::Current)
+                    ]), cur_window_mode, "Window Mode")
                 ).insert(WindowModeSelector)
-                 .observe(on_window_mode_changed)
-                 .id());
+                 .observe(on_window_mode_changed);
 
-                entities.push(section.spawn(w_selector(
+                section.spawn(w_selector(
                     SourceHandle::Strong(monitors.monitors.clone()), monitor_index, "Monitor")
                 ).insert(MonitorSelector)
-                 .observe(on_monitor_changed)
-                 .id());
+                 .observe(on_monitor_changed);
 
-
-                entities.push(section.spawn(w_selector(
+                section.spawn(w_selector(
                     SourceHandle::Strong(monitor.resolutions.clone()), 0, "Resolution")
                 ).insert(ResolutionSelector)
-                 .observe(on_resolution_changed)
-                 .id());
+                 .observe(on_resolution_changed);
 
-                entities.push(section.spawn(w_selector(
+                section.spawn(w_selector(
                     SourceHandle::Strong(monitor.refresh_rates.clone()), 0, "Refresh Rate")
                 ).insert(RefreshRateSelector)
-                 .observe(on_refresh_rate_changed)
-                 .id());
+                 .observe(on_refresh_rate_changed);
 
-                entities.push(section.spawn(w_selector(VSYNC_OPTIONS, 0, "VSync"))
+                section.spawn(w_selector(VSYNC_OPTIONS, 0, "VSync"))
                     .insert(VSyncSelector)
-                    .observe(on_vsync_changed)
-                    .id());
+                    .observe(on_vsync_changed);
             });
 
             base.spawn(w_row_container(10.0)).with_children(| container |{
@@ -428,12 +434,8 @@ pub fn spawn_m_settings(
                 let b2 = container.spawn(w_button(MODERN_THEME.button, Vec2::new(200.0, 60.0), "Apply"))
                     .observe(on_settings_apply)
                     .id();
-
-                nav_map.add_looping_edges(&[b1, b2], CompassOctant::East);
             });
     });
-
-    nav_map.add_looping_edges(&entities, CompassOctant::North);
 }
 
 fn on_sfx_changed(change: On<SliderValueChanged>, mut settings: ResMut<GameSettings>){

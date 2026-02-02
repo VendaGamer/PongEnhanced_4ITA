@@ -18,6 +18,7 @@ use bevy_tween::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
 use std::sync::Arc;
 use std::time::Duration;
+use bevy::ecs::relationship::{RelatedSpawnerCommands, Relationship};
 
 pub const BUTTON_PADDING: Val = Val::Px(20.0);
 pub const PIXEL_BORDER: UiRect = UiRect::all(Val::Px(3.0));
@@ -99,7 +100,6 @@ pub fn w_button(color: Color, size: Vec2, text: &str) -> impl Bundle {
         Outline::new(PIXEL_BORDER.bottom, Val::ZERO, MODERN_THEME.outline),
         HoverLight(color),
         Children::spawn_one(LabelBundle::button_label(text)),
-        AutoFocus,
     )
 }
 
@@ -122,53 +122,6 @@ pub fn w_title(text: impl Into<String>, size: f32) -> impl Bundle {
             ..default()
         },
         TextColor(MODERN_THEME.text_bright),
-    )
-}
-
-pub fn w_slider(min: f32, max: f32, current: f32) -> impl Bundle {
-    (
-        Node {
-            display: Display::Flex,
-            flex_direction: FlexDirection::Column,
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Stretch,
-            justify_items: JustifyItems::Center,
-            column_gap: px(4),
-            height: px(50),
-            width: percent(100),
-            ..default()
-        },
-        Hovered::default(),
-        Slider {
-            track_click: TrackClick::Snap,
-        },
-        SliderPrecision(0),
-        SliderValue(current),
-        SliderRange::new(min, max),
-        Children::spawn((
-            Spawn((
-                Node {
-                    height: px(12),
-                    border: PIXEL_BORDER,
-                    ..default()
-                },
-                BackgroundColor(MODERN_THEME.slider_track),
-                BorderColor::from(MODERN_THEME.border),
-                BorderRadius::ZERO,
-            )),
-            Spawn((
-                Node {
-                    display: Display::Flex,
-                    position_type: PositionType::Absolute,
-                    left: px(0),
-                    right: px(20),
-                    top: px(0),
-                    bottom: px(0),
-                    ..default()
-                },
-                Children::spawn_one(w_slider_thumb(Vec2::new(20.0,20.0)))
-            )),
-        )),
     )
 }
 
@@ -262,7 +215,6 @@ pub fn w_selector(options_provider: SourceHandle<dyn UIOptionProvider>, selected
                     border: PIXEL_BORDER,
                     ..default()
                 },
-                AutoFocus,
                 SelectorBar,
                 BackgroundColor(MODERN_THEME.panel_bg),
                 BorderColor::from(MODERN_THEME.border),
@@ -530,6 +482,84 @@ pub fn u_highlight_focused_element(
             *border_color = BorderColor::all(FOCUSED_BORDER);
         } else {
             *border_color = BorderColor::all(MODERN_THEME.border);
+        }
+    }
+}
+
+#[derive(Deref)]
+pub struct SliderEntities<'a> {
+    #[deref]
+    pub root: EntityCommands<'a>,
+    pub track: Entity,
+    pub thumb: Entity
+}
+
+pub trait WidgetsExtCommands {
+    fn append_slider(&mut self, min:f32, max:f32, cur:f32) -> SliderEntities<'_>;
+}
+
+ 
+impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
+    fn append_slider(&mut self, min: f32, max: f32, cur: f32) -> SliderEntities<'_> {
+        
+        let mut root = self.spawn((
+            Node {
+                display: Display::Flex,
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Stretch,
+                justify_items: JustifyItems::Center,
+                column_gap: px(4),
+                height: px(50),
+                width: percent(100),
+                ..default()
+            },
+            Hovered::default(),
+            Slider {
+                track_click: TrackClick::Snap,
+            },
+            SliderPrecision(0),
+            SliderValue(cur),
+            SliderRange::new(min, max),
+        ));
+        
+        let mut commands = root.commands();
+        let thumb: Entity;
+        let track: Entity;
+        
+        {
+            track =commands.spawn((
+                Node {
+                    height: px(12),
+                    border: PIXEL_BORDER,
+                    ..default()
+                },
+                BackgroundColor(MODERN_THEME.slider_track),
+                BorderColor::from(MODERN_THEME.border),
+                BorderRadius::ZERO,
+            )).id();
+            
+            let thumb_root = commands.spawn((
+                Node {
+                    display: Display::Flex,
+                    position_type: PositionType::Absolute,
+                    left: px(0),
+                    right: px(20),
+                    top: px(15),
+                    bottom: px(0),
+                    ..default()
+                },
+            )).id();
+            
+            thumb = commands.spawn(w_slider_thumb(Vec2::new(20.0,20.0))).id();
+            commands.entity(thumb_root).add_child(thumb);
+            root.add_children(&[track, thumb_root]);
+        }
+        
+        SliderEntities{
+            root,
+            track,
+            thumb
         }
     }
 }
