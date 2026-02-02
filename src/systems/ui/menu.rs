@@ -1,8 +1,6 @@
-use bevy::asset::AssetContainer;
-use bevy::asset::uuid::Version::Sha1;
 use crate::bundles::area::AreaBundle;
 use crate::bundles::widgets::LabelBundle;
-use crate::components::ui::{MainMenu, MonitorSelector, OfflinePlayMenu, OnlinePlayMenu, OptionSelector, PlayerJoinInMenu, RefreshRateSelector, ResolutionSelector, SettingsMenu, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector, WindowModeSelector};
+use crate::components::ui::{MainMenu, MonitorSelector, OfflinePlayMenu, OnlinePlayMenu, PlayerJoinInMenu, RefreshRateSelector, ResolutionSelector, Selector, SettingsMenu, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector, WindowModeSelector};
 use crate::components::Player;
 use crate::events::widgets::{ButtonPressed, CheckboxChanged, OptionChanged, SliderValueChanged};
 use crate::models::game::gameplay::GameMode;
@@ -11,15 +9,13 @@ use crate::resources::{GameModeConfig, GameSettings, MonitorInfo, Monitors, Pend
 use crate::systems::settings::persistence::save_settings;
 use crate::systems::widgets::*;
 use crate::utils::MODERN_THEME;
+use bevy::asset::AssetContainer;
 use bevy::dev_tools::fps_overlay::FpsOverlayConfig;
-use bevy::ecs::query::Spawned;
 use bevy::input_focus::directional_navigation::DirectionalNavigationMap;
-use bevy::input_focus::{FocusedInput, InputFocus};
 use bevy::math::CompassOctant;
 use bevy::prelude::*;
-use bevy::reflect::Enum;
 use bevy::ui_widgets::observe;
-use bevy::window::{PrimaryWindow, WindowMode, WindowResolution};
+use bevy::window::{PrimaryWindow, WindowMode};
 use leafwing_input_manager::action_state::ActionState;
 
 pub fn spawn_m_main(
@@ -119,7 +115,7 @@ pub fn m_offline() -> impl Bundle {
 
 fn on_game_mode_changed(
     change: On<OptionChanged>,
-    selectors: Query<(Entity, &OptionSelector)>,
+    selectors: Query<(Entity, &Selector)>,
     mut config: ResMut<GameModeConfig>,
 ) {
     for (entity, selector) in selectors.iter() {
@@ -516,9 +512,9 @@ fn m_base(menu_type: impl Component) -> impl Bundle {
 pub fn u_settings_visibility(
     _ : On<Add, MainMenu>,
     mut selectors: ParamSet<(
-        Single<(&mut Node, &OptionSelector), With<MonitorSelector>>,
-        Single<(&mut Node, &OptionSelector), With<ResolutionSelector>>,
-        Single<(&mut Node, &OptionSelector), With<RefreshRateSelector>>,
+        Single<(&mut Node, &Selector), With<MonitorSelector>>,
+        Single<(&mut Node, &Selector), With<ResolutionSelector>>,
+        Single<(&mut Node, &Selector), With<RefreshRateSelector>>,
     )>,
     settings: Res<PendingSettings>,
 ) {
@@ -528,9 +524,9 @@ pub fn u_settings_visibility(
 fn change_selector_visibility(
     window_mode: &WindowMode,
     selectors: &mut ParamSet<(
-        Single<(&mut Node, &OptionSelector), With<MonitorSelector>>,
-        Single<(&mut Node, &OptionSelector), With<ResolutionSelector>>,
-        Single<(&mut Node, &OptionSelector), With<RefreshRateSelector>>,
+        Single<(&mut Node, &Selector), With<MonitorSelector>>,
+        Single<(&mut Node, &Selector), With<ResolutionSelector>>,
+        Single<(&mut Node, &Selector), With<RefreshRateSelector>>,
     )>
 ){
     match window_mode {
@@ -554,11 +550,11 @@ fn change_selector_visibility(
 
 fn on_window_mode_changed(
     _: On<OptionChanged>,
-    mod_sel: Single<&OptionSelector, With<WindowModeSelector>>,
+    mod_sel: Single<&Selector, With<WindowModeSelector>>,
     mut selectors: ParamSet<(
-        Single<(&mut Node, &OptionSelector), With<MonitorSelector>>,
-        Single<(&mut Node, &OptionSelector), With<ResolutionSelector>>,
-        Single<(&mut Node, &OptionSelector), With<RefreshRateSelector>>,
+        Single<(&mut Node, &Selector), With<MonitorSelector>>,
+        Single<(&mut Node, &Selector), With<ResolutionSelector>>,
+        Single<(&mut Node, &Selector), With<RefreshRateSelector>>,
     )>,
     mut settings: ResMut<PendingSettings>,
 ){
@@ -570,7 +566,7 @@ fn on_window_mode_changed(
 
 fn on_monitor_changed(
     _: On<OptionChanged>,
-    mon_sel: Single<&OptionSelector, With<MonitorSelector>>,
+    mon_sel: Single<&Selector, With<MonitorSelector>>,
     mut settings: ResMut<PendingSettings>,
 ) {
     let current_monitor = mon_sel.current::<MonitorInfo>().unwrap();
@@ -605,7 +601,7 @@ fn on_show_fps_changed(
 
 fn on_resolution_changed(
     _: On<OptionChanged>,
-    selectors: Query<&OptionSelector, With<ResolutionSelector>>,
+    selectors: Query<&Selector, With<ResolutionSelector>>,
     mut settings: ResMut<PendingSettings>,
 ){
     let selector = selectors.single().expect("No resolution selector found");
@@ -624,7 +620,7 @@ fn on_resolution_changed(
 
 fn on_refresh_rate_changed(
     _: On<OptionChanged>,
-    selectors: Query<&OptionSelector, With<RefreshRateSelector>>,
+    selectors: Query<&Selector, With<RefreshRateSelector>>,
     mut settings: ResMut<PendingSettings>,
 ){
     let selector = selectors.single().expect("No resolution selector found");

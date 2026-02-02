@@ -1,5 +1,4 @@
 ﻿use bevy::prelude::{Entity, Event};
-use crate::bundles::EntityEvent;
 
 #[derive(Event)]
 pub struct GoalScored {

@@ -1,4 +1,3 @@
-use avian2d::prelude::Gravity;
 use crate::bundles::player::PlayerBundle;
 use crate::bundles::*;
 use crate::components::Player;
@@ -9,6 +8,7 @@ use crate::systems::menu::{spawn_m_main, u_join_in, u_settings_visibility};
 use crate::systems::selectors::update_selector_text;
 use crate::systems::settings::monitor::on_spawn_monitors;
 use crate::systems::*;
+use avian2d::prelude::Gravity;
 use bevy::ecs::query::Spawned;
 use bevy::input_focus::directional_navigation::DirectionalNavigationMap;
 use bevy::input_focus::InputFocusVisible;

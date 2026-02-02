@@ -7,4 +7,3 @@ mod online;
 pub use handle_gamepads::*;
 pub use handle_scoring::*;
 pub use movement::*;
-pub use game_modes::*;

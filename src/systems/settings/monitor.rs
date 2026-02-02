@@ -3,7 +3,6 @@ use bevy::ecs::query::*;
 use bevy::prelude::*;
 use bevy::window::*;
 use std::sync::Arc;
-use bevy::winit::{WinitMonitors, WinitWindows};
 
 #[cfg(windows)]
 fn get_monitor_name_windows(device_path: &str) -> Option<String> {

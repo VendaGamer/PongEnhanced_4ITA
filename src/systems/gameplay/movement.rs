@@ -1,4 +1,4 @@
-use std::time::Duration;
+use crate::components::game_modes::MAX_ABS_TILT;
 use crate::components::*;
 use crate::events::gameplay::{BallBounced, GoalScored};
 use crate::resources::controls::*;
@@ -11,7 +11,7 @@ use bevy_tween::interpolation::EaseKind;
 use bevy_tween::prelude::AnimationBuilderExt;
 use bevy_tween::tween::IntoTarget;
 use leafwing_input_manager::prelude::*;
-use crate::components::game_modes::{PaddleTilt, MAX_ABS_TILT};
+use std::time::Duration;
 
 const BALL_SPEED: f32 = 600.0;
 

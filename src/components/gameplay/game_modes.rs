@@ -1,4 +1,3 @@
-use bevy::math::Quat;
 use crate::bundles::Component;
 
 #[derive(Component)]

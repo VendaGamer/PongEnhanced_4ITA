@@ -1,7 +1,7 @@
+use crate::networking::protocol::GameProtocolPlugin;
 use bevy::prelude::*;
 use lightyear::prelude::client::ClientPlugins;
 use lightyear::prelude::server::ServerPlugins;
-use crate::networking::protocol::GameProtocolPlugin;
 
 pub struct GameNetworking;
 

@@ -32,9 +32,8 @@ fn handle_ui_scaling(
 
         let scale_x = event.width / FIXED_DIMENSIONS.x;
         let scale_y = event.height / FIXED_DIMENSIONS.y;
-
+        
         let scale = scale_y.min(scale_x);
-
         ui_scale.0 = scale;
     }
 }

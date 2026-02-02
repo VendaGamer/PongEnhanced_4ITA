@@ -1,16 +1,18 @@
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::{HoverLight, HoverLightColor};
-use crate::components::ui::{Dropdown, OptionSelector, SelectorButton, SelectorText, SourceHandle, UIOptionProvider};
+use crate::components::ui::{Dropdown, Selector, SelectorButton, SelectorText, SourceHandle, UIOptionProvider};
 use crate::events::widgets::{ButtonPressed, OptionChanged};
 use crate::resources::MenuAction;
 use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT, MODERN_THEME};
+use bevy::asset::AssetContainer;
 use bevy::ecs::relationship::{RelatedSpawnerCommands, Relationship};
 use bevy::input_focus::directional_navigation::DirectionalNavigation;
 use bevy::input_focus::tab_navigation::TabIndex;
-use bevy::input_focus::{AutoFocus, FocusedInput, InputFocus, InputFocusVisible};
+use bevy::input_focus::{AutoFocus, InputFocus, InputFocusVisible};
 use bevy::math::{CompassOctant, CompassQuadrant};
 use bevy::picking::hover::Hovered;
 use bevy::prelude::*;
+use bevy::tasks::futures_lite::StreamExt;
 use bevy::text::FontSmoothing;
 use bevy::ui::Checked;
 use bevy::ui_widgets::{Checkbox, Slider, SliderPrecision, SliderRange, SliderThumb, SliderValue, TrackClick};
@@ -19,9 +21,6 @@ use bevy_tween::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
 use std::sync::Arc;
 use std::time::Duration;
-use bevy::asset::AssetContainer;
-use bevy::asset::io::ErasedAssetWriter;
-use bevy::tasks::futures_lite::StreamExt;
 
 pub const BUTTON_PADDING: Val = Val::Px(20.0);
 pub const PIXEL_BORDER: UiRect = UiRect::all(Val::Px(3.0));
@@ -220,7 +219,7 @@ pub fn w_menu_button(color: Color, text: &str) -> impl Bundle {
 
 pub fn update_selector(
     pressed: On<ButtonPressed>,
-    mut selectors: Query<&mut OptionSelector>,
+    mut selectors: Query<&mut Selector>,
     button: Query<(&ChildOf, &SelectorButton)>,
     mut commands: Commands)
 {
@@ -386,7 +385,7 @@ fn try_navigate(dir: Option<CompassQuadrant>, navigation: &mut DirectionalNaviga
                         .map(|child_of| child_of.0);
 
                     if let Some(parent_id) = parent_entity {
-                        if let Some(mut selector) = world.entity_mut(parent_id).get_mut::<OptionSelector>() {
+                        if let Some(mut selector) = world.entity_mut(parent_id).get_mut::<Selector>() {
                             if dir.eq(&CompassQuadrant::West) {
                                 selector.prev();
                             } else {
@@ -561,7 +560,7 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
     fn append_selector(&mut self, options_provider: SourceHandle<dyn UIOptionProvider>, selected: usize, label: impl Into<String>) -> SelectorEntities<'_> {
 
         let mut root = self.spawn((
-            OptionSelector {
+            Selector {
                 options_provider,
                 selected
             },

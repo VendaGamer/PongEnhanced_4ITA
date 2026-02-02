@@ -1,8 +1,8 @@
-use crate::components::ui::{OptionSelector, SelectorText};
+use crate::components::ui::{Selector, SelectorText};
 use bevy::prelude::*;
 
 pub fn update_selector_text(
-    selectors: Query<(Entity, &OptionSelector), Changed<OptionSelector>>,
+    selectors: Query<(Entity, &Selector), Changed<Selector>>,
     mut texts: Query<&mut Text, With<SelectorText>>,
     children: Query<&Children>,
 ) {

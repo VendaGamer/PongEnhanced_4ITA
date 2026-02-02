@@ -1,6 +1,7 @@
 use crate::bundles::widgets::LabelBundle;
 use crate::bundles::{default, Entity, Transform, Vec3};
 use crate::components::ui::{ScoreText, UIOptionString};
+use crate::models::game::gameplay::PlayerId;
 use crate::utils::{FIXED_DIMENSIONS, HALF_HEIGHT, HALF_WALL_THICKNESS, HALF_WIDTH, WALL_THICKNESS};
 use avian2d::prelude::Collider;
 use bevy::prelude::{Color, Commands, Node, PositionType, Reflect, Vec2};
@@ -8,7 +9,6 @@ use bevy::ui::Val;
 use serde::{Deserialize, Serialize};
 use std::hash::{Hash, Hasher};
 use AreaShape::{Cuboid, Triangular, TwoSide};
-use crate::models::game::gameplay::PlayerId;
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
 pub enum AreaSide {

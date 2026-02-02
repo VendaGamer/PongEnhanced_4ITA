@@ -2,13 +2,13 @@ use crate::bundles::paddle::PaddleBundle;
 use crate::bundles::wall::WallBundle;
 use crate::bundles::{BallBundle, GoalBundle};
 use crate::components::area::Area;
+use crate::components::game_modes::{FlashyLight, PaddleTilt};
 use crate::models::game::gameplay::GameMode;
 use crate::resources::GameModeConfig;
 use crate::systems::handle_scoring;
 use crate::utils::{BALL_RADIUS, FIXED_DIMENSIONS, PADDLE_SIZE};
 use bevy::prelude::*;
 use bevy_light_2d::prelude::PointLight2d;
-use crate::components::game_modes::{FlashyLight, PaddleTilt};
 
 #[derive(Bundle)]
 pub struct AreaBundle {

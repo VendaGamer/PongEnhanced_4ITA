@@ -1,8 +1,7 @@
-use crate::models::game::area::LocalPlayerID;
+use crate::models::game::gameplay::PlayerId;
 use crate::Paddle;
 use avian2d::prelude::*;
 use bevy::prelude::*;
-use crate::models::game::gameplay::PlayerId;
 
 #[derive(Bundle)]
 pub struct PaddleBundle {

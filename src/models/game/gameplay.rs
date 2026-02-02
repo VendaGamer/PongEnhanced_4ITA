@@ -1,10 +1,10 @@
 use crate::components::ui::UIOptionString;
+use crate::models::game::area::LocalPlayerID;
+use crate::networking::protocol::RemotePlayerId;
 use bevy::prelude::DerefMut;
 use derive_more::{Deref, From, Into};
 use serde::{Deserialize, Serialize};
 use std::fmt::Write;
-use crate::models::game::area::LocalPlayerID;
-use crate::networking::protocol::RemotePlayerId;
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq, Serialize, Deserialize, Default, Debug)]
 pub enum GameMode {

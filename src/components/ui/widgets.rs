@@ -29,7 +29,6 @@ pub trait UIOptionProvider: Send + Sync + Any {
 }
 
 pub trait UIOptionValue: Any + Send + Sync + Debug + UIOptionString {
-
     fn as_any(&self) -> &dyn Any;
 }
 
@@ -92,7 +91,7 @@ pub struct SelectorButton(pub bool);
 pub struct SelectorText;
 
 #[derive(Component, From, Into)]
-pub struct OptionSelector {
+pub struct Selector {
     pub selected: usize,
     pub options_provider: SourceHandle<dyn UIOptionProvider>,
 }
@@ -124,7 +123,7 @@ pub struct FPSLockSelector;
 pub struct ShowFPSSelector;
 
 
-impl OptionSelector {
+impl Selector {
 
     pub fn current<T: Any + UIOptionString>(&self) -> Option<&T> {
         self.options_provider

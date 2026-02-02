@@ -1,3 +1,6 @@
+use crate::bundles::App;
+use crate::models::game::area::LocalPlayerID;
+use crate::resources::PlayerAction;
 use avian2d::prelude::*;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
@@ -6,9 +9,6 @@ use lightyear::input::config::InputConfig;
 use lightyear::prelude::input::leafwing;
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
-use crate::bundles::App;
-use crate::models::game::area::LocalPlayerID;
-use crate::resources::PlayerAction;
 
 #[derive(Component, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Reflect, Eq, Hash)]
 pub struct RemotePlayerId(pub PeerId, pub LocalPlayerID);
