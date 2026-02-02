@@ -1,13 +1,13 @@
-mod components;
-mod resources;
-mod systems;
 mod bundles;
-mod plugins;
-mod utils;
+mod components;
 mod events;
 mod models;
-mod traits;
 mod networking;
+mod plugins;
+mod resources;
+mod systems;
+mod traits;
+mod utils;
 
 use crate::networking::shared::GameNetworking;
 use crate::plugins::game_ui::GameUIPlugin;
@@ -39,44 +39,44 @@ fn main() {
     let video_mode = settings.window_mode;
 
     app.add_plugins((
-            DefaultPlugins.set(
-                WindowPlugin {
-                    primary_window: Some(Window {
-                        title: "Pong Enhanced".into(),
-                        present_mode: settings.vsync,
-                        resizable: false,
-                        mode: video_mode,
-                        resolution: window_resolution,
-                        ..default()
-                    }),
+        DefaultPlugins
+            .set(WindowPlugin {
+                primary_window: Some(Window {
+                    title: "Pong Enhanced".into(),
+                    present_mode: settings.vsync,
+                    resizable: false,
+                    mode: video_mode,
+                    resolution: window_resolution,
                     ..default()
-                }
-            )
+                }),
+                ..default()
+            })
             .set(ImagePlugin::default_nearest()),
-            PhysicsPlugins::default()
-                .build()
-                .disable::<PhysicsTransformPlugin>()
-                .disable::<PhysicsInterpolationPlugin>(),
-            InputManagerPlugin::<MenuAction>::default(),
-            UiWidgetsPlugins,
-            InputDispatchPlugin,
-            DefaultTweenPlugins,
-            DirectionalNavigationPlugin,
-
-            // my plugins
-            GameCorePlugin,
-            GameUIPlugin,
-            GameNetworking
-        ))
-        .insert_resource(settings);
+        PhysicsPlugins::default()
+            .build()
+            .disable::<PhysicsTransformPlugin>()
+            .disable::<PhysicsInterpolationPlugin>(),
+        InputManagerPlugin::<MenuAction>::default(),
+        UiWidgetsPlugins,
+        InputDispatchPlugin,
+        DefaultTweenPlugins,
+        DirectionalNavigationPlugin,
+        // my plugins
+        GameCorePlugin,
+        GameUIPlugin,
+        GameNetworking,
+    ))
+    .insert_resource(settings);
 
     let world = app.world_mut();
 
-    world.resource_mut::<Assets<_>>()
-        .insert(AssetId::default(), Font::try_from_bytes(DEFAULT_FONT.into())
-        .unwrap())
+    world
+        .resource_mut::<Assets<_>>()
+        .insert(
+            AssetId::default(),
+            Font::try_from_bytes(DEFAULT_FONT.into()).unwrap(),
+        )
         .expect("UNABLE TO LOAD FONT");
-
 
     app.run();
 }

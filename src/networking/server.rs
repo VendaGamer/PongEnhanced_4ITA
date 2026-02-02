@@ -9,9 +9,7 @@ pub struct GameServerPlugin;
 
 impl Plugin for GameServerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((
-            InputPlugin::<PlayerAction>::default(),
-        ));
+        app.add_plugins((InputPlugin::<PlayerAction>::default(),));
     }
 }
 
@@ -24,7 +22,5 @@ pub fn start_server(mut commands: Commands) {
         ))
         .id();
 
-    commands.trigger(Start{
-        entity: server
-    })
+    commands.trigger(Start { entity: server })
 }

@@ -17,14 +17,13 @@ pub struct GameProtocolPlugin;
 
 impl Plugin for GameProtocolPlugin {
     fn build(&self, app: &mut App) {
-
         app.add_plugins(leafwing::InputPlugin::<PlayerAction> {
             config: InputConfig {
                 rebroadcast_inputs: true,
                 ..default()
             },
         });
-        
+
         app.register_component::<Position>()
             .add_prediction()
             .add_should_rollback(position_should_rollback)
@@ -36,8 +35,6 @@ impl Plugin for GameProtocolPlugin {
             .add_should_rollback(rotation_should_rollback)
             .add_linear_interpolation()
             .add_linear_correction_fn();
-
-
 
         app.register_component::<LinearVelocity>().add_prediction();
         app.register_component::<AngularVelocity>().add_prediction();

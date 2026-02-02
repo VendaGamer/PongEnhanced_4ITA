@@ -1,2 +1,2 @@
-pub mod widgets;
 pub mod gameplay;
+pub mod widgets;

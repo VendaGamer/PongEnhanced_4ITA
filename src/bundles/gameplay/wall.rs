@@ -10,7 +10,7 @@ pub struct WallBundle {
     pub collider: Collider,
     pub transform: Transform,
     pub rigid_body: RigidBody,
-    pub restitution: Restitution
+    pub restitution: Restitution,
 }
 
 impl WallBundle {
@@ -19,13 +19,11 @@ impl WallBundle {
         let transform = AreaSide::get_transform(side);
 
         Self {
-            wall: Wall {
-                side
-            },
+            wall: Wall { side },
             collider,
             transform,
             rigid_body: RigidBody::Static,
-            restitution: Restitution::new(0.0)
+            restitution: Restitution::new(0.0),
         }
     }
 }

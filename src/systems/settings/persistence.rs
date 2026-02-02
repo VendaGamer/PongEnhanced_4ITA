@@ -13,19 +13,17 @@ pub fn save_settings(settings: &Res<GameSettings>) {
 }
 
 pub fn load_settings() -> GameSettings {
-
     let settings: GameSettings;
 
     if let Ok(contents) = fs::read_to_string(SETTINGS_FILE) {
         if let Ok(loaded) = serde_json::from_str::<GameSettings>(&contents) {
             settings = loaded;
-        }else{
+        } else {
             settings = GameSettings::default();
         }
-    }else{
+    } else {
         settings = GameSettings::default();
     }
 
     settings
-    
 }

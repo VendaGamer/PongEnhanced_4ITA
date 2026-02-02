@@ -2,7 +2,7 @@ use crate::bundles::Component;
 
 #[derive(Component)]
 pub struct PlayerHealth {
-    player_health: i32
+    player_health: i32,
 }
 
 #[derive(Component)]

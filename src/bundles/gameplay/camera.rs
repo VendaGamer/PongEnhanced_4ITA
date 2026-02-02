@@ -23,7 +23,7 @@ impl Default for CameraBundle {
                 ambient_light: AmbientLight2d {
                     brightness: 1.0,
                     color: Color::WHITE,
-                }
+                },
             },
             camera: Camera {
                 clear_color: ClearColorConfig::Custom(Color::BLACK),
@@ -35,7 +35,8 @@ impl Default for CameraBundle {
                     height: FIXED_DIMENSIONS.y,
                 },
                 ..OrthographicProjection::default_2d()
-            }.into(),
+            }
+            .into(),
             ui_anti_alias: UiAntiAlias::Off,
             msaa: Msaa::Off,
         }

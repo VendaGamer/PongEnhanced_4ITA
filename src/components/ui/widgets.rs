@@ -7,7 +7,7 @@ use std::sync::Arc;
 pub enum SourceHandle<T: 'static + ?Sized> {
     Strong(Arc<T>),
     Static(&'static T),
-    Unique(Box<T>)
+    Unique(Box<T>),
 }
 
 impl<T: ?Sized> SourceHandle<T> {
@@ -15,7 +15,7 @@ impl<T: ?Sized> SourceHandle<T> {
         match self {
             SourceHandle::Strong(arc) => arc.as_ref(),
             SourceHandle::Static(r) => r,
-            SourceHandle::Unique(boxed) => boxed.as_ref()
+            SourceHandle::Unique(boxed) => boxed.as_ref(),
         }
     }
 }
@@ -34,7 +34,7 @@ pub trait UIOptionValue: Any + Send + Sync + Debug + UIOptionString {
 
 impl<T> UIOptionValue for T
 where
-    T: Any + Send + Sync + Debug + UIOptionString
+    T: Any + Send + Sync + Debug + UIOptionString,
 {
     #[inline]
     fn as_any(&self) -> &dyn Any {
@@ -43,7 +43,6 @@ where
 }
 
 impl<T: UIOptionValue> UIOptionProvider for Vec<T> {
-
     #[inline]
     fn get_option(&self, index: usize) -> Option<&dyn UIOptionValue> {
         self.get(index).map(|val| val as &dyn UIOptionValue)
@@ -54,7 +53,7 @@ impl<T: UIOptionValue> UIOptionProvider for Vec<T> {
     }
 }
 
-impl<T: UIOptionValue, const N: usize> UIOptionProvider for [T; N]  {
+impl<T: UIOptionValue, const N: usize> UIOptionProvider for [T; N] {
     #[inline]
     fn get_option(&self, index: usize) -> Option<&dyn UIOptionValue> {
         self.get(index).map(|val| val as &dyn UIOptionValue)
@@ -75,7 +74,6 @@ impl<T: UIOptionValue + 'static> UIOptionProvider for [T] {
         self.len()
     }
 }
-
 
 #[derive(Component)]
 pub struct Dropdown {
@@ -100,7 +98,6 @@ pub trait UIOptionString {
     fn push_ui_option_string(&self, string: &mut String);
 }
 
-
 #[derive(Component)]
 pub struct MonitorSelector;
 
@@ -122,9 +119,7 @@ pub struct FPSLockSelector;
 #[derive(Component)]
 pub struct ShowFPSSelector;
 
-
 impl Selector {
-
     pub fn current<T: Any + UIOptionString>(&self) -> Option<&T> {
         self.options_provider
             .get_ref()

@@ -34,9 +34,7 @@ impl BallBundle {
         radius: f32,
     ) -> Self {
         Self {
-            ball: Ball{
-                initial_velocity
-            },
+            ball: Ball { initial_velocity },
             mesh: Mesh2d(meshes.add(Circle::new(radius))),
             material: MeshMaterial2d(materials.add(Color::WHITE)),
             transform: Transform::from_translation(position),

@@ -2,7 +2,9 @@ use crate::bundles::widgets::LabelBundle;
 use crate::bundles::{default, Entity, Transform, Vec3};
 use crate::components::ui::{ScoreText, UIOptionString};
 use crate::models::game::gameplay::PlayerId;
-use crate::utils::{FIXED_DIMENSIONS, HALF_HEIGHT, HALF_WALL_THICKNESS, HALF_WIDTH, WALL_THICKNESS};
+use crate::utils::{
+    FIXED_DIMENSIONS, HALF_HEIGHT, HALF_WALL_THICKNESS, HALF_WIDTH, WALL_THICKNESS,
+};
 use avian2d::prelude::Collider;
 use bevy::prelude::{Color, Commands, Node, PositionType, Reflect, Vec2};
 use bevy::ui::Val;
@@ -18,8 +20,7 @@ pub enum AreaSide {
     Bottom,
 }
 
-
-impl AreaSide{
+impl AreaSide {
     pub fn opposite(self) -> AreaSide {
         match self {
             AreaSide::Left => AreaSide::Right,
@@ -29,10 +30,8 @@ impl AreaSide{
         }
     }
 
-    pub fn spawn_score_text(self, commands: &mut Commands){
-
+    pub fn spawn_score_text(self, commands: &mut Commands) {
         let position = match self {
-
             AreaSide::Left => Vec2::new(FIXED_DIMENSIONS.x - (FIXED_DIMENSIONS.x / 3.0), 0.0),
             AreaSide::Right => Vec2::new(FIXED_DIMENSIONS.x / 3.0, 0.0),
             AreaSide::Top => Vec2::new(0.0, HALF_HEIGHT),
@@ -47,9 +46,7 @@ impl AreaSide{
                 ..default()
             },
             LabelBundle::custom("0", Color::WHITE.into(), 80.0),
-            ScoreText {
-                area_side: self,
-            }
+            ScoreText { area_side: self },
         ));
     }
 
@@ -60,7 +57,6 @@ impl AreaSide{
         }
     }
 }
-
 
 #[derive(Clone, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
 pub struct TeamInfo {
@@ -78,7 +74,7 @@ impl TeamInfo {
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Reflect, Eq, Hash)]
 pub enum LocalPlayerID {
     Keyboard(u8),
-    Gamepad(Entity)
+    Gamepad(Entity),
 }
 
 #[derive(Clone, Eq, Hash, PartialEq, Debug, Serialize, Deserialize)]
@@ -89,9 +85,7 @@ pub enum AreaShape {
 }
 
 impl AreaShape {
-
     pub fn default() -> AreaShape {
-
         TwoSide([
             TeamInfo {
                 current_score: 0,
@@ -104,7 +98,6 @@ impl AreaShape {
                 players: Vec::new(),
             },
         ])
-
     }
 }
 
@@ -119,10 +112,7 @@ impl UIOptionString for AreaShape {
     }
 }
 
-
 impl AreaShape {
-
-
     pub fn get_wall_sides(&self) -> &[AreaSide] {
         match self {
             TwoSide(_) => &[AreaSide::Top, AreaSide::Bottom],
@@ -131,34 +121,31 @@ impl AreaShape {
         }
     }
     pub fn get_team(&mut self, side: AreaSide) -> Option<&TeamInfo> {
-
         let teams = self.get_teams();
 
-        for team in teams.iter(){
+        for team in teams.iter() {
             if side == team.area_side {
                 return Some(team);
             }
         }
         None
-
     }
 
     pub fn get_team_mut(&mut self, side: AreaSide) -> Option<&mut TeamInfo> {
-
         let teams = self.get_teams_mut();
 
-        for team in teams.iter_mut(){
+        for team in teams.iter_mut() {
             if side == team.area_side {
                 return Some(team);
             }
         }
-        
+
         None
     }
-    
+
     pub fn contains_player(&self, player_id: PlayerId) -> bool {
-        for team in self.get_teams().iter(){
-            for player in team.players.iter(){
+        for team in self.get_teams().iter() {
+            for player in team.players.iter() {
                 if *player == player_id {
                     return true;
                 }
@@ -169,26 +156,23 @@ impl AreaShape {
 
     pub fn get_teams(&self) -> &[TeamInfo] {
         match self {
-            TwoSide(opt)     => opt.as_ref(),
-            Triangular(opt)  => opt.as_ref(),
-            Cuboid(opt)      => opt.as_ref(),
+            TwoSide(opt) => opt.as_ref(),
+            Triangular(opt) => opt.as_ref(),
+            Cuboid(opt) => opt.as_ref(),
         }
     }
 
     pub fn get_teams_mut(&mut self) -> &mut [TeamInfo] {
         match self {
-            TwoSide(opt)     => opt.as_mut(),
-            Triangular(opt)  => opt.as_mut(),
-            Cuboid(opt)      => opt.as_mut(),
+            TwoSide(opt) => opt.as_mut(),
+            Triangular(opt) => opt.as_mut(),
+            Cuboid(opt) => opt.as_mut(),
         }
     }
 }
 
 impl AreaSide {
-
     pub fn get_transform(self) -> Transform {
-
-
         match self {
             AreaSide::Left => Transform {
                 translation: Vec3::new(-HALF_WIDTH - HALF_WALL_THICKNESS, 0.0, 0.0),
@@ -235,7 +219,7 @@ impl AreaSide {
                     let y = -HALF_HEIGHT + spacing * (i + 1) as f32;
                     positions.push(Vec3::new(x, y, 0.0));
                 }
-            },
+            }
             AreaSide::Top | AreaSide::Bottom => {
                 let y = if self == AreaSide::Top {
                     HALF_HEIGHT - 50.0

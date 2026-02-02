@@ -7,7 +7,6 @@ pub fn update_selector_text(
     children: Query<&Children>,
 ) {
     for (selector_entity, selector) in &selectors {
-
         for child in children.iter_descendants(selector_entity) {
             if let Ok(mut text) = texts.get_mut(child) {
                 text.0.clear();

@@ -2,7 +2,6 @@ use crate::bundles::{default, Bundle, Color, Node, Text, TextColor, TextFont, Ui
 use bevy::prelude::*;
 use bevy::text::FontSmoothing;
 
-
 const GAME_TITLE: &'static str = "PONG ENHANCED";
 
 #[derive(Bundle)]
@@ -23,7 +22,7 @@ impl LabelBundle {
 
     pub fn game_title() -> impl Bundle {
         (
-            Node{
+            Node {
                 margin: UiRect::bottom(Val::Px(50.0)),
                 ..default()
             },
@@ -35,7 +34,7 @@ impl LabelBundle {
                     ..default()
                 },
                 TextColor(Color::srgb(0.9, 0.9, 1.0)),
-            ))
+            )),
         )
     }
 

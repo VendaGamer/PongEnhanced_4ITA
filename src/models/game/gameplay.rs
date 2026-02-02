@@ -24,10 +24,8 @@ pub enum PlayerId {
 
 impl PlayerId {
     pub fn local(&self) -> LocalPlayerID {
-        match self { 
-            PlayerId::Network(id) =>{
-                id.1
-            },
+        match self {
+            PlayerId::Network(id) => id.1,
             PlayerId::Local(id) => *id,
         }
     }
@@ -47,9 +45,21 @@ impl UIOptionString for GameMode {
     }
 }
 
-
-#[derive(Clone, Debug, Copy, Eq, Hash, PartialEq, Serialize,
-         Deserialize, Default, From, Into, Deref, DerefMut)]
+#[derive(
+    Clone,
+    Debug,
+    Copy,
+    Eq,
+    Hash,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    Default,
+    From,
+    Into,
+    Deref,
+    DerefMut,
+)]
 pub struct PlayerNum(pub u8);
 
 impl UIOptionString for PlayerNum {

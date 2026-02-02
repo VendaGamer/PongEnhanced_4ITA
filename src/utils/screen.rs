@@ -11,4 +11,4 @@ pub const HALF_HEIGHT: f32 = FIXED_DIMENSIONS.y / 2.0;
 pub const HALF_WALL_THICKNESS: f32 = WALL_THICKNESS / 2.0;
 
 pub const PADDLE_WALL_PADDING: f32 = 25.0;
-pub const TRANSFORM_ZERO: Transform = Transform::from_xyz(0.0,0.0,0.0);
+pub const TRANSFORM_ZERO: Transform = Transform::from_xyz(0.0, 0.0, 0.0);

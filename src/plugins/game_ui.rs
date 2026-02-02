@@ -10,29 +10,28 @@ pub struct GameUIPlugin;
 
 impl Plugin for GameUIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (
+        app.add_systems(
+            Update,
+            (
                 u_ui_hover_light,
                 u_slider_visuals,
                 t_button_press,
                 handle_ui_scaling,
                 u_highlight_focused_element,
                 u_navigate_element,
-                u_button_press
-            ))
-            .add_observer(t_slider_change)
-            .add_observer(update_selector);
+                u_button_press,
+            ),
+        )
+        .add_observer(t_slider_change)
+        .add_observer(update_selector);
     }
 }
 
-fn handle_ui_scaling(
-    mut ui_scale: ResMut<UiScale>,
-    mut resized: MessageReader<WindowResized>)
-{
+fn handle_ui_scaling(mut ui_scale: ResMut<UiScale>, mut resized: MessageReader<WindowResized>) {
     for event in resized.read() {
-
         let scale_x = event.width / FIXED_DIMENSIONS.x;
         let scale_y = event.height / FIXED_DIMENSIONS.y;
-        
+
         let scale = scale_y.min(scale_x);
         ui_scale.0 = scale;
     }
@@ -41,10 +40,10 @@ fn handle_ui_scaling(
 fn t_slider_change(
     value_change: On<ValueChange<f32>>,
     mut commands: Commands,
-    sliders: Query<&SliderValue>)
-{
-    if let Ok(slider_val) = sliders.get(value_change.source){
-        if slider_val.0 == value_change.value{
+    sliders: Query<&SliderValue>,
+) {
+    if let Ok(slider_val) = sliders.get(value_change.source) {
+        if slider_val.0 == value_change.value {
             return;
         }
 

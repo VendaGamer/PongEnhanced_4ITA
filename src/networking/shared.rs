@@ -10,7 +10,7 @@ impl Plugin for GameNetworking {
         app.add_plugins((
             ServerPlugins::default(),
             ClientPlugins::default(),
-            GameProtocolPlugin
+            GameProtocolPlugin,
         ));
     }
 }

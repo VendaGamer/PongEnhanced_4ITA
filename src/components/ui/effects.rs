@@ -9,7 +9,6 @@ pub struct HoverLightColor {
     pub hover_color: Color,
 }
 
-
 impl HoverLightColor {
     pub fn new(base_color: Color, lighten_amount: f32) -> Self {
         Self {

@@ -1,16 +1,21 @@
 use crate::bundles::area::AreaBundle;
 use crate::bundles::widgets::LabelBundle;
-use crate::components::ui::{MainMenu, MonitorSelector, OfflinePlayMenu, OnlinePlayMenu, PlayerJoinInMenu, RefreshRateSelector, ResolutionSelector, Selector, SettingsMenu, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector, WindowModeSelector};
+use crate::components::ui::{
+    MainMenu, MonitorSelector, OfflinePlayMenu, OnlinePlayMenu, PlayerJoinInMenu,
+    RefreshRateSelector, ResolutionSelector, Selector, SettingsMenu, SourceHandle,
+    UIOptionProvider, UIOptionString, VSyncSelector, WindowModeSelector,
+};
 use crate::components::Player;
-use crate::events::widgets::{ButtonPressed, CheckboxChanged, OptionChanged, SliderValueChanged};
+use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged};
 use crate::models::game::gameplay::GameMode;
 use crate::models::ui::option::{VSYNC_OPTIONS, VSYNC_OPTIONS_RAW};
-use crate::resources::{GameModeConfig, GameSettings, MonitorInfo, Monitors, PendingSettings, PlayerAction, RefreshRate, Resolution};
+use crate::resources::{
+    GameModeConfig, GameSettings, MonitorInfo, Monitors, PendingSettings, PlayerAction,
+    RefreshRate, Resolution,
+};
 use crate::systems::settings::persistence::save_settings;
 use crate::systems::widgets::*;
 use crate::utils::MODERN_THEME;
-use bevy::asset::AssetContainer;
-use bevy::dev_tools::fps_overlay::FpsOverlayConfig;
 use bevy::input_focus::directional_navigation::DirectionalNavigationMap;
 use bevy::math::CompassOctant;
 use bevy::prelude::*;
@@ -18,12 +23,8 @@ use bevy::ui_widgets::observe;
 use bevy::window::{PrimaryWindow, WindowMode};
 use leafwing_input_manager::action_state::ActionState;
 
-pub fn spawn_m_main(
-    directional_nav_map: &mut DirectionalNavigationMap,
-    commands: &mut Commands,
-) {
-    commands.spawn(m_base(MainMenu)).with_children(| base |{
-
+pub fn spawn_m_main(directional_nav_map: &mut DirectionalNavigationMap, commands: &mut Commands) {
+    commands.spawn(m_base(MainMenu)).with_children(|base| {
         base.spawn(LabelBundle::game_title());
         base.spawn((
             Node {
@@ -35,32 +36,33 @@ pub fn spawn_m_main(
                 ..default()
             },
             Outline::new(Val::Px(5.0), Val::ZERO, Color::linear_rgb(0.5, 0.5, 0.5)),
-            BackgroundColor::from(Color::srgb(0.1, 0.1, 0.1))
-        )).with_children(| cont |{
+            BackgroundColor::from(Color::srgb(0.1, 0.1, 0.1)),
+        ))
+        .with_children(|cont| {
+            let but1 = cont
+                .spawn(w_menu_button(Color::srgb(0.2, 0.6, 0.9), "Offline Play"))
+                .observe(on_offline)
+                .id();
 
-            let but1 =
-            cont.spawn(w_menu_button(Color::srgb(0.2, 0.6, 0.9), "Offline Play"))
-                .observe(on_offline).id();
+            let but2 = cont
+                .spawn(w_menu_button(Color::srgb(0.6, 0.3, 0.9), "Online Play"))
+                .observe(on_online)
+                .id();
 
-            let but2 =
-            cont.spawn(w_menu_button(Color::srgb(0.6, 0.3, 0.9), "Online Play"))
-                .observe(on_online).id();
+            let but3 = cont
+                .spawn(w_menu_button(Color::srgb(0.5, 0.5, 0.5), "Settings"))
+                .observe(on_settings)
+                .id();
 
-            let but3 =
-            cont.spawn(w_menu_button(Color::srgb(0.5, 0.5, 0.5), "Settings"))
-                .observe(on_settings).id();
+            let but4 = cont
+                .spawn(w_menu_button(Color::srgb(0.8, 0.2, 0.2), "Exit"))
+                .observe(on_exit)
+                .id();
 
-            let but4 =
-            cont.spawn(w_menu_button(Color::srgb(0.8, 0.2, 0.2), "Exit"))
-                .observe(on_exit).id();
-
-            directional_nav_map.add_looping_edges(
-                &[but1,but2,but3,but4],
-                CompassOctant::South);
+            directional_nav_map.add_looping_edges(&[but1, but2, but3, but4], CompassOctant::South);
         });
     });
 }
-
 
 #[macro_export]
 macro_rules! boxed_vec {
@@ -71,9 +73,7 @@ macro_rules! boxed_vec {
     };
 }
 
-
-const GAMEMODE_OPTIONS: SourceHandle<dyn UIOptionProvider> =
-SourceHandle::Static(&[
+const GAMEMODE_OPTIONS: SourceHandle<dyn UIOptionProvider> = SourceHandle::Static(&[
     GameMode::Classic,
     GameMode::Modern,
     GameMode::UpsideDown,
@@ -81,15 +81,12 @@ SourceHandle::Static(&[
     GameMode::Twisted,
 ]);
 
-
 pub fn m_offline() -> impl Bundle {
     (
         m_base(OfflinePlayMenu),
         children![
             w_menu_title("Offline Play"),
-            (
-                w_menu_section(),
-            ),
+            (w_menu_section(),),
             (
                 Node {
                     flex_direction: FlexDirection::Row,
@@ -112,15 +109,14 @@ pub fn m_offline() -> impl Bundle {
     )
 }
 
-
 fn on_game_mode_changed(
     change: On<OptionChanged>,
     selectors: Query<(Entity, &Selector)>,
     mut config: ResMut<GameModeConfig>,
 ) {
     for (entity, selector) in selectors.iter() {
-        if change.entity == entity{
-            if let Some(change) = selector.current::<GameMode>(){
+        if change.entity == entity {
+            if let Some(change) = selector.current::<GameMode>() {
                 config.game_mode = *change;
 
                 println!("Game mode changed to {change:?}");
@@ -205,7 +201,7 @@ fn on_offline_back_main(
     mut commands: Commands,
     mut map: ResMut<DirectionalNavigationMap>,
     menu: Query<Entity, With<OfflinePlayMenu>>,
-){
+) {
     commands.entity(menu.single().expect("No menu")).despawn();
     spawn_m_main(map.as_mut(), &mut commands);
 }
@@ -215,7 +211,7 @@ fn on_online_back_main(
     mut commands: Commands,
     mut map: ResMut<DirectionalNavigationMap>,
     main_menu: Single<Entity, With<OnlinePlayMenu>>,
-){
+) {
     commands.entity(*main_menu).despawn();
     spawn_m_main(map.as_mut(), &mut commands);
 }
@@ -236,14 +232,11 @@ fn m_player_join_in(player_num: u8) -> impl Bundle {
             w_menu_title(format!("Player {} Join In", player_num)),
             (
                 w_menu_section(),
-                children![
-                    LabelBundle::button_label("Press any button to join..."),
-                ],
+                children![LabelBundle::button_label("Press any button to join..."),],
             ),
         ],
     )
 }
-
 
 pub fn u_join_in(
     menus: Single<(Entity, &PlayerJoinInMenu)>,
@@ -251,14 +244,13 @@ pub fn u_join_in(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    mut game_settings: ResMut<GameModeConfig>
+    mut game_settings: ResMut<GameModeConfig>,
 ) {
     let player_num = menus.1.0 as usize;
 
     for (action, player) in player_query {
         let area = &mut game_settings.area_shape;
         if !action.get_just_pressed().is_empty() && !area.contains_player(player.id) {
-
             let teams_len = area.get_teams().len();
 
             area.get_teams_mut()[player_num - 1].players.push(player.id);
@@ -267,14 +259,17 @@ pub fn u_join_in(
 
             if player_num < teams_len {
                 commands.spawn(m_player_join_in((player_num + 1) as u8));
-            }else{
-                AreaBundle::spawn(game_settings.as_ref(), &mut commands, meshes.as_mut(), materials.as_mut());
+            } else {
+                AreaBundle::spawn(
+                    game_settings.as_ref(),
+                    &mut commands,
+                    meshes.as_mut(),
+                    materials.as_mut(),
+                );
             }
         }
     }
 }
-
-
 
 pub fn m_online() -> impl Bundle {
     (
@@ -285,53 +280,36 @@ pub fn m_online() -> impl Bundle {
                 w_menu_section(),
                 children![
                     (
-                        w_menu_button(
-                            Color::srgb(0.3, 0.6, 0.9),
-                            "Quick Match"
-                        ),
+                        w_menu_button(Color::srgb(0.3, 0.6, 0.9), "Quick Match"),
                         observe(on_quick_match)
                     ),
                     (
-                        w_menu_button(
-                            Color::srgb(0.5, 0.4, 0.9),
-                            "Create Room",
-                        ),
+                        w_menu_button(Color::srgb(0.5, 0.4, 0.9), "Create Room",),
                         observe(on_create_room)
                     ),
                     (
-                        w_menu_button(
-                            Color::srgb(0.9, 0.5, 0.3),
-                            "Join Room",
-                        ),
+                        w_menu_button(Color::srgb(0.9, 0.5, 0.3), "Join Room",),
                         observe(on_join_room)
                     ),
                     (
-                        w_menu_button(
-                            Color::srgb(0.4, 0.7, 0.4),
-                            "Friends List",
-                        ),
+                        w_menu_button(Color::srgb(0.4, 0.7, 0.4), "Friends List",),
                         observe(on_friends_list)
                     ),
                 ],
             ),
             (
-                w_menu_button(
-                    Color::srgb(0.6, 0.6, 0.6),
-                    "Back",
-                ),
+                w_menu_button(Color::srgb(0.6, 0.6, 0.6), "Back",),
                 observe(on_online_back_main)
             )
         ],
     )
 }
 
-fn index_for_window_mode(
-    window_mode: &WindowMode
-) -> usize {
+fn index_for_window_mode(window_mode: &WindowMode) -> usize {
     match window_mode {
         WindowMode::Windowed => 0,
         WindowMode::BorderlessFullscreen(..) => 1,
-        WindowMode::Fullscreen(..) => 2
+        WindowMode::Fullscreen(..) => 2,
     }
 }
 
@@ -339,143 +317,160 @@ pub fn spawn_m_settings(
     settings: &GameSettings,
     monitors: &Monitors,
     commands: &mut Commands,
-    nav_map: &mut DirectionalNavigationMap
+    nav_map: &mut DirectionalNavigationMap,
 ) {
     let cur_window_mode = index_for_window_mode(&settings.window_mode);
     let mut entities: Vec<Entity> = Vec::with_capacity(9);
 
     commands.insert_resource(PendingSettings::from(settings));
-    commands.spawn(m_base(SettingsMenu)).with_children(| base | {
-
+    commands.spawn(m_base(SettingsMenu)).with_children(|base| {
         base.spawn(w_menu_title("Settings"));
 
+        base.spawn(w_menu_section()).with_children(|section| {
+            {
+                section.spawn(LabelBundle::button_label("Sound Effects"));
+                let mut sfx = section.append_slider(0.0, 100.0, settings.sfx_volume);
 
-        base.spawn(w_menu_section())
-            .with_children(| section |{
+                sfx.root.observe(on_sfx_changed);
+                entities.push(sfx.thumb);
+            }
 
-                {
-                    section.spawn(LabelBundle::button_label("Sound Effects"));
-                    let mut sfx = section.append_slider(
-                        0.0,
-                        100.0,
-                        settings.sfx_volume
-                    );
+            {
+                section.spawn(LabelBundle::button_label("Master volume"));
+                let mut mas = section.append_slider(0.0, 100.0, settings.master_volume);
 
-                    sfx.root.observe(on_sfx_changed);
-                    entities.push(sfx.thumb);
-                }
+                mas.root.observe(on_master_changed);
+                entities.push(mas.thumb);
+            }
 
-                {
-                    section.spawn(LabelBundle::button_label("Master volume"));
-                    let mut mas = section.append_slider(
-                        0.0,
-                        100.0,
-                        settings.master_volume
-                    );
-                    
-                    mas.root.observe(on_master_changed);
-                    entities.push(mas.thumb);
-                }
+            {
+                let monitor_index = monitors.selected_monitor;
+                let monitor = monitors.get_current_monitor();
 
-                {
-                    let monitor_index = monitors.selected_monitor;
-                    let monitor = monitors.get_current_monitor();
-
-                    let mut w_sel = section.append_selector(SourceHandle::Unique(boxed_vec![
+                let mut w_sel = section.append_selector(
+                    SourceHandle::Unique(boxed_vec![
                         WindowMode::Windowed,
                         WindowMode::BorderlessFullscreen(monitor.monitor_selection),
-                        WindowMode::Fullscreen(monitor.monitor_selection, VideoModeSelection::Current)
-                    ]), cur_window_mode, "Window Mode");
+                        WindowMode::Fullscreen(
+                            monitor.monitor_selection,
+                            VideoModeSelection::Current
+                        )
+                    ]),
+                    cur_window_mode,
+                    "Window Mode",
+                );
 
-                    w_sel.root.insert(WindowModeSelector)
-                              .observe(on_window_mode_changed);
+                w_sel
+                    .root
+                    .insert(WindowModeSelector)
+                    .observe(on_window_mode_changed);
 
-                    entities.push(w_sel.bar);
+                entities.push(w_sel.bar);
 
-                    let mut m_sel = section.append_selector(SourceHandle::Strong(
-                        monitors.monitors.clone()), monitor_index, "Monitor");
+                let mut m_sel = section.append_selector(
+                    SourceHandle::Strong(monitors.monitors.clone()),
+                    monitor_index,
+                    "Monitor",
+                );
 
-                    entities.push(m_sel.bar);
+                entities.push(m_sel.bar);
 
-                    m_sel.root.insert(MonitorSelector)
-                              .observe(on_monitor_changed);
+                m_sel
+                    .root
+                    .insert(MonitorSelector)
+                    .observe(on_monitor_changed);
 
-                    let mut res_sel = section.append_selector(SourceHandle::Strong(
-                        monitor.resolutions.clone()), 0, "Resolution");
+                let mut res_sel = section.append_selector(
+                    SourceHandle::Strong(monitor.resolutions.clone()),
+                    0,
+                    "Resolution",
+                );
 
-                    entities.push(res_sel.bar);
+                entities.push(res_sel.bar);
 
-                    res_sel.root.insert(ResolutionSelector)
-                              .observe(on_resolution_changed);
+                res_sel
+                    .root
+                    .insert(ResolutionSelector)
+                    .observe(on_resolution_changed);
 
-                    let mut ref_sel = section.append_selector(SourceHandle::Strong(
-                        monitor.refresh_rates.clone()), 0, "Refresh Rate");
+                let mut ref_sel = section.append_selector(
+                    SourceHandle::Strong(monitor.refresh_rates.clone()),
+                    0,
+                    "Refresh Rate",
+                );
 
-                    entities.push(ref_sel.bar);
+                entities.push(ref_sel.bar);
 
-                    ref_sel.root.insert(RefreshRateSelector)
-                                .observe(on_refresh_rate_changed);
+                ref_sel
+                    .root
+                    .insert(RefreshRateSelector)
+                    .observe(on_refresh_rate_changed);
+            }
 
-                }
+            {
+                let mut v_sel = section.append_selector(VSYNC_OPTIONS, 0, "VSync");
 
-                {
-                    let mut v_sel = section.append_selector(VSYNC_OPTIONS, 0, "VSync");
+                v_sel.root.insert(VSyncSelector).observe(on_vsync_changed);
 
-                    v_sel.root.insert(VSyncSelector)
-                              .observe(on_vsync_changed);
+                entities.push(v_sel.bar);
+            }
+        });
 
-                    entities.push(v_sel.bar);
-                }
-            });
+        base.spawn(w_row_container(10.0))
+            .with_children(|container| {
+                const SIZE: Val2 = Val2::new(Val::Px(300.0), Val::Px(50.0));
 
-            base.spawn(w_row_container(10.0)).with_children(| container |{
+                entities.push(
+                    container
+                        .spawn(w_button(MODERN_THEME.button, "Back", SIZE))
+                        .observe(on_settings_back_main)
+                        .id(),
+                );
 
-                entities.push(container.spawn(w_button(MODERN_THEME.button, Vec2::new(200.0, 60.0), "Back"))
-                    .observe(on_settings_back_main)
-                    .id());
-
-                entities.push(container.spawn(w_button(MODERN_THEME.button, Vec2::new(200.0, 60.0), "Apply"))
-                    .observe(on_settings_apply)
-                    .id());
+                entities.push(
+                    container
+                        .spawn(w_button(MODERN_THEME.button, "Apply", SIZE))
+                        .observe(on_settings_apply)
+                        .id(),
+                );
             });
     });
 
-
     nav_map.add_looping_edges(&entities[..=7], CompassOctant::South);
-    nav_map.add_looping_edges(&[
-        entities[0],
-        entities[1],
-        entities[2],
-        entities[3],
-        entities[4],
-        entities[5],
-        entities[6],
-        entities[8],
-    ], CompassOctant::South);
+    nav_map.add_looping_edges(
+        &[
+            entities[0],
+            entities[1],
+            entities[2],
+            entities[3],
+            entities[4],
+            entities[5],
+            entities[6],
+            entities[8],
+        ],
+        CompassOctant::South,
+    );
     nav_map.add_looping_edges(&entities[7..=8], CompassOctant::East);
 }
 
-fn on_sfx_changed(change: On<SliderValueChanged>, mut settings: ResMut<GameSettings>){
+fn on_sfx_changed(change: On<SliderValueChanged>, mut settings: ResMut<GameSettings>) {
     settings.sfx_volume = change.value;
     println!("Changed SFX volume to {}", change.value);
 }
 
-fn on_master_changed(change: On<SliderValueChanged>, mut settings: ResMut<GameSettings>){
+fn on_master_changed(change: On<SliderValueChanged>, mut settings: ResMut<GameSettings>) {
     settings.master_volume = change.value;
     println!("Changed MASTER volume to {}", change.value);
 }
 
-fn on_screen_mode_changed(change : On<OptionChanged>){
-    
-}
+fn on_screen_mode_changed(change: On<OptionChanged>) {}
 
 fn on_settings_apply(
-    _ : On<ButtonPressed>,
+    _: On<ButtonPressed>,
     pending: Res<PendingSettings>,
     mut settings: ResMut<GameSettings>,
-    mut fps_overlay: ResMut<FpsOverlayConfig>,
     mut windows: Query<&mut Window, With<PrimaryWindow>>,
-){
+) {
     let mut primary_window = windows.single_mut().expect("No primary window found");
 
     settings.vsync = pending.vsync;
@@ -484,15 +479,15 @@ fn on_settings_apply(
     primary_window.present_mode = settings.vsync;
     primary_window.mode = settings.window_mode;
 
-
     if let Some(res) = settings.window_resolution {
         if matches!(settings.window_mode, WindowMode::Windowed) {
-            primary_window.resolution.set_physical_resolution(res.x, res.y);
+            primary_window
+                .resolution
+                .set_physical_resolution(res.x, res.y);
             return;
         }
     }
 }
-
 
 fn m_base(menu_type: impl Component) -> impl Bundle {
     (
@@ -505,12 +500,12 @@ fn m_base(menu_type: impl Component) -> impl Bundle {
             flex_direction: FlexDirection::Column,
             ..default()
         },
-        BackgroundColor(Color::srgb(0.05, 0.05, 0.1))
+        BackgroundColor(Color::srgb(0.05, 0.05, 0.1)),
     )
 }
 
 pub fn u_settings_visibility(
-    _ : On<Add, MainMenu>,
+    _: On<Add, MainMenu>,
     mut selectors: ParamSet<(
         Single<(&mut Node, &Selector), With<MonitorSelector>>,
         Single<(&mut Node, &Selector), With<ResolutionSelector>>,
@@ -527,19 +522,19 @@ fn change_selector_visibility(
         Single<(&mut Node, &Selector), With<MonitorSelector>>,
         Single<(&mut Node, &Selector), With<ResolutionSelector>>,
         Single<(&mut Node, &Selector), With<RefreshRateSelector>>,
-    )>
-){
+    )>,
+) {
     match window_mode {
         WindowMode::Windowed => {
             selectors.p0().0.display = Display::None;
             selectors.p1().0.display = Display::Flex;
             selectors.p2().0.display = Display::None;
-        },
+        }
         WindowMode::Fullscreen(..) => {
             selectors.p0().0.display = Display::Flex;
             selectors.p1().0.display = Display::Flex;
             selectors.p2().0.display = Display::Flex;
-        },
+        }
         WindowMode::BorderlessFullscreen(..) => {
             selectors.p0().0.display = Display::Flex;
             selectors.p1().0.display = Display::None;
@@ -557,12 +552,11 @@ fn on_window_mode_changed(
         Single<(&mut Node, &Selector), With<RefreshRateSelector>>,
     )>,
     mut settings: ResMut<PendingSettings>,
-){
+) {
     let current = mod_sel.current::<WindowMode>().unwrap();
     change_selector_visibility(current, &mut selectors);
     settings.window_mode = *current;
 }
-
 
 fn on_monitor_changed(
     _: On<OptionChanged>,
@@ -574,40 +568,26 @@ fn on_monitor_changed(
     match settings.window_mode {
         WindowMode::Fullscreen(ref mut monitor, ..) => {
             *monitor = current_monitor.monitor_selection;
-        },
+        }
         WindowMode::BorderlessFullscreen(ref mut monitor) => {
             *monitor = current_monitor.monitor_selection;
-        },
+        }
         WindowMode::Windowed => {}
     };
 }
 
-fn on_vsync_changed(
-    change: On<OptionChanged>,
-    mut settings: ResMut<PendingSettings>,
-) {
+fn on_vsync_changed(change: On<OptionChanged>, mut settings: ResMut<PendingSettings>) {
     settings.vsync = VSYNC_OPTIONS_RAW[change.selected_index];
 }
-
-fn on_show_fps_changed(
-    change: On<CheckboxChanged>,
-    mut settings: ResMut<GameSettings>,
-    mut fps_overlay: ResMut<FpsOverlayConfig>,
-) {
-    settings.show_fps = change.state;
-    fps_overlay.enabled = settings.show_fps;
-}
-
 
 fn on_resolution_changed(
     _: On<OptionChanged>,
     selectors: Query<&Selector, With<ResolutionSelector>>,
     mut settings: ResMut<PendingSettings>,
-){
+) {
     let selector = selectors.single().expect("No resolution selector found");
 
     if let Some(res) = selector.current::<Resolution>() {
-
         if let WindowMode::Fullscreen(.., selection) = &mut settings.window_mode {
             if let VideoModeSelection::Specific(mode) = selection {
                 mode.physical_size = res.0;
@@ -622,7 +602,7 @@ fn on_refresh_rate_changed(
     _: On<OptionChanged>,
     selectors: Query<&Selector, With<RefreshRateSelector>>,
     mut settings: ResMut<PendingSettings>,
-){
+) {
     let selector = selectors.single().expect("No resolution selector found");
 
     if let Some(res) = selector.current::<RefreshRate>() {
@@ -634,15 +614,14 @@ fn on_refresh_rate_changed(
     }
 }
 
-
-impl UIOptionString for WindowMode{
+impl UIOptionString for WindowMode {
     fn push_ui_option_string(&self, string: &mut String) {
-        let s = match self { 
+        let s = match self {
             WindowMode::Windowed => "Windowed",
             WindowMode::BorderlessFullscreen(..) => "BorderlessFullscreen",
             WindowMode::Fullscreen(..) => "Fullscreen",
         };
-        
+
         string.push_str(s);
     }
 }

@@ -17,8 +17,9 @@ pub struct GameCorePlugin;
 
 impl Plugin for GameCorePlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_systems(Update, (
+        app.add_systems(
+            Update,
+            (
                 u_move_paddle_i,
                 check_connection,
                 maintain_ball_speed,
@@ -27,26 +28,20 @@ impl Plugin for GameCorePlugin {
                 u_join_in,
                 u_spawned_gamepads,
                 u_tilt_i,
-            ))
-            .add_systems(Startup, (
-                setup_common,
-            ))
-            .add_systems(PostStartup, (
-                on_spawn_monitors,
-            ))
-            .add_observer(paddle_hit_dynamics)
-            .add_observer(t_ball_events)
-            .add_observer(u_settings_visibility)
-            .insert_resource(GameModeConfig::default())
-            .insert_resource(Gravity::ZERO)
-            .insert_resource(InputFocusVisible(false));
+            ),
+        )
+        .add_systems(Startup, (setup_common,))
+        .add_systems(PostStartup, (on_spawn_monitors,))
+        .add_observer(paddle_hit_dynamics)
+        .add_observer(t_ball_events)
+        .add_observer(u_settings_visibility)
+        .insert_resource(GameModeConfig::default())
+        .insert_resource(Gravity::ZERO)
+        .insert_resource(InputFocusVisible(false));
     }
 }
 
-fn u_spawned_gamepads(
-    query: Query<Entity, (Spawned, With<Gamepad>)>,
-    mut commands: Commands
-) {
+fn u_spawned_gamepads(query: Query<Entity, (Spawned, With<Gamepad>)>, mut commands: Commands) {
     for entity in query.iter() {
         commands.entity(entity).observe(on_despawn_gamepad);
         commands.spawn(PlayerBundle::new(LocalPlayerID::Gamepad(entity)));
@@ -54,7 +49,7 @@ fn u_spawned_gamepads(
 }
 
 fn on_despawn_gamepad(
-    despawn :On<Despawn>,
+    despawn: On<Despawn>,
     mut players: Query<(Entity, &mut Player)>,
     mut commands: Commands,
 ) {
@@ -67,10 +62,7 @@ fn on_despawn_gamepad(
     }
 }
 
-fn setup_common(
-    mut commands: Commands,
-    mut map: ResMut<DirectionalNavigationMap>,
-) {
+fn setup_common(mut commands: Commands, mut map: ResMut<DirectionalNavigationMap>) {
     commands.spawn(CameraBundle::default());
 
     for i in 1..=2 {

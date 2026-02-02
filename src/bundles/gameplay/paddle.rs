@@ -15,20 +15,16 @@ pub struct PaddleBundle {
 }
 
 impl PaddleBundle {
-
     pub fn new(
         meshes: &mut Assets<Mesh>,
         materials: &mut Assets<ColorMaterial>,
         position: Vec3,
         size: Vec2,
         goal: Entity,
-        id: PlayerId
+        id: PlayerId,
     ) -> Self {
         Self {
-            paddle: Paddle {
-                goal,
-                id
-            },
+            paddle: Paddle { goal, id },
             mesh: Mesh2d(meshes.add(Rectangle::new(size.x, size.y))),
             material: MeshMaterial2d(materials.add(Color::WHITE)),
             transform: Transform::from_translation(position),

@@ -25,42 +25,34 @@ impl AreaBundle {
         meshes: &mut Assets<Mesh>,
         materials: &mut Assets<ColorMaterial>,
     ) {
-        commands.spawn(BallBundle::new(
-            meshes,
-            materials,
-            Vec3::ZERO,
-            Vec2::new(-300.0, 300.0),
-            BALL_RADIUS
-        )).observe(handle_scoring);
+        commands
+            .spawn(BallBundle::new(
+                meshes,
+                materials,
+                Vec3::ZERO,
+                Vec2::new(-300.0, 300.0),
+                BALL_RADIUS,
+            ))
+            .observe(handle_scoring);
 
         match config.game_mode {
-            GameMode::Classic =>{
-
-            },
-            GameMode::Modern => {
-
-            },
+            GameMode::Classic => {}
+            GameMode::Modern => {}
             GameMode::Blackout => {
-                
                 commands.spawn((
                     Transform::from_translation(Vec3::ZERO),
                     FlashyLight,
-                    PointLight2d{
+                    PointLight2d {
                         color: Color::srgb(1.0, 1.0, 1.0),
                         radius: 500.0,
                         intensity: 2.0,
                         ..default()
-                    }
+                    },
                 ));
-            },
-            GameMode::Twisted => {
-
-            },
-            GameMode::UpsideDown => {
-
             }
+            GameMode::Twisted => {}
+            GameMode::UpsideDown => {}
         }
-
 
         let teams = config.area_shape.get_teams();
 
@@ -69,14 +61,20 @@ impl AreaBundle {
             let positions = team.get_positions();
 
             for i in 0..team.players.len() {
-                let mut paddle =
-                commands.spawn(PaddleBundle::new(meshes, materials, positions[i], PADDLE_SIZE, goal, team.players[i]));
+                let mut paddle = commands.spawn(PaddleBundle::new(
+                    meshes,
+                    materials,
+                    positions[i],
+                    PADDLE_SIZE,
+                    goal,
+                    team.players[i],
+                ));
 
-                if matches!(config.game_mode, GameMode::Twisted){
-                    paddle.insert(PaddleTilt {tilt: 0.0});
+                if matches!(config.game_mode, GameMode::Twisted) {
+                    paddle.insert(PaddleTilt { tilt: 0.0 });
                 }
             }
-            
+
             team.area_side.spawn_score_text(commands);
         }
 

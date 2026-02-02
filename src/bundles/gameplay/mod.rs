@@ -1,10 +1,10 @@
-pub mod paddle;
+pub mod area;
 pub mod ball;
 pub mod camera;
-pub mod area;
-pub mod goal;
-pub mod wall;
 pub mod division_line;
+pub mod goal;
+pub mod paddle;
+pub mod wall;
 
 pub use ball::*;
 pub use bevy::prelude::*;

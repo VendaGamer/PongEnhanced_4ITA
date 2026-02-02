@@ -1,6 +1,8 @@
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::{HoverLight, HoverLightColor};
-use crate::components::ui::{Dropdown, Selector, SelectorButton, SelectorText, SourceHandle, UIOptionProvider};
+use crate::components::ui::{
+    Dropdown, Selector, SelectorButton, SelectorText, SourceHandle, UIOptionProvider,
+};
 use crate::events::widgets::{ButtonPressed, OptionChanged};
 use crate::resources::MenuAction;
 use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT, MODERN_THEME};
@@ -15,7 +17,9 @@ use bevy::prelude::*;
 use bevy::tasks::futures_lite::StreamExt;
 use bevy::text::FontSmoothing;
 use bevy::ui::Checked;
-use bevy::ui_widgets::{Checkbox, Slider, SliderPrecision, SliderRange, SliderThumb, SliderValue, TrackClick};
+use bevy::ui_widgets::{
+    Checkbox, Slider, SliderPrecision, SliderRange, SliderThumb, SliderValue, TrackClick,
+};
 use bevy_tween::interpolate::background_color_to;
 use bevy_tween::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
@@ -25,7 +29,6 @@ use std::time::Duration;
 pub const BUTTON_PADDING: Val = Val::Px(20.0);
 pub const PIXEL_BORDER: UiRect = UiRect::all(Val::Px(3.0));
 pub const BUTTON_OUTLINE: Outline = Outline::new(PIXEL_BORDER.bottom, Val::ZERO, Color::BLACK);
-
 
 pub fn u_slider_visuals(
     sliders: Query<(Entity, &SliderValue, &SliderRange), Changed<SliderValue>>,
@@ -43,8 +46,15 @@ pub fn u_slider_visuals(
 
 pub fn u_ui_hover_light(
     mut commands: Commands,
-    query: Query<(Entity, Ref<Interaction>, &HoverLight, Option<&HoverLightColor>),
-    (Changed<Interaction>, With<BackgroundColor>)>,
+    query: Query<
+        (
+            Entity,
+            Ref<Interaction>,
+            &HoverLight,
+            Option<&HoverLightColor>,
+        ),
+        (Changed<Interaction>, With<BackgroundColor>),
+    >,
 ) {
     for (entity, interaction, hover_light, maybe_custom_colors) in &query {
         let base_color = hover_light.0;
@@ -59,7 +69,6 @@ pub fn u_ui_hover_light(
             lighten_color(base_color, DEFAULT_LIGHTEN_AMOUNT)
         };
 
-
         let target = entity.into_target();
 
         match *interaction {
@@ -67,29 +76,31 @@ pub fn u_ui_hover_light(
                 commands.entity(entity).animation().insert_tween_here(
                     Duration::from_millis(250),
                     EaseKind::CubicInOut,
-                    target.state(base_color).with(background_color_to(hover_color))
+                    target
+                        .state(base_color)
+                        .with(background_color_to(hover_color)),
                 );
-            },
+            }
             Interaction::None => {
                 commands.entity(entity).animation().insert_tween_here(
                     Duration::from_millis(250),
                     EaseKind::CubicInOut,
-                    target.state(hover_color).with(background_color_to(base_color))
+                    target
+                        .state(hover_color)
+                        .with(background_color_to(base_color)),
                 );
             }
-            _ => {
-                
-            }
+            _ => {}
         };
     }
 }
 
-pub fn w_button(color: Color, size: Vec2, text: &str) -> impl Bundle {
+pub fn w_button(color: Color, text: &str, size: Val2) -> impl Bundle {
     (
         Button,
         Node {
-            width: Val::Px(size.x),
-            height: Val::Px(size.y),
+            width: size.x,
+            height: size.y,
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
             margin: UiRect::bottom(BUTTON_PADDING),
@@ -163,12 +174,13 @@ pub fn w_slider_thumb(size: Vec2) -> impl Bundle {
     )
 }
 
-pub fn w_dropdown(options: Arc<dyn UIOptionProvider>, selected: usize, tab_index: i32) -> impl Bundle {
+pub fn w_dropdown(
+    options: Arc<dyn UIOptionProvider>,
+    selected: usize,
+    tab_index: i32,
+) -> impl Bundle {
     (
-        Dropdown {
-            selected,
-            options,
-        },
+        Dropdown { selected, options },
         Node {
             width: Val::Px(300.0),
             height: Val::Px(50.0),
@@ -185,8 +197,6 @@ pub fn w_dropdown(options: Arc<dyn UIOptionProvider>, selected: usize, tab_index
         TabIndex(tab_index),
     )
 }
-
-
 
 #[derive(Component)]
 pub struct SelectorBar;
@@ -207,26 +217,22 @@ pub fn w_section_header(text: &'static str) -> impl Bundle {
 }
 
 pub fn w_checkbox(state: bool) -> impl Bundle {
-    (
-        Checkbox,
-        Checked::default(),
-    )
+    (Checkbox, Checked::default())
 }
 
 pub fn w_menu_button(color: Color, text: &str) -> impl Bundle {
-    w_button(color, Vec2::new(350.0, 70.0), text)
+    w_button(color, text, Val2::new(Val::Px(350.0), Val::Px(70.0)))
 }
 
 pub fn update_selector(
     pressed: On<ButtonPressed>,
     mut selectors: Query<&mut Selector>,
     button: Query<(&ChildOf, &SelectorButton)>,
-    mut commands: Commands)
-{
+    mut commands: Commands,
+) {
     if let Ok((child_of, button)) = button.get(pressed.event_target()) {
         let selector_entity = child_of.parent();
         if let Ok(mut selector) = selectors.get_mut(selector_entity) {
-
             if button.0 {
                 selector.next();
             } else {
@@ -235,7 +241,7 @@ pub fn update_selector(
 
             commands.trigger(OptionChanged {
                 entity: selector_entity,
-                selected_index: selector.selected
+                selected_index: selector.selected,
             });
         }
     }
@@ -271,7 +277,7 @@ pub fn w_area_container(size: f32, text: &'static str, visuals: impl Bundle) -> 
         },
         children![
             (
-                Node{
+                Node {
                     width: Val::Px(size),
                     height: Val::Px(size),
                     border: PIXEL_BORDER,
@@ -369,39 +375,42 @@ fn get_quadrant(input: Vec2) -> Option<CompassQuadrant> {
 }
 
 #[inline]
-fn try_navigate(dir: Option<CompassQuadrant>, navigation: &mut DirectionalNavigation, commands: &mut Commands) {
+fn try_navigate(
+    dir: Option<CompassQuadrant>,
+    navigation: &mut DirectionalNavigation,
+    commands: &mut Commands,
+) {
     if let Some(dir) = dir {
         let octant = quadrant_to_octant(&dir);
 
         if matches!(&dir, CompassQuadrant::West | CompassQuadrant::East) {
-            commands.queue(move | world: &mut World |{
-
+            commands.queue(move |world: &mut World| {
                 let focus = world.resource::<InputFocus>();
 
                 if let Some(focused) = focus.0 {
-
-                    let parent_entity = world.entity(focused)
+                    let parent_entity = world
+                        .entity(focused)
                         .get::<ChildOf>()
                         .map(|child_of| child_of.0);
 
                     if let Some(parent_id) = parent_entity {
-                        if let Some(mut selector) = world.entity_mut(parent_id).get_mut::<Selector>() {
+                        if let Some(mut selector) =
+                            world.entity_mut(parent_id).get_mut::<Selector>()
+                        {
                             if dir.eq(&CompassQuadrant::West) {
                                 selector.prev();
                             } else {
                                 selector.next();
                             }
 
-                            world.trigger(OptionChanged{
+                            world.trigger(OptionChanged {
                                 entity: parent_id,
                                 selected_index: 0,
                             });
                         } else if let Some(parent) = world.entity(parent_id).get::<ChildOf>() {
-
                             let mut par = world.entity_mut(parent.0);
 
-                            if let Some(value) = par.get::<SliderValue>(){
-
+                            if let Some(value) = par.get::<SliderValue>() {
                                 if dir.eq(&CompassQuadrant::West) {
                                     par.insert(SliderValue(value.0 - 1.0));
                                 } else {
@@ -409,14 +418,10 @@ fn try_navigate(dir: Option<CompassQuadrant>, navigation: &mut DirectionalNaviga
                                 }
                             }
                         }
-
-
-
                     }
                 }
             });
         }
-
 
         match navigation.navigate(octant) {
             Ok(entity) => {
@@ -437,7 +442,6 @@ fn quadrant_to_octant(quadrant: &CompassQuadrant) -> CompassOctant {
         CompassQuadrant::West => CompassOctant::West,
     }
 }
-
 
 pub fn u_button_press(
     focused: Res<InputFocus>,
@@ -475,7 +479,7 @@ pub struct SliderEntities<'a> {
     #[deref]
     pub root: EntityCommands<'a>,
     pub track: Entity,
-    pub thumb: Entity
+    pub thumb: Entity,
 }
 
 #[derive(Deref)]
@@ -488,14 +492,46 @@ pub struct SelectorEntities<'a> {
 }
 
 pub trait WidgetsExtCommands {
-    fn append_slider(&mut self, min:f32, max:f32, cur:f32) -> SliderEntities<'_>;
-    fn append_selector(&mut self, options_provider: SourceHandle<dyn UIOptionProvider>, selected: usize, label: impl Into<String>) -> SelectorEntities<'_>;
+    fn append_slider_custom(
+        &mut self,
+        min: f32,
+        max: f32,
+        cur: f32,
+        size: Val2,
+    ) -> SliderEntities<'_>;
+    fn append_slider(&mut self, min: f32, max: f32, cur: f32) -> SliderEntities<'_> {
+        const SIZE: Val2 = Val2::new(Val::Percent(100.0), Val::Px(50.0));
+
+        self.append_slider_custom(min, max, cur, SIZE)
+    }
+
+    fn append_selector_custom(
+        &mut self,
+        options_provider: SourceHandle<dyn UIOptionProvider>,
+        selected: usize,
+        label: impl Into<String>,
+        size: Val2,
+    ) -> SelectorEntities<'_>;
+    fn append_selector(
+        &mut self,
+        options_provider: SourceHandle<dyn UIOptionProvider>,
+        selected: usize,
+        label: impl Into<String>,
+    ) -> SelectorEntities<'_> {
+        const SIZE: Val2 = Val2::new(Val::Px(430.0), Val::Px(30.0));
+
+        self.append_selector_custom(options_provider, selected, label, SIZE)
+    }
 }
 
- 
 impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
-    fn append_slider(&mut self, min: f32, max: f32, cur: f32) -> SliderEntities<'_> {
-        
+    fn append_slider_custom(
+        &mut self,
+        min: f32,
+        max: f32,
+        cur: f32,
+        size: Val2,
+    ) -> SliderEntities<'_> {
         let mut root = self.spawn((
             Node {
                 display: Display::Flex,
@@ -504,8 +540,8 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
                 align_items: AlignItems::Stretch,
                 justify_items: JustifyItems::Center,
                 column_gap: px(4),
-                height: px(50),
-                width: percent(100),
+                height: size.y,
+                width: size.x,
                 ..default()
             },
             Hovered::default(),
@@ -516,25 +552,27 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
             SliderValue(cur),
             SliderRange::new(min, max),
         ));
-        
+
         let mut commands = root.commands();
         let thumb: Entity;
         let track: Entity;
-        
+
         {
-            track =commands.spawn((
-                Node {
-                    height: px(12),
-                    border: PIXEL_BORDER,
-                    ..default()
-                },
-                BackgroundColor(MODERN_THEME.slider_track),
-                BorderColor::from(MODERN_THEME.border),
-                BorderRadius::ZERO,
-            )).id();
-            
-            let thumb_root = commands.spawn((
-                Node {
+            track = commands
+                .spawn((
+                    Node {
+                        height: px(12),
+                        border: PIXEL_BORDER,
+                        ..default()
+                    },
+                    BackgroundColor(MODERN_THEME.slider_track),
+                    BorderColor::from(MODERN_THEME.border),
+                    BorderRadius::ZERO,
+                ))
+                .id();
+
+            let thumb_root = commands
+                .spawn((Node {
                     display: Display::Flex,
                     position_type: PositionType::Absolute,
                     left: px(0),
@@ -542,27 +580,28 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
                     top: px(15),
                     bottom: px(0),
                     ..default()
-                },
-            )).id();
-            
-            thumb = commands.spawn(w_slider_thumb(Vec2::new(20.0,20.0))).id();
+                },))
+                .id();
+
+            thumb = commands.spawn(w_slider_thumb(Vec2::new(20.0, 20.0))).id();
             commands.entity(thumb_root).add_child(thumb);
             root.add_children(&[track, thumb_root]);
         }
-        
-        SliderEntities{
-            root,
-            track,
-            thumb
-        }
+
+        SliderEntities { root, track, thumb }
     }
 
-    fn append_selector(&mut self, options_provider: SourceHandle<dyn UIOptionProvider>, selected: usize, label: impl Into<String>) -> SelectorEntities<'_> {
-
+    fn append_selector_custom(
+        &mut self,
+        options_provider: SourceHandle<dyn UIOptionProvider>,
+        selected: usize,
+        label: impl Into<String>,
+        size: Val2,
+    ) -> SelectorEntities<'_> {
         let mut root = self.spawn((
             Selector {
                 options_provider,
-                selected
+                selected,
             },
             Node {
                 flex_wrap: FlexWrap::Wrap,
@@ -572,7 +611,8 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
                 align_items: AlignItems::Center,
                 justify_items: JustifyItems::Center,
                 ..default()
-            }));
+            },
+        ));
 
         let mut commands = root.commands();
 
@@ -581,59 +621,71 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
         let bar: Entity;
 
         {
-            l_but = commands.spawn(w_button(MODERN_THEME.button, Vec2::new(40.0, 40.0), "<"))
-                    .insert(SelectorButton(false))
-                    .id();
+            l_but = commands
+                .spawn(w_button(
+                    MODERN_THEME.button,
+                    "<",
+                    Val2::new(size.y, size.y),
+                ))
+                .insert(SelectorButton(false))
+                .id();
 
-            bar = commands.spawn((
-                Node {
-                    width: Val::Px(450.0),
-                    height: Val::Px(50.0),
-                    margin: UiRect::all(Val::Px(10.0)),
-                    justify_content: JustifyContent::SpaceBetween,
-                    justify_items: JustifyItems::Center,
-                    align_items: AlignItems::Center,
-                    padding: UiRect::all(Val::Px(15.0)),
-                    border: PIXEL_BORDER,
-                    ..default()
-                },
-                SelectorBar,
-                AutoFocus,
-                BackgroundColor(MODERN_THEME.panel_bg),
-                BorderColor::from(MODERN_THEME.border),
-                BorderRadius::ZERO,
-                Children::spawn_one((
+            bar = commands
+                .spawn((
                     Node {
-                        display: Display::Flex,
-                        flex_direction: FlexDirection::Row,
+                        width: size.x,
+                        height: size.y,
+                        margin: UiRect::all(Val::Px(10.0)),
                         justify_content: JustifyContent::SpaceBetween,
+                        justify_items: JustifyItems::Center,
                         align_items: AlignItems::Center,
-                        width: Val::Percent(100.0),
+                        padding: UiRect::all(Val::Px(15.0)),
+                        border: PIXEL_BORDER,
                         ..default()
                     },
-                    Children::spawn((
-                        Spawn(LabelBundle::button_label(label)),
-                        Spawn((
-                            TextFont {
-                                font_size: 32.0,
-                                font_smoothing: FontSmoothing::None,
-                                ..default()
-                            },
-                            TextColor(Color::WHITE),
-                            SelectorText,
+                    SelectorBar,
+                    AutoFocus,
+                    BackgroundColor(MODERN_THEME.panel_bg),
+                    BorderColor::from(MODERN_THEME.border),
+                    BorderRadius::ZERO,
+                    Children::spawn_one((
+                        Node {
+                            display: Display::Flex,
+                            flex_direction: FlexDirection::Row,
+                            justify_content: JustifyContent::SpaceBetween,
+                            align_items: AlignItems::Center,
+                            width: Val::Percent(100.0),
+                            ..default()
+                        },
+                        Children::spawn((
+                            Spawn(LabelBundle::button_label(label)),
+                            Spawn((
+                                TextFont {
+                                    font_size: 32.0,
+                                    font_smoothing: FontSmoothing::None,
+                                    ..default()
+                                },
+                                TextColor(Color::WHITE),
+                                SelectorText,
+                            )),
                         )),
                     )),
                 ))
-            )).id();
+                .id();
 
-            r_but = commands.spawn(w_button(MODERN_THEME.button, Vec2::new(40.0, 40.0), ">"))
-                            .insert(SelectorButton(true))
-                            .id();
+            r_but = commands
+                .spawn(w_button(
+                    MODERN_THEME.button,
+                    ">",
+                    Val2::new(size.y, size.y),
+                ))
+                .insert(SelectorButton(true))
+                .id();
 
-            root.add_children(&[l_but, bar ,r_but]);
+            root.add_children(&[l_but, bar, r_but]);
         }
 
-        SelectorEntities{
+        SelectorEntities {
             root,
             bar,
             left_button: l_but,

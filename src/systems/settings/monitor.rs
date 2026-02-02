@@ -15,21 +15,15 @@ fn get_monitor_name_windows(device_path: &str) -> Option<String> {
     let wide: Vec<u16> = device_path.encode_utf16().chain(Some(0)).collect();
 
     unsafe {
-        if EnumDisplayDevicesW(
-            PWSTR(wide.as_ptr() as *mut _),
-            0,
-            &mut display_device,
-            0,
-        )
-            .as_bool()
+        if EnumDisplayDevicesW(PWSTR(wide.as_ptr() as *mut _), 0, &mut display_device, 0).as_bool()
         {
             let mut idx: usize = 0;
 
             for char in display_device.DeviceString {
-                if char == 0{
+                if char == 0 {
                     break;
                 }
-                idx+=1;
+                idx += 1;
             }
 
             return String::from_utf16(&display_device.DeviceString[..idx]).ok();
@@ -39,31 +33,28 @@ fn get_monitor_name_windows(device_path: &str) -> Option<String> {
     None
 }
 
-
 pub fn on_spawn_monitors(
     query: Query<(Entity, &Monitor), Spawned>,
     window: Query<&mut Window, With<PrimaryWindow>>,
-    mut commands: Commands
-){
+    mut commands: Commands,
+) {
     let mut info: Vec<MonitorInfo> = Vec::new();
-    let mut current_monitor_index:usize = 0;
+    let mut current_monitor_index: usize = 0;
     let primary_window = window.single().expect("Couldn't get primary window");
 
-    let selected_monitor = match primary_window.mode{
+    let selected_monitor = match primary_window.mode {
         WindowMode::BorderlessFullscreen(monitor) => Some(monitor),
         WindowMode::Fullscreen(monitor, _) => Some(monitor),
         _ => None,
     };
 
     for (index, (entity, monitor)) in query.iter().enumerate() {
-
-        let name = if let Some(real_name) = monitor.name.clone(){
-
+        let name = if let Some(real_name) = monitor.name.clone() {
             #[cfg(windows)]
             {
                 if let Some(name) = get_monitor_name_windows(&real_name) {
                     name
-                }else{
+                } else {
                     real_name
                 }
             }
@@ -71,31 +62,32 @@ pub fn on_spawn_monitors(
             {
                 real_name
             }
-
         } else {
             format!("Monitor {}", index + 1)
         };
 
         let selection = MonitorSelection::Entity(entity);
 
-
         if let Some(current_monitor) = selected_monitor {
-            if current_monitor.eq(&selection){
+            if current_monitor.eq(&selection) {
                 current_monitor_index = index;
             }
         }
 
-        let mut refresh_rates: Vec<RefreshRate> = monitor.video_modes
+        let mut refresh_rates: Vec<RefreshRate> = monitor
+            .video_modes
             .iter()
             .map(|video_mode| video_mode.refresh_rate_millihertz.into())
             .collect();
 
-        let mut resolutions: Vec<Resolution> = monitor.video_modes
+        let mut resolutions: Vec<Resolution> = monitor
+            .video_modes
             .iter()
             .map(|video_mode| video_mode.physical_size.into())
             .collect();
 
-        let mut bit_depths: Vec<BitDepth> = monitor.video_modes
+        let mut bit_depths: Vec<BitDepth> = monitor
+            .video_modes
             .iter()
             .map(|video_mode| video_mode.bit_depth.into())
             .collect();
@@ -107,21 +99,22 @@ pub fn on_spawn_monitors(
 
         {
             let mut seen = std::collections::HashSet::new();
-            refresh_rates.retain(|rate| {
-                seen.insert((rate.0 + 500) / 1000 * 1000)
-            });
+            refresh_rates.retain(|rate| seen.insert((rate.0 + 500) / 1000 * 1000));
         }
-
 
         bit_depths.sort_unstable();
         bit_depths.dedup();
 
         let bit_depth = bit_depths.iter().map(|x| x.0).max().expect("No bit depths");
         let refresh_rate = monitor.refresh_rate_millihertz.unwrap_or(
-            refresh_rates.iter().map(|x| x.0).max().expect("No Refresh rates")
+            refresh_rates
+                .iter()
+                .map(|x| x.0)
+                .max()
+                .expect("No Refresh rates"),
         );
 
-        info.push(MonitorInfo{
+        info.push(MonitorInfo {
             monitor_selection: selection,
             name,
             refresh_rates: Arc::new(refresh_rates),
@@ -131,14 +124,12 @@ pub fn on_spawn_monitors(
                 bit_depth,
                 refresh_rate_millihertz: refresh_rate,
                 physical_size: monitor.physical_size(),
-            }
+            },
         });
     }
 
-    commands.insert_resource(
-        Monitors{
-            monitors: Arc::new(info),
-            selected_monitor: current_monitor_index,
-        }
-    );
+    commands.insert_resource(Monitors {
+        monitors: Arc::new(info),
+        selected_monitor: current_monitor_index,
+    });
 }

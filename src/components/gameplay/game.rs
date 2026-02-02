@@ -4,7 +4,7 @@ use bevy::prelude::Component;
 
 #[derive(Component)]
 pub struct Ball {
-    pub initial_velocity: Vec2
+    pub initial_velocity: Vec2,
 }
 
 pub trait GameModeRules: Send + Sync {

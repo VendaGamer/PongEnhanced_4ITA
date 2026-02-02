@@ -17,7 +17,7 @@ impl PlayerBundle {
     pub fn new(id: LocalPlayerID) -> Self {
         Self {
             player: Player {
-                id: PlayerId::Local(id)
+                id: PlayerId::Local(id),
             },
             bindings: Player::get_input_map(id),
         }
@@ -26,7 +26,7 @@ impl PlayerBundle {
     pub fn new_network(id: RemotePlayerId) -> impl Bundle {
         (
             Replicate::to_clients(NetworkTarget::All),
-            PlayerBundle::new(id.1)
+            PlayerBundle::new(id.1),
         )
     }
 }

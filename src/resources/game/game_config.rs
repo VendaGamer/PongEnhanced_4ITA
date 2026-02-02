@@ -14,7 +14,6 @@ pub struct GameSettings {
     pub window_mode: WindowMode,
     pub window_resolution: Option<UVec2>,
     pub vsync: PresentMode,
-    pub show_fps: bool,
 }
 
 #[derive(Resource, Clone, Eq, PartialEq, Debug)]
@@ -26,7 +25,7 @@ pub struct PendingSettings {
 
 impl From<&GameSettings> for PendingSettings {
     fn from(settings: &GameSettings) -> Self {
-        Self{
+        Self {
             window_mode: settings.window_mode,
             window_resolution: settings.window_resolution,
             vsync: settings.vsync,
@@ -41,18 +40,18 @@ pub struct Monitors {
 }
 
 impl UIOptionString for MonitorInfo {
-    fn push_ui_option_string(&self, string: &mut String){
+    fn push_ui_option_string(&self, string: &mut String) {
         string.push_str(&*self.name);
     }
 }
 
-
 impl Monitors {
     pub fn get_current_monitor(&self) -> &MonitorInfo {
-        self.monitors.get(self.selected_monitor).expect("no monitor found")
+        self.monitors
+            .get(self.selected_monitor)
+            .expect("no monitor found")
     }
 }
-
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct MonitorInfo {
@@ -68,9 +67,8 @@ pub struct MonitorInfo {
 pub struct RefreshRate(pub u32);
 
 impl UIOptionString for RefreshRate {
-
     fn push_ui_option_string(&self, string: &mut String) {
-        string.push_str(format!("{} Hz", self.0/1000).as_str());
+        string.push_str(format!("{} Hz", self.0 / 1000).as_str());
     }
 }
 
@@ -91,7 +89,6 @@ impl UIOptionString for BitDepth {
     }
 }
 
-
 impl Default for GameSettings {
     fn default() -> Self {
         Self {
@@ -100,7 +97,6 @@ impl Default for GameSettings {
             window_mode: WindowMode::BorderlessFullscreen(MonitorSelection::Primary),
             vsync: PresentMode::AutoVsync,
             window_resolution: None,
-            show_fps: true,
         }
     }
 }
@@ -114,7 +110,7 @@ pub struct GameModeConfig {
 
 impl Default for GameModeConfig {
     fn default() -> Self {
-        Self{
+        Self {
             game_mode: GameMode::Classic,
             area_shape: AreaShape::default(),
             win_score: 10,
@@ -123,7 +119,6 @@ impl Default for GameModeConfig {
 }
 
 impl GameModeConfig {
-
     pub fn get_ball_speed(&self) -> f32 {
         match self.game_mode {
             GameMode::Classic => 400.0,
