@@ -44,7 +44,7 @@ fn get_monitor_name_windows(device_path: &str) -> Option<String> {
 pub fn on_spawn_monitors(
     query: Query<(Entity, &Monitor), Spawned>,
     window: Query<&mut Window, With<PrimaryWindow>>,
-    mut commands: Commands,
+    mut commands: Commands
 ){
     let mut info: Vec<MonitorInfo> = Vec::new();
     let mut current_monitor_index:usize = 0;
@@ -73,7 +73,7 @@ pub fn on_spawn_monitors(
                 real_name
             }
 
-        }else{
+        } else {
             format!("Monitor {}", index + 1)
         };
 

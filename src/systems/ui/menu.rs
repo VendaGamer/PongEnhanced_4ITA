@@ -1,3 +1,4 @@
+use bevy::asset::AssetContainer;
 use bevy::asset::uuid::Version::Sha1;
 use crate::bundles::area::AreaBundle;
 use crate::bundles::widgets::LabelBundle;
@@ -92,17 +93,6 @@ pub fn m_offline() -> impl Bundle {
             w_menu_title("Offline Play"),
             (
                 w_menu_section(),
-                children![
-                (
-                    w_selector(
-                        GAMEMODE_OPTIONS,
-                        0,
-                        "Game Mode",
-                    ),
-                    observe(on_game_mode_changed),
-                ),
-
-                ],
             ),
             (
                 Node {
@@ -356,16 +346,17 @@ pub fn spawn_m_settings(
     nav_map: &mut DirectionalNavigationMap
 ) {
     let cur_window_mode = index_for_window_mode(&settings.window_mode);
+    let mut entities: Vec<Entity> = Vec::with_capacity(9);
+
     commands.insert_resource(PendingSettings::from(settings));
     commands.spawn(m_base(SettingsMenu)).with_children(| base | {
 
         base.spawn(w_menu_title("Settings"));
 
+
         base.spawn(w_menu_section())
             .with_children(| section |{
 
-                
-                let s1: Entity;
                 {
                     section.spawn(LabelBundle::button_label("Sound Effects"));
                     let mut sfx = section.append_slider(
@@ -375,10 +366,9 @@ pub fn spawn_m_settings(
                     );
 
                     sfx.root.observe(on_sfx_changed);
-                    s1 = sfx.thumb;
+                    entities.push(sfx.thumb);
                 }
-                
-                let s2: Entity;
+
                 {
                     section.spawn(LabelBundle::button_label("Master volume"));
                     let mut mas = section.append_slider(
@@ -388,54 +378,85 @@ pub fn spawn_m_settings(
                     );
                     
                     mas.root.observe(on_master_changed);
-                    s2 = mas.thumb;
+                    entities.push(mas.thumb);
                 }
 
-                nav_map.add_looping_edges(&[s1, s2], CompassOctant::North);
-                
-                let monitor_index = monitors.selected_monitor;
-                let monitor = monitors.get_current_monitor();
+                {
+                    let monitor_index = monitors.selected_monitor;
+                    let monitor = monitors.get_current_monitor();
 
-                section.spawn(w_selector(SourceHandle::Unique(
-                    boxed_vec![
+                    let mut w_sel = section.append_selector(SourceHandle::Unique(boxed_vec![
                         WindowMode::Windowed,
                         WindowMode::BorderlessFullscreen(monitor.monitor_selection),
                         WindowMode::Fullscreen(monitor.monitor_selection, VideoModeSelection::Current)
-                    ]), cur_window_mode, "Window Mode")
-                ).insert(WindowModeSelector)
-                 .observe(on_window_mode_changed);
+                    ]), cur_window_mode, "Window Mode");
 
-                section.spawn(w_selector(
-                    SourceHandle::Strong(monitors.monitors.clone()), monitor_index, "Monitor")
-                ).insert(MonitorSelector)
-                 .observe(on_monitor_changed);
+                    w_sel.root.insert(WindowModeSelector)
+                              .observe(on_window_mode_changed);
 
-                section.spawn(w_selector(
-                    SourceHandle::Strong(monitor.resolutions.clone()), 0, "Resolution")
-                ).insert(ResolutionSelector)
-                 .observe(on_resolution_changed);
+                    entities.push(w_sel.bar);
 
-                section.spawn(w_selector(
-                    SourceHandle::Strong(monitor.refresh_rates.clone()), 0, "Refresh Rate")
-                ).insert(RefreshRateSelector)
-                 .observe(on_refresh_rate_changed);
+                    let mut m_sel = section.append_selector(SourceHandle::Strong(
+                        monitors.monitors.clone()), monitor_index, "Monitor");
 
-                section.spawn(w_selector(VSYNC_OPTIONS, 0, "VSync"))
-                    .insert(VSyncSelector)
-                    .observe(on_vsync_changed);
+                    entities.push(m_sel.bar);
+
+                    m_sel.root.insert(MonitorSelector)
+                              .observe(on_monitor_changed);
+
+                    let mut res_sel = section.append_selector(SourceHandle::Strong(
+                        monitor.resolutions.clone()), 0, "Resolution");
+
+                    entities.push(res_sel.bar);
+
+                    res_sel.root.insert(ResolutionSelector)
+                              .observe(on_resolution_changed);
+
+                    let mut ref_sel = section.append_selector(SourceHandle::Strong(
+                        monitor.refresh_rates.clone()), 0, "Refresh Rate");
+
+                    entities.push(ref_sel.bar);
+
+                    ref_sel.root.insert(RefreshRateSelector)
+                                .observe(on_refresh_rate_changed);
+
+                }
+
+                {
+                    let mut v_sel = section.append_selector(VSYNC_OPTIONS, 0, "VSync");
+
+                    v_sel.root.insert(VSyncSelector)
+                              .observe(on_vsync_changed);
+
+                    entities.push(v_sel.bar);
+                }
             });
 
             base.spawn(w_row_container(10.0)).with_children(| container |{
 
-                let b1 = container.spawn(w_button(MODERN_THEME.button, Vec2::new(200.0, 60.0), "Back"))
+                entities.push(container.spawn(w_button(MODERN_THEME.button, Vec2::new(200.0, 60.0), "Back"))
                     .observe(on_settings_back_main)
-                    .id();
+                    .id());
 
-                let b2 = container.spawn(w_button(MODERN_THEME.button, Vec2::new(200.0, 60.0), "Apply"))
+                entities.push(container.spawn(w_button(MODERN_THEME.button, Vec2::new(200.0, 60.0), "Apply"))
                     .observe(on_settings_apply)
-                    .id();
+                    .id());
             });
     });
+
+
+    nav_map.add_looping_edges(&entities[..=7], CompassOctant::South);
+    nav_map.add_looping_edges(&[
+        entities[0],
+        entities[1],
+        entities[2],
+        entities[3],
+        entities[4],
+        entities[5],
+        entities[6],
+        entities[8],
+    ], CompassOctant::South);
+    nav_map.add_looping_edges(&entities[7..=8], CompassOctant::East);
 }
 
 fn on_sfx_changed(change: On<SliderValueChanged>, mut settings: ResMut<GameSettings>){

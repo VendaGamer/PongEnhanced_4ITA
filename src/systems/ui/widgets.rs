@@ -4,10 +4,11 @@ use crate::components::ui::{Dropdown, OptionSelector, SelectorButton, SelectorTe
 use crate::events::widgets::{ButtonPressed, OptionChanged};
 use crate::resources::MenuAction;
 use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT, MODERN_THEME};
+use bevy::ecs::relationship::{RelatedSpawnerCommands, Relationship};
 use bevy::input_focus::directional_navigation::DirectionalNavigation;
 use bevy::input_focus::tab_navigation::TabIndex;
-use bevy::input_focus::{AutoFocus, InputFocus, InputFocusVisible};
-use bevy::math::{CompassOctant, CompassQuadrant, I8Vec2};
+use bevy::input_focus::{AutoFocus, FocusedInput, InputFocus, InputFocusVisible};
+use bevy::math::{CompassOctant, CompassQuadrant};
 use bevy::picking::hover::Hovered;
 use bevy::prelude::*;
 use bevy::text::FontSmoothing;
@@ -18,7 +19,9 @@ use bevy_tween::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
 use std::sync::Arc;
 use std::time::Duration;
-use bevy::ecs::relationship::{RelatedSpawnerCommands, Relationship};
+use bevy::asset::AssetContainer;
+use bevy::asset::io::ErasedAssetWriter;
+use bevy::tasks::futures_lite::StreamExt;
 
 pub const BUTTON_PADDING: Val = Val::Px(20.0);
 pub const PIXEL_BORDER: UiRect = UiRect::all(Val::Px(3.0));
@@ -94,6 +97,7 @@ pub fn w_button(color: Color, size: Vec2, text: &str) -> impl Bundle {
             border: PIXEL_BORDER,
             ..default()
         },
+        AutoFocus,
         BackgroundColor(color),
         BorderRadius::ZERO,
         BorderColor::from(MODERN_THEME.border),
@@ -183,72 +187,7 @@ pub fn w_dropdown(options: Arc<dyn UIOptionProvider>, selected: usize, tab_index
     )
 }
 
-pub fn w_selector(options_provider: SourceHandle<dyn UIOptionProvider>, selected: usize, label: impl Into<String>) -> impl Bundle {
-    (
-        OptionSelector {
-            options_provider,
-            selected
-        },
-        Node {
-            flex_wrap: FlexWrap::Wrap,
-            flex_direction: FlexDirection::Row,
-            row_gap: Val::Px(20.0),
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Center,
-            justify_items: JustifyItems::Center,
-            ..default()
-        },
-        Children::spawn((
-            Spawn((
-                w_button(MODERN_THEME.button, Vec2::new(40.0, 40.0), "<"),
-                SelectorButton(false),
-            )),
-            Spawn((
-                Node {
-                    width: Val::Px(450.0),
-                    height: Val::Px(50.0),
-                    margin: UiRect::all(Val::Px(10.0)),
-                    justify_content: JustifyContent::SpaceBetween,
-                    justify_items: JustifyItems::Center,
-                    align_items: AlignItems::Center,
-                    padding: UiRect::all(Val::Px(15.0)),
-                    border: PIXEL_BORDER,
-                    ..default()
-                },
-                SelectorBar,
-                BackgroundColor(MODERN_THEME.panel_bg),
-                BorderColor::from(MODERN_THEME.border),
-                BorderRadius::ZERO,
-                Children::spawn_one((
-                    Node {
-                        display: Display::Flex,
-                        flex_direction: FlexDirection::Row,
-                        justify_content: JustifyContent::SpaceBetween,
-                        align_items: AlignItems::Center,
-                        width: Val::Percent(100.0),
-                        ..default()
-                    },
-                    Children::spawn((
-                        Spawn(LabelBundle::button_label(label)),
-                        Spawn((
-                            TextFont {
-                                font_size: 32.0,
-                                font_smoothing: FontSmoothing::None,
-                                ..default()
-                            },
-                            TextColor(Color::WHITE),
-                            SelectorText,
-                        )),
-                    )),
-                ))
-            )),
-            Spawn((
-                w_button(MODERN_THEME.button, Vec2::new(40.0, 40.0), ">"),
-                SelectorButton(true),
-            ))
-        ))
-    )
-}
+
 
 #[derive(Component)]
 pub struct SelectorBar;
@@ -368,12 +307,13 @@ const REPEAT_DELAY: f32 = 0.15;
 const DEADZONE: f32 = 0.3;
 
 pub fn u_navigate_element(
-    state: Single<&ActionState<MenuAction>>,
     mut input_focus: ResMut<InputFocusVisible>,
     mut navigation: DirectionalNavigation,
     mut last_direction: Local<Option<CompassQuadrant>>,
     mut auto_nav_delay: Local<f32>,
+    state: Single<&ActionState<MenuAction>>,
     time: Res<Time>,
+    mut commands: Commands,
 ) {
     if let Some(data) = state.dual_axis_data(&MenuAction::Navigate) {
         let current = get_quadrant(data.pair);
@@ -382,7 +322,7 @@ pub fn u_navigate_element(
 
         if *auto_nav_delay < -0.001 {
             *auto_nav_delay = 0.15;
-            try_navigate(current, &mut navigation);
+            try_navigate(current, &mut navigation, &mut commands);
             return;
         }
 
@@ -397,7 +337,7 @@ pub fn u_navigate_element(
         }
 
         *auto_nav_delay = 0.7;
-        try_navigate(current, &mut navigation);
+        try_navigate(current, &mut navigation, &mut commands);
         *last_direction = current;
     }
 }
@@ -430,9 +370,54 @@ fn get_quadrant(input: Vec2) -> Option<CompassQuadrant> {
 }
 
 #[inline]
-fn try_navigate(dir: Option<CompassQuadrant>, navigation: &mut DirectionalNavigation) {
+fn try_navigate(dir: Option<CompassQuadrant>, navigation: &mut DirectionalNavigation, commands: &mut Commands) {
     if let Some(dir) = dir {
-        let octant = quadrant_to_octant(dir);
+        let octant = quadrant_to_octant(&dir);
+
+        if matches!(&dir, CompassQuadrant::West | CompassQuadrant::East) {
+            commands.queue(move | world: &mut World |{
+
+                let focus = world.resource::<InputFocus>();
+
+                if let Some(focused) = focus.0 {
+
+                    let parent_entity = world.entity(focused)
+                        .get::<ChildOf>()
+                        .map(|child_of| child_of.0);
+
+                    if let Some(parent_id) = parent_entity {
+                        if let Some(mut selector) = world.entity_mut(parent_id).get_mut::<OptionSelector>() {
+                            if dir.eq(&CompassQuadrant::West) {
+                                selector.prev();
+                            } else {
+                                selector.next();
+                            }
+
+                            world.trigger(OptionChanged{
+                                entity: parent_id,
+                                selected_index: 0,
+                            });
+                        } else if let Some(parent) = world.entity(parent_id).get::<ChildOf>() {
+
+                            let mut par = world.entity_mut(parent.0);
+
+                            if let Some(value) = par.get::<SliderValue>(){
+
+                                if dir.eq(&CompassQuadrant::West) {
+                                    par.insert(SliderValue(value.0 - 1.0));
+                                } else {
+                                    par.insert(SliderValue(value.0 + 1.0));
+                                }
+                            }
+                        }
+
+
+
+                    }
+                }
+            });
+        }
+
 
         match navigation.navigate(octant) {
             Ok(entity) => {
@@ -445,7 +430,7 @@ fn try_navigate(dir: Option<CompassQuadrant>, navigation: &mut DirectionalNaviga
     }
 }
 
-fn quadrant_to_octant(quadrant: CompassQuadrant) -> CompassOctant {
+fn quadrant_to_octant(quadrant: &CompassQuadrant) -> CompassOctant {
     match quadrant {
         CompassQuadrant::North => CompassOctant::North,
         CompassQuadrant::East => CompassOctant::East,
@@ -494,8 +479,18 @@ pub struct SliderEntities<'a> {
     pub thumb: Entity
 }
 
+#[derive(Deref)]
+pub struct SelectorEntities<'a> {
+    #[deref]
+    pub root: EntityCommands<'a>,
+    pub left_button: Entity,
+    pub right_button: Entity,
+    pub bar: Entity,
+}
+
 pub trait WidgetsExtCommands {
     fn append_slider(&mut self, min:f32, max:f32, cur:f32) -> SliderEntities<'_>;
+    fn append_selector(&mut self, options_provider: SourceHandle<dyn UIOptionProvider>, selected: usize, label: impl Into<String>) -> SelectorEntities<'_>;
 }
 
  
@@ -560,6 +555,90 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
             root,
             track,
             thumb
+        }
+    }
+
+    fn append_selector(&mut self, options_provider: SourceHandle<dyn UIOptionProvider>, selected: usize, label: impl Into<String>) -> SelectorEntities<'_> {
+
+        let mut root = self.spawn((
+            OptionSelector {
+                options_provider,
+                selected
+            },
+            Node {
+                flex_wrap: FlexWrap::Wrap,
+                flex_direction: FlexDirection::Row,
+                row_gap: Val::Px(20.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                justify_items: JustifyItems::Center,
+                ..default()
+            }));
+
+        let mut commands = root.commands();
+
+        let l_but: Entity;
+        let r_but: Entity;
+        let bar: Entity;
+
+        {
+            l_but = commands.spawn(w_button(MODERN_THEME.button, Vec2::new(40.0, 40.0), "<"))
+                    .insert(SelectorButton(false))
+                    .id();
+
+            bar = commands.spawn((
+                Node {
+                    width: Val::Px(450.0),
+                    height: Val::Px(50.0),
+                    margin: UiRect::all(Val::Px(10.0)),
+                    justify_content: JustifyContent::SpaceBetween,
+                    justify_items: JustifyItems::Center,
+                    align_items: AlignItems::Center,
+                    padding: UiRect::all(Val::Px(15.0)),
+                    border: PIXEL_BORDER,
+                    ..default()
+                },
+                SelectorBar,
+                AutoFocus,
+                BackgroundColor(MODERN_THEME.panel_bg),
+                BorderColor::from(MODERN_THEME.border),
+                BorderRadius::ZERO,
+                Children::spawn_one((
+                    Node {
+                        display: Display::Flex,
+                        flex_direction: FlexDirection::Row,
+                        justify_content: JustifyContent::SpaceBetween,
+                        align_items: AlignItems::Center,
+                        width: Val::Percent(100.0),
+                        ..default()
+                    },
+                    Children::spawn((
+                        Spawn(LabelBundle::button_label(label)),
+                        Spawn((
+                            TextFont {
+                                font_size: 32.0,
+                                font_smoothing: FontSmoothing::None,
+                                ..default()
+                            },
+                            TextColor(Color::WHITE),
+                            SelectorText,
+                        )),
+                    )),
+                ))
+            )).id();
+
+            r_but = commands.spawn(w_button(MODERN_THEME.button, Vec2::new(40.0, 40.0), ">"))
+                            .insert(SelectorButton(true))
+                            .id();
+
+            root.add_children(&[l_but, bar ,r_but]);
+        }
+
+        SelectorEntities{
+            root,
+            bar,
+            left_button: l_but,
+            right_button: r_but,
         }
     }
 }

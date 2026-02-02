@@ -10,8 +10,7 @@ pub struct GameUIPlugin;
 
 impl Plugin for GameUIPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_systems(Update, (
+        app.add_systems(Update, (
                 u_ui_hover_light,
                 u_slider_visuals,
                 t_button_press,
