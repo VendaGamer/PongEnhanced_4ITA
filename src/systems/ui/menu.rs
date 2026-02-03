@@ -19,14 +19,16 @@ use crate::utils::MODERN_THEME;
 use bevy::input_focus::directional_navigation::DirectionalNavigationMap;
 use bevy::math::CompassOctant;
 use bevy::prelude::*;
-use bevy::ui_widgets::observe;
 use bevy::window::{PrimaryWindow, WindowMode};
 use leafwing_input_manager::action_state::ActionState;
 
-pub fn spawn_m_main(directional_nav_map: &mut DirectionalNavigationMap, commands: &mut Commands) {
-    commands.spawn(m_base(MainMenu)).with_children(|base| {
-        base.spawn(LabelBundle::game_title());
-        base.spawn((
+pub fn spawn_m_main<'a>(commands: &'a mut Commands, nav_map: &'a mut DirectionalNavigationMap) -> EntityCommands<'a> {
+
+    let mut base = spawn_m_base(commands, nav_map, MainMenu);
+
+    base.with_children(|parent| {
+        parent.spawn(LabelBundle::game_title());
+        parent.spawn((
             Node {
                 flex_direction: FlexDirection::Column,
                 flex_wrap: FlexWrap::Wrap,
@@ -37,8 +39,7 @@ pub fn spawn_m_main(directional_nav_map: &mut DirectionalNavigationMap, commands
             },
             Outline::new(Val::Px(5.0), Val::ZERO, Color::linear_rgb(0.5, 0.5, 0.5)),
             BackgroundColor::from(Color::srgb(0.1, 0.1, 0.1)),
-        ))
-        .with_children(|cont| {
+        )).with_children(|cont| {
             let but1 = cont
                 .spawn(w_menu_button(Color::srgb(0.2, 0.6, 0.9), "Offline Play"))
                 .observe(on_offline)
@@ -59,9 +60,11 @@ pub fn spawn_m_main(directional_nav_map: &mut DirectionalNavigationMap, commands
                 .observe(on_exit)
                 .id();
 
-            directional_nav_map.add_looping_edges(&[but1, but2, but3, but4], CompassOctant::South);
+            nav_map.add_looping_edges(&[but1, but2, but3, but4], CompassOctant::South);
         });
     });
+
+    base
 }
 
 #[macro_export]
@@ -73,40 +76,46 @@ macro_rules! boxed_vec {
     };
 }
 
-const GAMEMODE_OPTIONS: SourceHandle<dyn UIOptionProvider> = SourceHandle::Static(&[
+pub const GAMEMODE_OPTIONS: SourceHandle<dyn UIOptionProvider> = SourceHandle::Static(&GAMEMODE_OPTIONS_RAW);
+
+pub const GAMEMODE_OPTIONS_RAW: [GameMode; 5] = [
     GameMode::Classic,
     GameMode::Modern,
     GameMode::UpsideDown,
     GameMode::Blackout,
     GameMode::Twisted,
-]);
+];
 
-pub fn m_offline() -> impl Bundle {
-    (
-        m_base(OfflinePlayMenu),
-        children![
-            w_menu_title("Offline Play"),
-            (w_menu_section(),),
-            (
-                Node {
-                    flex_direction: FlexDirection::Row,
-                    margin: UiRect::top(Val::Px(30.0)),
-                    column_gap: Val::Px(20.0),
-                    ..default()
-                },
-                children![
-                    (
-                        w_menu_button(Color::srgb(0.2, 0.7, 0.3), "Start Game"),
-                        observe(on_start_offline_game)
-                    ),
-                    (
-                        w_menu_button(Color::srgb(0.6, 0.6, 0.6), "Back"),
-                        observe(on_offline_back_main)
-                    )
-                ]
-            ),
-        ],
-    )
+pub fn spawn_m_offline<'a>(commands: &'a mut Commands, nav_map: &'a mut DirectionalNavigationMap) -> EntityCommands<'a> {
+
+    let mut base = spawn_m_base(commands, nav_map, OfflinePlayMenu);
+
+    base.with_children(|parent| {
+
+        parent.spawn(w_menu_title("Offline Play"));
+        parent.spawn(w_menu_section()).with_children(|parent| {
+
+            parent.spawn(Node {
+                flex_direction: FlexDirection::Row,
+                margin: UiRect::top(Val::Px(30.0)),
+                column_gap: Val::Px(20.0),
+                ..default()
+            }).with_children(|parent| {
+
+                let b1 = parent.spawn(w_menu_button(Color::srgb(0.2, 0.7, 0.3), "Start Game"))
+                        .observe(on_start_offline_game)
+                        .id();
+
+                let b2 = parent.spawn(w_menu_button(Color::srgb(0.6, 0.6, 0.6), "Back"))
+                        .observe(on_offline_back_main)
+                        .id();
+
+                nav_map.add_looping_edges(&[b1, b2], CompassOctant::East);
+            });
+        });
+    });
+
+    base
 }
 
 fn on_game_mode_changed(
@@ -148,21 +157,23 @@ fn on_offline(
     _press: On<ButtonPressed>,
     config: Res<GameModeConfig>,
     mut commands: Commands,
+    mut nav_map: ResMut<DirectionalNavigationMap>,
     main_menu: Query<Entity, With<MainMenu>>,
 ) {
     let entity = main_menu.single().expect("Main Menu doesn't exist");
     commands.entity(entity).despawn();
-    commands.spawn(m_offline());
+    spawn_m_offline(&mut commands, &mut nav_map);
 }
 
 fn on_online(
     _press: On<ButtonPressed>,
     mut commands: Commands,
+    mut nav_map: ResMut<DirectionalNavigationMap>,
     main_menu: Query<Entity, With<MainMenu>>,
 ) {
     let entity = main_menu.single().expect("Main Menu doesn't exist");
     commands.entity(entity).despawn();
-    commands.spawn(m_online());
+    spawn_m_online(&mut commands, &mut nav_map);
 }
 
 fn on_settings(
@@ -192,7 +203,7 @@ fn on_settings_back_main(
     let entity = settings_menu.single().expect("Settings Menu doesn't exist");
     commands.entity(entity).despawn();
 
-    spawn_m_main(nam_map.as_mut(), &mut commands);
+    spawn_m_main(&mut commands, nam_map.as_mut());
     save_settings(&settings);
 }
 
@@ -200,10 +211,10 @@ fn on_offline_back_main(
     _: On<ButtonPressed>,
     mut commands: Commands,
     mut map: ResMut<DirectionalNavigationMap>,
-    menu: Query<Entity, With<OfflinePlayMenu>>,
+    menu: Single<Entity, With<OfflinePlayMenu>>,
 ) {
-    commands.entity(menu.single().expect("No menu")).despawn();
-    spawn_m_main(map.as_mut(), &mut commands);
+    commands.entity(*menu).despawn();
+    spawn_m_main(&mut commands, map.as_mut());
 }
 
 fn on_online_back_main(
@@ -213,35 +224,39 @@ fn on_online_back_main(
     main_menu: Single<Entity, With<OnlinePlayMenu>>,
 ) {
     commands.entity(*main_menu).despawn();
-    spawn_m_main(map.as_mut(), &mut commands);
+    spawn_m_main(&mut commands, map.as_mut());
 }
 
 fn on_start_offline_game(
     _: On<ButtonPressed>,
     mut commands: Commands,
+    mut nav_map: ResMut<DirectionalNavigationMap>,
     menu: Single<Entity, With<OfflinePlayMenu>>,
 ) {
     commands.entity(*menu).despawn();
-    commands.spawn(m_player_join_in(1));
+    spawn_m_player_join_in(&mut commands, &mut nav_map, 1);
 }
 
-fn m_player_join_in(player_num: u8) -> impl Bundle {
-    (
-        m_base(PlayerJoinInMenu(player_num)),
-        children![
-            w_menu_title(format!("Player {} Join In", player_num)),
-            (
-                w_menu_section(),
-                children![LabelBundle::button_label("Press any button to join..."),],
-            ),
-        ],
-    )
+fn spawn_m_player_join_in<'a>(commands: &'a mut Commands, nav_map: &'a mut DirectionalNavigationMap, player_num: u8) -> EntityCommands<'a> {
+
+    let mut base = spawn_m_base(commands, nav_map, PlayerJoinInMenu(player_num));
+
+    base.with_children(| parent |{
+
+        parent.spawn(w_menu_title(format!("Player {} Join In", player_num)));
+        parent.spawn((
+            w_menu_section(),
+        )).with_child(LabelBundle::button_label("Press any button to join..."));
+    });
+
+    base
 }
 
 pub fn u_join_in(
     menus: Single<(Entity, &PlayerJoinInMenu)>,
     player_query: Query<(&ActionState<PlayerAction>, &Player)>,
     mut commands: Commands,
+    mut nav_map: ResMut<DirectionalNavigationMap>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut game_settings: ResMut<GameModeConfig>,
@@ -258,7 +273,7 @@ pub fn u_join_in(
             commands.entity(menus.0).despawn();
 
             if player_num < teams_len {
-                commands.spawn(m_player_join_in((player_num + 1) as u8));
+                spawn_m_player_join_in(&mut commands, &mut nav_map, (player_num + 1) as u8);
             } else {
                 AreaBundle::spawn(
                     game_settings.as_ref(),
@@ -271,38 +286,52 @@ pub fn u_join_in(
     }
 }
 
-pub fn m_online() -> impl Bundle {
-    (
-        m_base(OnlinePlayMenu),
-        children![
-            w_menu_title("Online Play"),
-            (
-                w_menu_section(),
-                children![
-                    (
-                        w_menu_button(Color::srgb(0.3, 0.6, 0.9), "Quick Match"),
-                        observe(on_quick_match)
-                    ),
-                    (
-                        w_menu_button(Color::srgb(0.5, 0.4, 0.9), "Create Room",),
-                        observe(on_create_room)
-                    ),
-                    (
-                        w_menu_button(Color::srgb(0.9, 0.5, 0.3), "Join Room",),
-                        observe(on_join_room)
-                    ),
-                    (
-                        w_menu_button(Color::srgb(0.4, 0.7, 0.4), "Friends List",),
-                        observe(on_friends_list)
-                    ),
-                ],
-            ),
-            (
-                w_menu_button(Color::srgb(0.6, 0.6, 0.6), "Back",),
-                observe(on_online_back_main)
-            )
-        ],
-    )
+pub fn spawn_m_online<'a>(
+    commands: &'a mut Commands,
+    nav_map: &'a mut DirectionalNavigationMap,
+) -> EntityCommands<'a> {
+
+    let mut entities: Vec<Entity> = Vec::new();
+
+    let mut base = spawn_m_base(commands, nav_map, OnlinePlayMenu);
+
+    base.with_children(|parent| {
+
+        parent.spawn(w_menu_title("Online Play"));
+        parent.spawn(w_menu_section()).with_children(|parent| {
+
+            entities.push(parent.spawn(
+                w_menu_button(Color::srgb(0.3, 0.6, 0.9), "Quick Match")
+            ).observe(on_quick_match)
+             .id());
+
+            entities.push(parent.spawn(
+                w_menu_button(Color::srgb(0.5, 0.4, 0.9), "Create Room")
+            ).observe(on_create_room)
+             .id());
+
+            entities.push(parent.spawn(
+                w_menu_button(Color::srgb(0.9, 0.5, 0.3), "Join Room")
+            ).observe(on_join_room)
+             .id());
+
+            entities.push(parent.spawn(
+                w_menu_button(Color::srgb(0.4, 0.7, 0.4), "Friends List")
+            ).observe(on_friends_list)
+             .id());
+
+        });
+
+        entities.push(parent.spawn(
+            w_menu_button(Color::srgb(0.6, 0.6, 0.6), "Back")
+        ).observe(on_online_back_main)
+         .id());
+
+    });
+
+    nav_map.add_looping_edges(&entities, CompassOctant::South);
+
+    base
 }
 
 fn index_for_window_mode(window_mode: &WindowMode) -> usize {
@@ -323,7 +352,7 @@ pub fn spawn_m_settings(
     let mut entities: Vec<Entity> = Vec::with_capacity(9);
 
     commands.insert_resource(PendingSettings::from(settings));
-    commands.spawn(m_base(SettingsMenu)).with_children(|base| {
+    spawn_m_base(commands, nav_map, SettingsMenu).with_children(|base| {
         base.spawn(w_menu_title("Settings"));
 
         base.spawn(w_menu_section()).with_children(|section| {
@@ -489,8 +518,11 @@ fn on_settings_apply(
     }
 }
 
-fn m_base(menu_type: impl Component) -> impl Bundle {
-    (
+fn spawn_m_base<'a>(commands: &'a mut Commands, nav_map: &mut DirectionalNavigationMap, menu_type: impl Component) -> EntityCommands<'a> {
+
+    nav_map.clear();
+
+    commands.spawn((
         menu_type,
         Node {
             width: Val::Percent(100.0),
@@ -501,7 +533,7 @@ fn m_base(menu_type: impl Component) -> impl Bundle {
             ..default()
         },
         BackgroundColor(Color::srgb(0.05, 0.05, 0.1)),
-    )
+    ))
 }
 
 pub fn u_settings_visibility(

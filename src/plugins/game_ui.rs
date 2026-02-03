@@ -1,8 +1,10 @@
 ﻿use crate::bundles::{App, Commands, MessageReader, On, Plugin, ResMut, UiScale, Update};
+use crate::events::gameplay::UINavigated;
 use crate::events::widgets::SliderValueChanged;
 use crate::systems::widgets::*;
 use crate::utils::FIXED_DIMENSIONS;
-use bevy::prelude::Query;
+use bevy::input_focus::directional_navigation::DirectionalNavigation;
+use bevy::prelude::{Display, InheritedVisibility, Node, Query};
 use bevy::ui_widgets::{SliderValue, ValueChange};
 use bevy::window::WindowResized;
 
@@ -22,8 +24,23 @@ impl Plugin for GameUIPlugin {
                 u_button_press,
             ),
         )
+        .add_observer(handle_invisible_nav)
         .add_observer(t_slider_change)
         .add_observer(update_selector);
+    }
+}
+
+
+fn handle_invisible_nav(
+    event: On<UINavigated>,
+    nodes: Query<&Node>,
+    mut nav: DirectionalNavigation
+) {
+    if let Ok(node) = nodes.get(event.entity) {
+
+        if matches!(node.display, Display::None) {
+            _ = nav.navigate(event.direction);
+        }
     }
 }
 

@@ -16,6 +16,7 @@ use crate::resources::MenuAction;
 use crate::systems::settings::persistence::load_settings;
 use crate::utils::DEFAULT_FONT;
 use avian2d::prelude::*;
+use bevy::camera::visibility::VisibilityPlugin;
 use bevy::input_focus::directional_navigation::DirectionalNavigationPlugin;
 use bevy::input_focus::InputDispatchPlugin;
 use bevy::prelude::*;

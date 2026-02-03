@@ -70,5 +70,5 @@ fn setup_common(mut commands: Commands, mut map: ResMut<DirectionalNavigationMap
     }
 
     commands.spawn(MenuAction::input_map());
-    spawn_m_main(map.as_mut(), &mut commands);
+    spawn_m_main(&mut commands, map.as_mut());
 }

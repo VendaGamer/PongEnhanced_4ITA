@@ -25,6 +25,7 @@ use bevy_tween::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
 use std::sync::Arc;
 use std::time::Duration;
+use crate::events::gameplay::UINavigated;
 
 pub const BUTTON_PADDING: Val = Val::Px(20.0);
 pub const PIXEL_BORDER: UiRect = UiRect::all(Val::Px(3.0));
@@ -426,6 +427,10 @@ fn try_navigate(
         match navigation.navigate(octant) {
             Ok(entity) => {
                 println!("Navigated {octant:?} successfully. {entity} is now focused.");
+                commands.trigger(UINavigated {
+                    direction: octant,
+                    entity
+                })
             }
             Err(e) => {
                 println!("Navigation failed: {e}");
@@ -434,7 +439,7 @@ fn try_navigate(
     }
 }
 
-fn quadrant_to_octant(quadrant: &CompassQuadrant) -> CompassOctant {
+pub fn quadrant_to_octant(quadrant: &CompassQuadrant) -> CompassOctant {
     match quadrant {
         CompassQuadrant::North => CompassOctant::North,
         CompassQuadrant::East => CompassOctant::East,
