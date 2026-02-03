@@ -1,11 +1,11 @@
-﻿use bevy::ecs::relationship::Relationship;
-use crate::bundles::{App, Commands, MessageReader, On, Plugin, ResMut, UiScale, Update};
+﻿use crate::bundles::{App, Commands, MessageReader, On, Plugin, ResMut, UiScale, Update};
 use crate::events::gameplay::UINavigated;
 use crate::events::widgets::SliderValueChanged;
 use crate::systems::widgets::*;
 use crate::utils::FIXED_DIMENSIONS;
+use bevy::ecs::relationship::Relationship;
 use bevy::input_focus::directional_navigation::DirectionalNavigation;
-use bevy::prelude::{ChildOf, Display, Entity, InheritedVisibility, Node, Query};
+use bevy::prelude::{ChildOf, Display, Entity, Node, Query};
 use bevy::ui_widgets::{SliderValue, ValueChange};
 use bevy::window::WindowResized;
 
@@ -21,7 +21,7 @@ impl Plugin for GameUIPlugin {
                 t_button_press,
                 handle_ui_scaling,
                 u_highlight_focused_element,
-                u_navigate_element,
+                t_navigate_element,
                 u_button_press,
             ),
         )
@@ -31,7 +31,7 @@ impl Plugin for GameUIPlugin {
     }
 }
 
-
+#[inline]
 fn handle_invisible_nav(
     event: On<UINavigated>,
     nodes: Query<(&Node, Option<&ChildOf>)>,

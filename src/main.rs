@@ -62,6 +62,7 @@ fn main() {
         InputDispatchPlugin,
         DefaultTweenPlugins,
         DirectionalNavigationPlugin,
+        
         // my plugins
         GameCorePlugin,
         GameUIPlugin,

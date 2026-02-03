@@ -312,7 +312,7 @@ const INITIAL_REPEAT_DELAY: f32 = 0.5;
 const REPEAT_DELAY: f32 = 0.15;
 const DEADZONE: f32 = 0.3;
 
-pub fn u_navigate_element(
+pub fn t_navigate_element(
     mut input_focus: ResMut<InputFocusVisible>,
     mut navigation: DirectionalNavigation,
     mut last_direction: Local<Option<CompassQuadrant>>,
@@ -497,27 +497,27 @@ pub struct SelectorEntities<'a> {
 }
 
 pub trait WidgetsExtCommands {
-    fn append_slider_custom(
+    fn spawn_slider_custom(
         &mut self,
         min: f32,
         max: f32,
         cur: f32,
         size: Val2,
     ) -> SliderEntities<'_>;
-    fn append_slider(&mut self, min: f32, max: f32, cur: f32) -> SliderEntities<'_> {
+    fn spawn_slider(&mut self, min: f32, max: f32, cur: f32) -> SliderEntities<'_> {
         const SIZE: Val2 = Val2::new(Val::Percent(100.0), Val::Px(50.0));
 
-        self.append_slider_custom(min, max, cur, SIZE)
+        self.spawn_slider_custom(min, max, cur, SIZE)
     }
 
-    fn append_selector_custom(
+    fn spawn_selector_custom(
         &mut self,
         options_provider: SourceHandle<dyn UIOptionProvider>,
         selected: usize,
         label: impl Into<String>,
         size: Val2,
     ) -> SelectorEntities<'_>;
-    fn append_selector(
+    fn spawn_selector(
         &mut self,
         options_provider: SourceHandle<dyn UIOptionProvider>,
         selected: usize,
@@ -525,12 +525,12 @@ pub trait WidgetsExtCommands {
     ) -> SelectorEntities<'_> {
         const SIZE: Val2 = Val2::new(Val::Px(430.0), Val::Px(30.0));
 
-        self.append_selector_custom(options_provider, selected, label, SIZE)
+        self.spawn_selector_custom(options_provider, selected, label, SIZE)
     }
 }
 
 impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
-    fn append_slider_custom(
+    fn spawn_slider_custom(
         &mut self,
         min: f32,
         max: f32,
@@ -596,7 +596,7 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
         SliderEntities { root, track, thumb }
     }
 
-    fn append_selector_custom(
+    fn spawn_selector_custom(
         &mut self,
         options_provider: SourceHandle<dyn UIOptionProvider>,
         selected: usize,

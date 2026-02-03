@@ -358,7 +358,7 @@ pub fn spawn_m_settings(
         base.spawn(w_menu_section()).with_children(|section| {
             {
                 section.spawn(LabelBundle::button_label("Sound Effects"));
-                let mut sfx = section.append_slider(0.0, 100.0, settings.sfx_volume);
+                let mut sfx = section.spawn_slider(0.0, 100.0, settings.sfx_volume);
 
                 sfx.root.observe(on_sfx_changed);
                 entities.push(sfx.thumb);
@@ -366,7 +366,7 @@ pub fn spawn_m_settings(
 
             {
                 section.spawn(LabelBundle::button_label("Master volume"));
-                let mut mas = section.append_slider(0.0, 100.0, settings.master_volume);
+                let mut mas = section.spawn_slider(0.0, 100.0, settings.master_volume);
 
                 mas.root.observe(on_master_changed);
                 entities.push(mas.thumb);
@@ -376,7 +376,7 @@ pub fn spawn_m_settings(
                 let monitor_index = monitors.selected_monitor;
                 let monitor = monitors.get_current_monitor();
 
-                let mut w_sel = section.append_selector(
+                let mut w_sel = section.spawn_selector(
                     SourceHandle::Unique(boxed_vec![
                         WindowMode::Windowed,
                         WindowMode::BorderlessFullscreen(monitor.monitor_selection),
@@ -396,7 +396,7 @@ pub fn spawn_m_settings(
 
                 entities.push(w_sel.bar);
 
-                let mut m_sel = section.append_selector(
+                let mut m_sel = section.spawn_selector(
                     SourceHandle::Strong(monitors.monitors.clone()),
                     monitor_index,
                     "Monitor",
@@ -409,7 +409,7 @@ pub fn spawn_m_settings(
                     .insert(MonitorSelector)
                     .observe(on_monitor_changed);
 
-                let mut res_sel = section.append_selector(
+                let mut res_sel = section.spawn_selector(
                     SourceHandle::Strong(monitor.resolutions.clone()),
                     0,
                     "Resolution",
@@ -422,7 +422,7 @@ pub fn spawn_m_settings(
                     .insert(ResolutionSelector)
                     .observe(on_resolution_changed);
 
-                let mut ref_sel = section.append_selector(
+                let mut ref_sel = section.spawn_selector(
                     SourceHandle::Strong(monitor.refresh_rates.clone()),
                     0,
                     "Refresh Rate",
@@ -437,7 +437,7 @@ pub fn spawn_m_settings(
             }
 
             {
-                let mut v_sel = section.append_selector(VSYNC_OPTIONS, 0, "VSync");
+                let mut v_sel = section.spawn_selector(VSYNC_OPTIONS, 0, "VSync");
 
                 v_sel.root.insert(VSyncSelector).observe(on_vsync_changed);
 
