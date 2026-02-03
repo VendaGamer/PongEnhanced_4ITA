@@ -14,7 +14,7 @@ pub struct BallBounced {
     pub ball: Entity,
 }
 
-#[derive(Event)]
+#[derive(Event, Copy, Clone)]
 pub struct UINavigated {
     pub direction: CompassOctant,
     pub entity: Entity,

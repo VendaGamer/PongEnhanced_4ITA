@@ -1,10 +1,11 @@
-﻿use crate::bundles::{App, Commands, MessageReader, On, Plugin, ResMut, UiScale, Update};
+﻿use bevy::ecs::relationship::Relationship;
+use crate::bundles::{App, Commands, MessageReader, On, Plugin, ResMut, UiScale, Update};
 use crate::events::gameplay::UINavigated;
 use crate::events::widgets::SliderValueChanged;
 use crate::systems::widgets::*;
 use crate::utils::FIXED_DIMENSIONS;
 use bevy::input_focus::directional_navigation::DirectionalNavigation;
-use bevy::prelude::{Display, InheritedVisibility, Node, Query};
+use bevy::prelude::{ChildOf, Display, Entity, InheritedVisibility, Node, Query};
 use bevy::ui_widgets::{SliderValue, ValueChange};
 use bevy::window::WindowResized;
 
@@ -33,15 +34,53 @@ impl Plugin for GameUIPlugin {
 
 fn handle_invisible_nav(
     event: On<UINavigated>,
-    nodes: Query<&Node>,
-    mut nav: DirectionalNavigation
+    nodes: Query<(&Node, Option<&ChildOf>)>,
+    nav: DirectionalNavigation
 ) {
-    if let Ok(node) = nodes.get(event.entity) {
+    handle_invisible_nav_core(*event, nodes, nav);
+}
 
-        if matches!(node.display, Display::None) {
-            _ = nav.navigate(event.direction);
+fn handle_invisible_nav_core(
+    event: UINavigated,
+    nodes: Query<(&Node, Option<&ChildOf>)>,
+    mut nav: DirectionalNavigation
+){
+    if let Ok((node, parent)) = nodes.get(event.entity) {
+        if is_display_none(&nodes, event.entity, node, parent) {
+            match nav.navigate(event.direction) {
+                Ok(entity) => {
+                    handle_invisible_nav_core(
+                        UINavigated{
+                            direction: event.direction,
+                            entity,
+                        },
+                        nodes,
+                        nav
+                    );
+                },
+                _ => {}
+            }
         }
     }
+}
+
+fn is_display_none(
+    query: &Query<(&Node, Option<&ChildOf>)>,
+    entity: Entity,
+    node: &Node,
+    parent: Option<&ChildOf>
+) -> bool {
+    if matches!(node.display, Display::None) {
+        return true;
+    }
+
+    if let Some(parent) = parent {
+        if let Ok((parent_node, grandparent)) = query.get(parent.get()) {
+            return is_display_none(query, parent.get(), parent_node, grandparent);
+        }
+    }
+
+    false
 }
 
 fn handle_ui_scaling(mut ui_scale: ResMut<UiScale>, mut resized: MessageReader<WindowResized>) {
