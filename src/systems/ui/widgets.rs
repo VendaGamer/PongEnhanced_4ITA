@@ -6,7 +6,6 @@ use crate::components::ui::{
 use crate::events::widgets::{ButtonPressed, OptionChanged};
 use crate::resources::MenuAction;
 use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT, MODERN_THEME};
-use bevy::asset::AssetContainer;
 use bevy::ecs::relationship::{RelatedSpawnerCommands, Relationship};
 use bevy::input_focus::directional_navigation::DirectionalNavigation;
 use bevy::input_focus::tab_navigation::TabIndex;
@@ -14,7 +13,6 @@ use bevy::input_focus::{AutoFocus, InputFocus, InputFocusVisible};
 use bevy::math::{CompassOctant, CompassQuadrant};
 use bevy::picking::hover::Hovered;
 use bevy::prelude::*;
-use bevy::tasks::futures_lite::StreamExt;
 use bevy::text::FontSmoothing;
 use bevy::ui::Checked;
 use bevy::ui_widgets::{
@@ -248,21 +246,21 @@ pub fn update_selector(
     }
 }
 
-pub fn w_row_container(gap: f32) -> impl Bundle {
+pub fn w_row_container(gap: Val) -> impl Bundle {
     Node {
         flex_direction: FlexDirection::Row,
         flex_wrap: FlexWrap::Wrap,
-        column_gap: Val::Px(gap),
+        column_gap: gap,
         display: Display::Flex,
         ..default()
     }
 }
 
-pub fn w_col_container(gap: f32) -> impl Bundle {
+pub fn w_col_container(gap: Val) -> impl Bundle {
     Node {
         flex_direction: FlexDirection::Column,
         flex_wrap: FlexWrap::Wrap,
-        row_gap: Val::Px(gap),
+        row_gap: gap,
         display: Display::Flex,
         ..default()
     }
@@ -523,7 +521,7 @@ pub trait WidgetsExtCommands {
         selected: usize,
         label: impl Into<String>,
     ) -> SelectorEntities<'_> {
-        const SIZE: Val2 = Val2::new(Val::Px(430.0), Val::Px(30.0));
+        const SIZE: Val2 = Val2::new(Val::Px(460.0), Val::Px(30.0));
 
         self.spawn_selector_custom(options_provider, selected, label, SIZE)
     }

@@ -16,7 +16,6 @@ use crate::resources::MenuAction;
 use crate::systems::settings::persistence::load_settings;
 use crate::utils::DEFAULT_FONT;
 use avian2d::prelude::*;
-use bevy::camera::visibility::VisibilityPlugin;
 use bevy::input_focus::directional_navigation::DirectionalNavigationPlugin;
 use bevy::input_focus::InputDispatchPlugin;
 use bevy::prelude::*;
@@ -25,7 +24,6 @@ use bevy::window::WindowResolution;
 use bevy_tween::DefaultTweenPlugins;
 use components::*;
 use leafwing_input_manager::plugin::InputManagerPlugin;
-use lightyear::prelude::*;
 
 fn main() {
     let mut app = App::new();

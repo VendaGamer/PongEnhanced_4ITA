@@ -28,13 +28,13 @@ impl Plugin for GameCorePlugin {
                 u_join_in,
                 u_spawned_gamepads,
                 u_tilt_i,
+                u_settings_visibility
             ),
         )
         .add_systems(Startup, (setup_common,))
         .add_systems(PostStartup, (on_spawn_monitors,))
         .add_observer(paddle_hit_dynamics)
         .add_observer(t_ball_events)
-        .add_observer(u_settings_visibility)
         .insert_resource(GameModeConfig::default())
         .insert_resource(Gravity::ZERO)
         .insert_resource(InputFocusVisible(false));

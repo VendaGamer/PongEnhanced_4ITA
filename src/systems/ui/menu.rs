@@ -1,3 +1,4 @@
+use bevy::ecs::query::Spawned;
 use crate::bundles::area::AreaBundle;
 use crate::bundles::widgets::LabelBundle;
 use crate::components::ui::{
@@ -19,8 +20,59 @@ use crate::utils::MODERN_THEME;
 use bevy::input_focus::directional_navigation::DirectionalNavigationMap;
 use bevy::math::CompassOctant;
 use bevy::prelude::*;
-use bevy::window::{PrimaryWindow, WindowMode};
+use bevy::reflect::{Array, Enum};
+use bevy::render::render_resource::encase::private::RuntimeSizedArray;
+use bevy::window::{PresentMode, PrimaryWindow, VideoMode, WindowMode};
+use bevy::winit::WinitWindows;
 use leafwing_input_manager::action_state::ActionState;
+
+
+pub const GAMEMODE_OPTIONS: SourceHandle<dyn UIOptionProvider> = SourceHandle::Static(&GAMEMODE_OPTIONS_RAW);
+
+pub const GAMEMODE_OPTIONS_RAW: [GameMode; 5] = [
+    GameMode::Classic,
+    GameMode::Modern,
+    GameMode::UpsideDown,
+    GameMode::Blackout,
+    GameMode::Twisted,
+];
+
+#[inline]
+fn index_of_game_mode(game_mode: &GameMode) -> usize {
+    GAMEMODE_OPTIONS_RAW.iter().position(|r| r == game_mode).unwrap_or(0)
+}
+
+#[inline]
+fn current_video_mode(
+    settings: &GameSettings,
+    monitor: &MonitorInfo,
+) -> VideoMode {
+    match settings.window_mode {
+        WindowMode::Fullscreen(.., selection) => {
+            match selection {
+                VideoModeSelection::Specific(mode) => mode,
+                _ => monitor.native_mode
+            }
+        }
+        _ => monitor.native_mode
+    }
+}
+
+#[inline]
+fn current_resolution_index(
+    resolutions: &Vec<Resolution>,
+    video_mode: &VideoMode
+) -> usize {
+    resolutions.iter().position(| res | res.0 == video_mode.physical_size).unwrap_or(resolutions.len() - 1)
+}
+
+#[inline]
+fn current_refresh_rate_index(
+    resolutions: &Vec<RefreshRate>,
+    video_mode: &VideoMode
+) -> usize {
+    resolutions.iter().position(|ref_rate| ref_rate.0 == video_mode.refresh_rate_millihertz).unwrap_or(resolutions.len() - 1)
+}
 
 pub fn spawn_m_main<'a>(commands: &'a mut Commands, nav_map: &'a mut DirectionalNavigationMap) -> EntityCommands<'a> {
 
@@ -64,7 +116,47 @@ pub fn spawn_m_main<'a>(commands: &'a mut Commands, nav_map: &'a mut Directional
         });
     });
 
-    base
+    return base;
+
+    fn on_offline(
+        _press: On<ButtonPressed>,
+        config: Res<GameModeConfig>,
+        mut commands: Commands,
+        mut nav_map: ResMut<DirectionalNavigationMap>,
+        main_menu: Query<Entity, With<MainMenu>>,
+    ) {
+        let entity = main_menu.single().expect("Main Menu doesn't exist");
+        commands.entity(entity).despawn();
+        spawn_m_offline(&mut commands, &mut nav_map, &config);
+    }
+
+    fn on_online(
+        _press: On<ButtonPressed>,
+        mut commands: Commands,
+        mut nav_map: ResMut<DirectionalNavigationMap>,
+        main_menu: Query<Entity, With<MainMenu>>,
+    ) {
+        let entity = main_menu.single().expect("Main Menu doesn't exist");
+        commands.entity(entity).despawn();
+        spawn_m_online(&mut commands, &mut nav_map);
+    }
+
+    fn on_settings(
+        _press: On<ButtonPressed>,
+        mut commands: Commands,
+        mut nav_map: ResMut<DirectionalNavigationMap>,
+        main_menu: Query<Entity, With<MainMenu>>,
+        settings: Res<GameSettings>,
+        monitors: Res<Monitors>,
+    ) {
+        let entity = main_menu.single().expect("Main Menu doesn't exist");
+        commands.entity(entity).despawn();
+        spawn_m_settings(&settings, &monitors, &mut commands, &mut nav_map);
+    }
+
+    fn on_exit(_press: On<ButtonPressed>, mut exit: MessageWriter<AppExit>) {
+        exit.write(AppExit::Success);
+    }
 }
 
 #[macro_export]
@@ -76,62 +168,86 @@ macro_rules! boxed_vec {
     };
 }
 
-pub const GAMEMODE_OPTIONS: SourceHandle<dyn UIOptionProvider> = SourceHandle::Static(&GAMEMODE_OPTIONS_RAW);
-
-pub const GAMEMODE_OPTIONS_RAW: [GameMode; 5] = [
-    GameMode::Classic,
-    GameMode::Modern,
-    GameMode::UpsideDown,
-    GameMode::Blackout,
-    GameMode::Twisted,
-];
-
-pub fn spawn_m_offline<'a>(commands: &'a mut Commands, nav_map: &'a mut DirectionalNavigationMap) -> EntityCommands<'a> {
+pub fn spawn_m_offline<'a>(
+    commands: &'a mut Commands,
+    nav_map: &'a mut DirectionalNavigationMap,
+    config: &'a Res<GameModeConfig>
+) -> EntityCommands<'a> {
 
     let mut base = spawn_m_base(commands, nav_map, OfflinePlayMenu);
+    let mut entities: Vec<Entity> = Vec::new();
 
     base.with_children(|parent| {
 
         parent.spawn(w_menu_title("Offline Play"));
+
         parent.spawn(w_menu_section()).with_children(|parent| {
 
-            parent.spawn(Node {
-                flex_direction: FlexDirection::Row,
-                margin: UiRect::top(Val::Px(30.0)),
-                column_gap: Val::Px(20.0),
-                ..default()
-            }).with_children(|parent| {
+            let mut g_sel = parent.spawn_selector(
+                GAMEMODE_OPTIONS,
+                index_of_game_mode(&config.game_mode),
+                "GameMode",
+            );
 
-                let b1 = parent.spawn(w_menu_button(Color::srgb(0.2, 0.7, 0.3), "Start Game"))
-                        .observe(on_start_offline_game)
-                        .id();
+            g_sel.root.observe(on_game_mode_changed);
 
-                let b2 = parent.spawn(w_menu_button(Color::srgb(0.6, 0.6, 0.6), "Back"))
-                        .observe(on_offline_back_main)
-                        .id();
+            entities.push(g_sel.bar);
+        });
 
-                nav_map.add_looping_edges(&[b1, b2], CompassOctant::East);
-            });
+        parent.spawn(w_row_container(Val::Px(20.0))).with_children(|parent| {
+
+            entities.push(parent.spawn(
+                w_menu_button(Color::srgb(0.2, 0.7, 0.3), "Start Game")
+            ).observe(on_start)
+             .id());
+
+            entities.push(parent.spawn(
+                w_menu_button(Color::srgb(0.6, 0.6, 0.6), "Back")
+            ).observe(on_back)
+             .id());
+
         });
     });
 
-    base
-}
+    nav_map.add_looping_edges(&entities[..=1], CompassOctant::South);
+    nav_map.add_looping_edges(&[entities[0], entities[2]], CompassOctant::South);
+    nav_map.add_looping_edges(&entities[1..=2], CompassOctant::East);
 
-fn on_game_mode_changed(
-    change: On<OptionChanged>,
-    selectors: Query<(Entity, &Selector)>,
-    mut config: ResMut<GameModeConfig>,
-) {
-    for (entity, selector) in selectors.iter() {
-        if change.entity == entity {
-            if let Some(change) = selector.current::<GameMode>() {
-                config.game_mode = *change;
+    return base;
 
-                println!("Game mode changed to {change:?}");
+    fn on_start(
+        _: On<ButtonPressed>,
+        mut commands: Commands,
+        mut nav_map: ResMut<DirectionalNavigationMap>,
+        menu: Single<Entity, With<OfflinePlayMenu>>,
+    ) {
+        commands.entity(*menu).despawn();
+        spawn_m_player_join_in(&mut commands, &mut nav_map, 1);
+    }
+    fn on_back(
+        _: On<ButtonPressed>,
+        mut commands: Commands,
+        mut map: ResMut<DirectionalNavigationMap>,
+        menu: Single<Entity, With<OfflinePlayMenu>>,
+    ) {
+        commands.entity(*menu).despawn();
+        spawn_m_main(&mut commands, &mut map);
+    }
+    fn on_game_mode_changed(
+        change: On<OptionChanged>,
+        selectors: Query<(Entity, &Selector)>,
+        mut config: ResMut<GameModeConfig>,
+    ) {
+        for (entity, selector) in selectors.iter() {
+            if change.entity == entity {
+                if let Some(change) = selector.current::<GameMode>() {
+                    config.game_mode = *change;
+
+                    println!("Game mode changed to {change:?}");
+                }
+
+                break;
             }
-
-            break;
         }
     }
 }
@@ -153,45 +269,7 @@ fn on_friends_list(_press: On<ButtonPressed>) {
     println!("Opening friends list...");
 }
 
-fn on_offline(
-    _press: On<ButtonPressed>,
-    config: Res<GameModeConfig>,
-    mut commands: Commands,
-    mut nav_map: ResMut<DirectionalNavigationMap>,
-    main_menu: Query<Entity, With<MainMenu>>,
-) {
-    let entity = main_menu.single().expect("Main Menu doesn't exist");
-    commands.entity(entity).despawn();
-    spawn_m_offline(&mut commands, &mut nav_map);
-}
 
-fn on_online(
-    _press: On<ButtonPressed>,
-    mut commands: Commands,
-    mut nav_map: ResMut<DirectionalNavigationMap>,
-    main_menu: Query<Entity, With<MainMenu>>,
-) {
-    let entity = main_menu.single().expect("Main Menu doesn't exist");
-    commands.entity(entity).despawn();
-    spawn_m_online(&mut commands, &mut nav_map);
-}
-
-fn on_settings(
-    _press: On<ButtonPressed>,
-    mut commands: Commands,
-    mut nav_map: ResMut<DirectionalNavigationMap>,
-    main_menu: Query<Entity, With<MainMenu>>,
-    settings: Res<GameSettings>,
-    monitors: Res<Monitors>,
-) {
-    let entity = main_menu.single().expect("Main Menu doesn't exist");
-    commands.entity(entity).despawn();
-    spawn_m_settings(&settings, &monitors, &mut commands, &mut nav_map);
-}
-
-fn on_exit(_press: On<ButtonPressed>, mut exit: MessageWriter<AppExit>) {
-    exit.write(AppExit::Success);
-}
 
 fn on_settings_back_main(
     _: On<ButtonPressed>,
@@ -203,18 +281,8 @@ fn on_settings_back_main(
     let entity = settings_menu.single().expect("Settings Menu doesn't exist");
     commands.entity(entity).despawn();
 
-    spawn_m_main(&mut commands, nam_map.as_mut());
+    spawn_m_main(&mut commands, &mut nam_map);
     save_settings(&settings);
-}
-
-fn on_offline_back_main(
-    _: On<ButtonPressed>,
-    mut commands: Commands,
-    mut map: ResMut<DirectionalNavigationMap>,
-    menu: Single<Entity, With<OfflinePlayMenu>>,
-) {
-    commands.entity(*menu).despawn();
-    spawn_m_main(&mut commands, map.as_mut());
 }
 
 fn on_online_back_main(
@@ -224,17 +292,7 @@ fn on_online_back_main(
     main_menu: Single<Entity, With<OnlinePlayMenu>>,
 ) {
     commands.entity(*main_menu).despawn();
-    spawn_m_main(&mut commands, map.as_mut());
-}
-
-fn on_start_offline_game(
-    _: On<ButtonPressed>,
-    mut commands: Commands,
-    mut nav_map: ResMut<DirectionalNavigationMap>,
-    menu: Single<Entity, With<OfflinePlayMenu>>,
-) {
-    commands.entity(*menu).despawn();
-    spawn_m_player_join_in(&mut commands, &mut nav_map, 1);
+    spawn_m_main(&mut commands, &mut map);
 }
 
 fn spawn_m_player_join_in<'a>(commands: &'a mut Commands, nav_map: &'a mut DirectionalNavigationMap, player_num: u8) -> EntityCommands<'a> {
@@ -250,40 +308,6 @@ fn spawn_m_player_join_in<'a>(commands: &'a mut Commands, nav_map: &'a mut Direc
     });
 
     base
-}
-
-pub fn u_join_in(
-    menus: Single<(Entity, &PlayerJoinInMenu)>,
-    player_query: Query<(&ActionState<PlayerAction>, &Player)>,
-    mut commands: Commands,
-    mut nav_map: ResMut<DirectionalNavigationMap>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-    mut game_settings: ResMut<GameModeConfig>,
-) {
-    let player_num = menus.1.0 as usize;
-
-    for (action, player) in player_query {
-        let area = &mut game_settings.area_shape;
-        if !action.get_just_pressed().is_empty() && !area.contains_player(player.id) {
-            let teams_len = area.get_teams().len();
-
-            area.get_teams_mut()[player_num - 1].players.push(player.id);
-
-            commands.entity(menus.0).despawn();
-
-            if player_num < teams_len {
-                spawn_m_player_join_in(&mut commands, &mut nav_map, (player_num + 1) as u8);
-            } else {
-                AreaBundle::spawn(
-                    game_settings.as_ref(),
-                    &mut commands,
-                    meshes.as_mut(),
-                    materials.as_mut(),
-                );
-            }
-        }
-    }
 }
 
 pub fn spawn_m_online<'a>(
@@ -350,12 +374,14 @@ pub fn spawn_m_settings(
 ) {
     let cur_window_mode = index_for_window_mode(&settings.window_mode);
     let mut entities: Vec<Entity> = Vec::with_capacity(9);
-
     commands.insert_resource(PendingSettings::from(settings));
+
+
     spawn_m_base(commands, nav_map, SettingsMenu).with_children(|base| {
         base.spawn(w_menu_title("Settings"));
 
-        base.spawn(w_menu_section()).with_children(|section| {
+        base.spawn(w_menu_section()).with_children(| section | {
+
             {
                 section.spawn(LabelBundle::button_label("Sound Effects"));
                 let mut sfx = section.spawn_slider(0.0, 100.0, settings.sfx_volume);
@@ -375,69 +401,80 @@ pub fn spawn_m_settings(
             {
                 let monitor_index = monitors.selected_monitor;
                 let monitor = monitors.get_current_monitor();
+                let video_mode = current_video_mode(settings, monitor);
 
-                let mut w_sel = section.spawn_selector(
-                    SourceHandle::Unique(boxed_vec![
+                {
+                    let mut w_sel = section.spawn_selector(
+                        SourceHandle::Unique(boxed_vec![
                         WindowMode::Windowed,
                         WindowMode::BorderlessFullscreen(monitor.monitor_selection),
                         WindowMode::Fullscreen(
                             monitor.monitor_selection,
-                            VideoModeSelection::Current
+                            VideoModeSelection::Specific(video_mode)
                         )
                     ]),
-                    cur_window_mode,
-                    "Window Mode",
-                );
+                        cur_window_mode,
+                        "Window Mode",
+                    );
 
-                w_sel
-                    .root
-                    .insert(WindowModeSelector)
-                    .observe(on_window_mode_changed);
+                    w_sel.root.insert(WindowModeSelector)
+                        .observe(on_window_mode_changed);
 
-                entities.push(w_sel.bar);
+                    entities.push(w_sel.bar);
+                }
 
-                let mut m_sel = section.spawn_selector(
-                    SourceHandle::Strong(monitors.monitors.clone()),
-                    monitor_index,
-                    "Monitor",
-                );
+                {
+                    let mut m_sel = section.spawn_selector(
+                        SourceHandle::Strong(monitors.monitors.clone()),
+                        monitor_index,
+                        "Monitor",
+                    );
 
-                entities.push(m_sel.bar);
+                    entities.push(m_sel.bar);
 
-                m_sel
-                    .root
-                    .insert(MonitorSelector)
-                    .observe(on_monitor_changed);
+                    m_sel.root.insert(MonitorSelector)
+                              .observe(on_monitor_changed);
+                }
 
-                let mut res_sel = section.spawn_selector(
-                    SourceHandle::Strong(monitor.resolutions.clone()),
-                    0,
-                    "Resolution",
-                );
+                {
+                    let mut res_sel = section.spawn_selector(
+                        SourceHandle::Strong(monitor.resolutions.clone()),
+                        current_resolution_index(&monitor.resolutions, &video_mode),
+                        "Resolution",
+                    );
 
-                entities.push(res_sel.bar);
+                    entities.push(res_sel.bar);
 
-                res_sel
-                    .root
-                    .insert(ResolutionSelector)
-                    .observe(on_resolution_changed);
+                    res_sel.root.insert(ResolutionSelector)
+                                .observe(on_resolution_changed);
+                }
 
-                let mut ref_sel = section.spawn_selector(
-                    SourceHandle::Strong(monitor.refresh_rates.clone()),
-                    0,
-                    "Refresh Rate",
-                );
+                {
+                    let mut ref_sel = section.spawn_selector(
+                        SourceHandle::Strong(monitor.refresh_rates.clone()),
+                        current_refresh_rate_index(&monitor.refresh_rates, &video_mode),
+                        "Refresh Rate",
+                    );
 
-                entities.push(ref_sel.bar);
+                    entities.push(ref_sel.bar);
 
-                ref_sel
-                    .root
-                    .insert(RefreshRateSelector)
-                    .observe(on_refresh_rate_changed);
+                    ref_sel.root.insert(RefreshRateSelector)
+                                .observe(on_refresh_rate_changed);
+                }
             }
 
             {
-                let mut v_sel = section.spawn_selector(VSYNC_OPTIONS, 0, "VSync");
+
+                let index = if matches!(settings.vsync, PresentMode::AutoNoVsync) {
+                    0
+                } else {
+                    1
+                };
+
+                let mut v_sel = section.spawn_selector(
+                    VSYNC_OPTIONS,
+                    index,
+                    "VSync");
 
                 v_sel.root.insert(VSyncSelector).observe(on_vsync_changed);
 
@@ -445,7 +482,7 @@ pub fn spawn_m_settings(
             }
         });
 
-        base.spawn(w_row_container(10.0))
+        base.spawn(w_row_container(Val::Px(10.0)))
             .with_children(|container| {
                 const SIZE: Val2 = Val2::new(Val::Px(300.0), Val::Px(50.0));
 
@@ -479,44 +516,172 @@ pub fn spawn_m_settings(
         ],
         CompassOctant::South,
     );
+
     nav_map.add_looping_edges(&entities[7..=8], CompassOctant::East);
-}
 
-fn on_sfx_changed(change: On<SliderValueChanged>, mut settings: ResMut<GameSettings>) {
-    settings.sfx_volume = change.value;
-    println!("Changed SFX volume to {}", change.value);
-}
 
-fn on_master_changed(change: On<SliderValueChanged>, mut settings: ResMut<GameSettings>) {
-    settings.master_volume = change.value;
-    println!("Changed MASTER volume to {}", change.value);
-}
+    fn on_sfx_changed(change: On<SliderValueChanged>, mut settings: ResMut<GameSettings>) {
+        settings.sfx_volume = change.value;
+        println!("Changed SFX volume to {}", change.value);
+    }
 
-fn on_screen_mode_changed(change: On<OptionChanged>) {}
+    fn on_master_changed(change: On<SliderValueChanged>, mut settings: ResMut<GameSettings>) {
+        settings.master_volume = change.value;
+        println!("Changed MASTER volume to {}", change.value);
+    }
 
-fn on_settings_apply(
-    _: On<ButtonPressed>,
-    pending: Res<PendingSettings>,
-    mut settings: ResMut<GameSettings>,
-    mut windows: Query<&mut Window, With<PrimaryWindow>>,
-) {
-    let mut primary_window = windows.single_mut().expect("No primary window found");
 
-    settings.vsync = pending.vsync;
-    settings.window_mode = pending.window_mode;
-    settings.window_resolution = pending.window_resolution;
-    primary_window.present_mode = settings.vsync;
-    primary_window.mode = settings.window_mode;
+    fn on_window_mode_changed(
+        _: On<OptionChanged>,
+        mod_sel: Single<&Selector, With<WindowModeSelector>>,
+        mut selectors: ParamSet<(
+            Single<(&mut Node, &Selector), With<MonitorSelector>>,
+            Single<(&mut Node, &Selector), With<ResolutionSelector>>,
+            Single<(&mut Node, &Selector), With<RefreshRateSelector>>,
+        )>,
+        mut settings: ResMut<PendingSettings>,
+    ) {
+        let current = mod_sel.current::<WindowMode>().unwrap();
+        change_selector_visibility(current, &mut selectors);
+        settings.window_mode = *current;
+    }
 
-    if let Some(res) = settings.window_resolution {
-        if matches!(settings.window_mode, WindowMode::Windowed) {
-            primary_window
-                .resolution
-                .set_physical_resolution(res.x, res.y);
-            return;
+    fn on_monitor_changed(
+        _: On<OptionChanged>,
+        mut selectors: ParamSet<(
+            Single<&mut Selector, With<MonitorSelector>>,
+            Single<&mut Selector, With<ResolutionSelector>>,
+            Single<&mut Selector, With<RefreshRateSelector>>,
+        )>,
+        mut settings: ResMut<PendingSettings>,
+        mut monitors: ResMut<Monitors>,
+    ) {
+        let last_index = monitors.selected_monitor;
+
+        {
+            let mut mon_sel = selectors.p0();
+
+            match settings.window_mode {
+                WindowMode::Fullscreen(ref mut monitor, ..) => {
+                    let current_monitor = mon_sel.current::<MonitorInfo>().unwrap();
+
+                    *monitor = current_monitor.monitor_selection;
+                    monitors.selected_monitor = mon_sel.selected;
+                }
+                WindowMode::BorderlessFullscreen(ref mut monitor) => {
+                    let current_monitor = mon_sel.current::<MonitorInfo>().unwrap();
+
+                    *monitor = current_monitor.monitor_selection;
+                    monitors.selected_monitor = mon_sel.selected;
+                }
+                WindowMode::Windowed => {
+                    monitors.selected_monitor = 0;
+                }
+            };
+
+            if last_index == monitors.selected_monitor {
+                return;
+            }
+
+            mon_sel.selected = monitors.selected_monitor;
+        }
+
+        let current_monitor = monitors.get_current_monitor();
+
+        {
+            let mut res_sel = selectors.p1();
+            let resolutions = &current_monitor.resolutions;
+            let res_value = res_sel.current::<Resolution>().unwrap().0;
+
+            let index = resolutions
+                .iter()
+                .position(|r| r.0 == res_value)
+                .unwrap_or(resolutions.len() - 1);
+
+            res_sel.set(
+                SourceHandle::Strong(resolutions.clone()),
+                index,
+            );
+        }
+
+        {
+            let mut ref_sel = selectors.p2();
+            let ref_rates = &current_monitor.refresh_rates;
+            let ref_value = ref_sel.current::<RefreshRate>().unwrap().0;
+
+            let index = ref_rates
+                .iter()
+                .position(|r| r.0 == ref_value)
+                .unwrap_or(ref_rates.len() - 1);
+
+            ref_sel.set(
+                SourceHandle::Strong(ref_rates.clone()),
+                index
+            );
+        }
+    }
+
+    fn on_vsync_changed(change: On<OptionChanged>, mut settings: ResMut<PendingSettings>) {
+        settings.vsync = VSYNC_OPTIONS_RAW[change.selected_index];
+    }
+
+    fn on_resolution_changed(
+        _: On<OptionChanged>,
+        selector: Single<&Selector, With<ResolutionSelector>>,
+        mut settings: ResMut<PendingSettings>,
+    ) {
+        if let Some(res) = selector.current::<Resolution>() {
+            if let WindowMode::Fullscreen(.., selection) = &mut settings.window_mode {
+                if let VideoModeSelection::Specific(mode) = selection {
+                    mode.physical_size = res.0;
+                    settings.window_resolution = None;
+                }
+            }
+
+            settings.window_resolution = Some(res.0);
+        }
+    }
+
+    fn on_refresh_rate_changed(
+        _: On<OptionChanged>,
+        selectors: Query<&Selector, With<RefreshRateSelector>>,
+        mut settings: ResMut<PendingSettings>,
+    ) {
+        let selector = selectors.single().expect("No resolution selector found");
+
+        if let Some(res) = selector.current::<RefreshRate>() {
+            if let WindowMode::Fullscreen(.., selection) = &mut settings.window_mode {
+                if let VideoModeSelection::Specific(mode) = selection {
+                    mode.refresh_rate_millihertz = res.0;
+                }
+            }
+        }
+    }
+
+
+    fn on_settings_apply(
+        _: On<ButtonPressed>,
+        pending: Res<PendingSettings>,
+        mut settings: ResMut<GameSettings>,
+        mut window: Single<&mut Window, With<PrimaryWindow>>,
+    ) {
+        settings.vsync = pending.vsync;
+        settings.window_mode = pending.window_mode;
+        settings.window_resolution = pending.window_resolution;
+        window.present_mode = settings.vsync;
+        window.mode = settings.window_mode;
+
+        if let Some(res) = settings.window_resolution {
+            if matches!(settings.window_mode, WindowMode::Windowed) {
+                window.resolution.set_physical_resolution(res.x, res.y);
+            }
         }
     }
 }
+
+
+
+
 
 fn spawn_m_base<'a>(commands: &'a mut Commands, nav_map: &mut DirectionalNavigationMap, menu_type: impl Component) -> EntityCommands<'a> {
 
@@ -537,7 +702,7 @@ fn spawn_m_base<'a>(commands: &'a mut Commands, nav_map: &mut DirectionalNavigat
 }
 
 pub fn u_settings_visibility(
-    _: On<Add, MainMenu>,
+    _ : Single<(), (With<SettingsMenu>, Spawned)>,
     mut selectors: ParamSet<(
         Single<(&mut Node, &Selector), With<MonitorSelector>>,
         Single<(&mut Node, &Selector), With<ResolutionSelector>>,
@@ -575,72 +740,35 @@ fn change_selector_visibility(
     }
 }
 
-fn on_window_mode_changed(
-    _: On<OptionChanged>,
-    mod_sel: Single<&Selector, With<WindowModeSelector>>,
-    mut selectors: ParamSet<(
-        Single<(&mut Node, &Selector), With<MonitorSelector>>,
-        Single<(&mut Node, &Selector), With<ResolutionSelector>>,
-        Single<(&mut Node, &Selector), With<RefreshRateSelector>>,
-    )>,
-    mut settings: ResMut<PendingSettings>,
+pub fn u_join_in(
+    menus: Single<(Entity, &PlayerJoinInMenu)>,
+    player_query: Query<(&ActionState<PlayerAction>, &Player)>,
+    mut commands: Commands,
+    mut nav_map: ResMut<DirectionalNavigationMap>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut game_settings: ResMut<GameModeConfig>,
 ) {
-    let current = mod_sel.current::<WindowMode>().unwrap();
-    change_selector_visibility(current, &mut selectors);
-    settings.window_mode = *current;
-}
+    let player_num = menus.1.0 as usize;
 
-fn on_monitor_changed(
-    _: On<OptionChanged>,
-    mon_sel: Single<&Selector, With<MonitorSelector>>,
-    mut settings: ResMut<PendingSettings>,
-) {
-    let current_monitor = mon_sel.current::<MonitorInfo>().unwrap();
+    for (action, player) in player_query {
+        let area = &mut game_settings.area_shape;
+        if !action.get_just_pressed().is_empty() && !area.contains_player(player.id) {
+            let teams_len = area.get_teams().len();
 
-    match settings.window_mode {
-        WindowMode::Fullscreen(ref mut monitor, ..) => {
-            *monitor = current_monitor.monitor_selection;
-        }
-        WindowMode::BorderlessFullscreen(ref mut monitor) => {
-            *monitor = current_monitor.monitor_selection;
-        }
-        WindowMode::Windowed => {}
-    };
-}
+            area.get_teams_mut()[player_num - 1].players.push(player.id);
 
-fn on_vsync_changed(change: On<OptionChanged>, mut settings: ResMut<PendingSettings>) {
-    settings.vsync = VSYNC_OPTIONS_RAW[change.selected_index];
-}
+            commands.entity(menus.0).despawn();
 
-fn on_resolution_changed(
-    _: On<OptionChanged>,
-    selectors: Query<&Selector, With<ResolutionSelector>>,
-    mut settings: ResMut<PendingSettings>,
-) {
-    let selector = selectors.single().expect("No resolution selector found");
-
-    if let Some(res) = selector.current::<Resolution>() {
-        if let WindowMode::Fullscreen(.., selection) = &mut settings.window_mode {
-            if let VideoModeSelection::Specific(mode) = selection {
-                mode.physical_size = res.0;
-            }
-        }
-
-        settings.window_resolution = Some(res.0);
-    }
-}
-
-fn on_refresh_rate_changed(
-    _: On<OptionChanged>,
-    selectors: Query<&Selector, With<RefreshRateSelector>>,
-    mut settings: ResMut<PendingSettings>,
-) {
-    let selector = selectors.single().expect("No resolution selector found");
-
-    if let Some(res) = selector.current::<RefreshRate>() {
-        if let WindowMode::Fullscreen(.., selection) = &mut settings.window_mode {
-            if let VideoModeSelection::Specific(mode) = selection {
-                mode.refresh_rate_millihertz = res.0;
+            if player_num < teams_len {
+                spawn_m_player_join_in(&mut commands, &mut nav_map, (player_num + 1) as u8);
+            } else {
+                AreaBundle::spawn(
+                    &game_settings,
+                    &mut commands,
+                    &mut meshes,
+                    &mut materials,
+                );
             }
         }
     }
@@ -650,7 +778,7 @@ impl UIOptionString for WindowMode {
     fn push_ui_option_string(&self, string: &mut String) {
         let s = match self {
             WindowMode::Windowed => "Windowed",
-            WindowMode::BorderlessFullscreen(..) => "BorderlessFullscreen",
+            WindowMode::BorderlessFullscreen(..) => "Borderless Fullscreen",
             WindowMode::Fullscreen(..) => "Fullscreen",
         };
 

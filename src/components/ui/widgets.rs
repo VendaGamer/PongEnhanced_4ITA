@@ -18,6 +18,13 @@ impl<T: ?Sized> SourceHandle<T> {
             SourceHandle::Unique(boxed) => boxed.as_ref(),
         }
     }
+    fn get_mut(&mut self) -> Option<&mut T> {
+        match self {
+            SourceHandle::Strong(arc) => Arc::get_mut(arc),
+            SourceHandle::Unique(boxed) => Some(boxed.as_mut()),
+            SourceHandle::Static(r) => None,
+        }
+    }
 }
 
 pub trait UIOptionProvider: Send + Sync + Any {
@@ -43,6 +50,7 @@ where
 }
 
 impl<T: UIOptionValue> UIOptionProvider for Vec<T> {
+
     #[inline]
     fn get_option(&self, index: usize) -> Option<&dyn UIOptionValue> {
         self.get(index).map(|val| val as &dyn UIOptionValue)

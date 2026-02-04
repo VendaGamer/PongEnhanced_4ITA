@@ -4,14 +4,20 @@
   "window_mode": {
     "Fullscreen": [
       {
-        "Entity": 4294967099
+        "Entity": 4294967100
       },
-      "Current"
+      {
+        "Specific": {
+          "physical_size": [
+            1920,
+            1080
+          ],
+          "bit_depth": 32,
+          "refresh_rate_millihertz": 67000
+        }
+      }
     ]
   },
-  "window_resolution": [
-    1920,
-    1080
-  ],
+  "window_resolution": null,
   "vsync": "AutoNoVsync"
 }

@@ -46,7 +46,7 @@ fn handle_invisible_nav_core(
     mut nav: DirectionalNavigation
 ){
     if let Ok((node, parent)) = nodes.get(event.entity) {
-        if is_display_none(&nodes, event.entity, node, parent) {
+        if is_display_none(&nodes, node, parent) {
             match nav.navigate(event.direction) {
                 Ok(entity) => {
                     handle_invisible_nav_core(
@@ -66,7 +66,6 @@ fn handle_invisible_nav_core(
 
 fn is_display_none(
     query: &Query<(&Node, Option<&ChildOf>)>,
-    entity: Entity,
     node: &Node,
     parent: Option<&ChildOf>
 ) -> bool {
@@ -76,7 +75,7 @@ fn is_display_none(
 
     if let Some(parent) = parent {
         if let Ok((parent_node, grandparent)) = query.get(parent.get()) {
-            return is_display_none(query, parent.get(), parent_node, grandparent);
+            return is_display_none(query, parent_node, grandparent);
         }
     }
 
