@@ -1,4 +1,3 @@
-use bevy::ecs::query::Spawned;
 use crate::bundles::area::AreaBundle;
 use crate::bundles::widgets::LabelBundle;
 use crate::components::ui::{
@@ -17,13 +16,13 @@ use crate::resources::{
 use crate::systems::settings::persistence::save_settings;
 use crate::systems::widgets::*;
 use crate::utils::MODERN_THEME;
+use bevy::ecs::query::Spawned;
 use bevy::input_focus::directional_navigation::DirectionalNavigationMap;
 use bevy::math::CompassOctant;
 use bevy::prelude::*;
-use bevy::reflect::{Array, Enum};
+use bevy::reflect::Array;
 use bevy::render::render_resource::encase::private::RuntimeSizedArray;
 use bevy::window::{PresentMode, PrimaryWindow, VideoMode, WindowMode};
-use bevy::winit::WinitWindows;
 use leafwing_input_manager::action_state::ActionState;
 
 
@@ -252,25 +251,6 @@ pub fn spawn_m_offline<'a>(
     }
 }
 
-// Observer callbacks
-fn on_quick_match(_press: On<ButtonPressed>) {
-    println!("Searching for quick match...");
-}
-
-fn on_create_room(_press: On<ButtonPressed>) {
-    println!("Creating room...");
-}
-
-fn on_join_room(_press: On<ButtonPressed>) {
-    println!("Join room menu...");
-}
-
-fn on_friends_list(_press: On<ButtonPressed>) {
-    println!("Opening friends list...");
-}
-
-
-
 fn on_settings_back_main(
     _: On<ButtonPressed>,
     mut commands: Commands,
@@ -283,16 +263,6 @@ fn on_settings_back_main(
 
     spawn_m_main(&mut commands, &mut nam_map);
     save_settings(&settings);
-}
-
-fn on_online_back_main(
-    _: On<ButtonPressed>,
-    mut commands: Commands,
-    mut map: ResMut<DirectionalNavigationMap>,
-    main_menu: Single<Entity, With<OnlinePlayMenu>>,
-) {
-    commands.entity(*main_menu).despawn();
-    spawn_m_main(&mut commands, &mut map);
 }
 
 fn spawn_m_player_join_in<'a>(commands: &'a mut Commands, nav_map: &'a mut DirectionalNavigationMap, player_num: u8) -> EntityCommands<'a> {
@@ -348,14 +318,42 @@ pub fn spawn_m_online<'a>(
 
         entities.push(parent.spawn(
             w_menu_button(Color::srgb(0.6, 0.6, 0.6), "Back")
-        ).observe(on_online_back_main)
+        ).observe(on_back)
          .id());
 
     });
 
     nav_map.add_looping_edges(&entities, CompassOctant::South);
 
-    base
+    return base;
+
+
+    fn on_quick_match(_press: On<ButtonPressed>) {
+        println!("Searching for quick match...");
+    }
+
+    fn on_create_room(_press: On<ButtonPressed>) {
+        println!("Creating room...");
+    }
+
+    fn on_join_room(_press: On<ButtonPressed>) {
+        println!("Join room menu...");
+    }
+
+    fn on_friends_list(_press: On<ButtonPressed>) {
+        println!("Opening friends list...");
+    }
+
+    fn on_back(
+        _: On<ButtonPressed>,
+        mut commands: Commands,
+        mut map: ResMut<DirectionalNavigationMap>,
+        main_menu: Single<Entity, With<OnlinePlayMenu>>,
+    ) {
+        commands.entity(*main_menu).despawn();
+        spawn_m_main(&mut commands, &mut map);
+    }
+
 }
 
 fn index_for_window_mode(window_mode: &WindowMode) -> usize {
@@ -668,6 +666,7 @@ pub fn spawn_m_settings(
         settings.vsync = pending.vsync;
         settings.window_mode = pending.window_mode;
         settings.window_resolution = pending.window_resolution;
+        
         window.present_mode = settings.vsync;
         window.mode = settings.window_mode;
 

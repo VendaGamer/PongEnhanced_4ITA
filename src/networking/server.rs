@@ -1,7 +1,7 @@
 use crate::resources::PlayerAction;
 use bevy::prelude::*;
 use lightyear::prelude::input::leafwing::InputPlugin;
-use lightyear::prelude::server::{NetcodeConfig, NetcodeServer, ServerUdpIo, Start};
+use lightyear::prelude::server::{NetcodeConfig, NetcodeServer, ServerPlugins, ServerUdpIo, Start};
 use lightyear::prelude::LocalAddr;
 use std::net::{Ipv4Addr, SocketAddrV4};
 
@@ -9,7 +9,10 @@ pub struct GameServerPlugin;
 
 impl Plugin for GameServerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((InputPlugin::<PlayerAction>::default(),));
+        app.add_plugins((
+            InputPlugin::<PlayerAction>::default(),
+            ServerPlugins::default()
+        ));
     }
 }
 

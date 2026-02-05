@@ -502,10 +502,39 @@ pub trait WidgetsExtCommands {
         cur: f32,
         size: Val2,
     ) -> SliderEntities<'_>;
+
+    fn spawn_slider_interactable(
+        &mut self,
+        min: f32,
+        max: f32,
+        cur: f32,
+        entities: &mut Vec<Entity>) -> SliderEntities<'_>
+    {
+        let slider = self.spawn_slider(min, max, cur);
+
+        entities.push(slider.thumb);
+
+        slider
+    }
+
     fn spawn_slider(&mut self, min: f32, max: f32, cur: f32) -> SliderEntities<'_> {
         const SIZE: Val2 = Val2::new(Val::Percent(100.0), Val::Px(50.0));
 
         self.spawn_slider_custom(min, max, cur, SIZE)
+    }
+
+    fn spawn_selector_interactable(
+        &mut self,
+        options_provider: SourceHandle<dyn UIOptionProvider>,
+        selected: usize,
+        label: impl Into<String>,
+        entities: &mut Vec<Entity>) -> SelectorEntities<'_> {
+
+        let selector = self.spawn_selector(options_provider, selected, label);
+        
+        entities.push(selector.bar);
+        
+        selector
     }
 
     fn spawn_selector_custom(
