@@ -24,7 +24,7 @@ use bevy::reflect::Array;
 use bevy::render::render_resource::encase::private::RuntimeSizedArray;
 use bevy::window::{PresentMode, PrimaryWindow, VideoMode, WindowMode};
 use leafwing_input_manager::action_state::ActionState;
-
+use crate::networking::server::start_server;
 
 pub const GAMEMODE_OPTIONS: SourceHandle<dyn UIOptionProvider> = SourceHandle::Static(&GAMEMODE_OPTIONS_RAW);
 
@@ -332,8 +332,11 @@ pub fn spawn_m_online<'a>(
         println!("Searching for quick match...");
     }
 
-    fn on_create_room(_press: On<ButtonPressed>) {
-        println!("Creating room...");
+    fn on_create_room(
+        _press: On<ButtonPressed>,
+        commands: Commands,
+    ) {
+        start_server(commands);
     }
 
     fn on_join_room(_press: On<ButtonPressed>) {
@@ -355,6 +358,7 @@ pub fn spawn_m_online<'a>(
     }
 
 }
+
 
 fn index_for_window_mode(window_mode: &WindowMode) -> usize {
     match window_mode {
@@ -378,7 +382,20 @@ pub fn spawn_m_settings(
     spawn_m_base(commands, nav_map, SettingsMenu).with_children(|base| {
         base.spawn(w_menu_title("Settings"));
 
-        base.spawn(w_menu_section()).with_children(| section | {
+        base.spawn((
+            Node {
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Center,
+                padding: UiRect::all(Val::Px(30.0)),
+                margin: UiRect::all(Val::Px(10.0)),
+                width: Val::Px(800.0),
+                border: PIXEL_BORDER,
+                ..default()
+            },
+            BackgroundColor(MODERN_THEME.section_bg),
+            BorderColor::all(MODERN_THEME.border_dark),
+            BorderRadius::ZERO,
+        )).with_children(| section | {
 
             {
                 section.spawn(LabelBundle::button_label("Sound Effects"));
@@ -540,8 +557,24 @@ pub fn spawn_m_settings(
         mut settings: ResMut<PendingSettings>,
     ) {
         let current = mod_sel.current::<WindowMode>().unwrap();
+
         change_selector_visibility(current, &mut selectors);
         settings.window_mode = *current;
+
+        match current {
+            WindowMode::Fullscreen(..) =>{
+                settings.window_resolution = None;
+            },
+            WindowMode::BorderlessFullscreen(..) => {
+                settings.window_resolution = None;
+            },
+            WindowMode::Windowed => {
+                let current_res = selectors.p1().1.current::<Resolution>().unwrap();
+
+                settings.window_resolution = Some(current_res.0);
+            },
+        }
+
     }
 
     fn on_monitor_changed(
@@ -629,14 +662,19 @@ pub fn spawn_m_settings(
         mut settings: ResMut<PendingSettings>,
     ) {
         if let Some(res) = selector.current::<Resolution>() {
+
+            if matches!(settings.window_mode, WindowMode::Windowed){
+                settings.window_resolution = Some(res.0);
+                return;
+            }
+
             if let WindowMode::Fullscreen(.., selection) = &mut settings.window_mode {
                 if let VideoModeSelection::Specific(mode) = selection {
                     mode.physical_size = res.0;
-                    settings.window_resolution = None;
                 }
             }
 
-            settings.window_resolution = Some(res.0);
+            settings.window_resolution = None;
         }
     }
 
@@ -679,6 +717,14 @@ pub fn spawn_m_settings(
 }
 
 
+fn spawn_m_online_create<'a>(
+    commands: &'a mut Commands,
+    nav_map: &mut DirectionalNavigationMap,
+    menu_type: impl Component) -> EntityCommands<'a> {
+    
+    
+    
+}
 
 
 

@@ -10,7 +10,6 @@ pub struct GameServerPlugin;
 impl Plugin for GameServerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
-            InputPlugin::<PlayerAction>::default(),
             ServerPlugins::default()
         ));
     }
