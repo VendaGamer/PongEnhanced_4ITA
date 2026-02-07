@@ -129,11 +129,11 @@ pub struct InputText(pub String, pub usize);
 pub struct InputTextPlaceholder(pub String);
 
 impl InputText{
-    pub const fn new(text: impl Into<String>) -> Self {
-        
+    pub fn new(text: impl Into<String>) -> Self {
+
         let str = text.into();
         let cur = str.len();
-        
+
         Self(str, cur)
     }
 }

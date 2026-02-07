@@ -568,18 +568,16 @@ pub trait WidgetsExtCommands {
     #[inline]
     fn spawn_input(
         &mut self,
-        label: impl Into<String>,
-        placeholder: impl Into<String>
+        label: impl Into<String>
     ) -> InputEntities<'_> {
         const SIZE: Val2 = Val2::new(Val::Px(460.0), Val::Px(30.0));
 
-        self.spawn_input_custom(label, text, SIZE)
+        self.spawn_input_custom(label, SIZE)
     }
 
     fn spawn_input_custom(
         &mut self,
         label: impl Into<String>,
-        input: impl Into<String>,
         size: Val2,
     ) -> InputEntities<'_>;
 }
@@ -755,7 +753,6 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
     fn spawn_input_custom(
         &mut self,
         label: impl Into<String>,
-        text: impl Into<String>,
         size: Val2) -> InputEntities<'_> {
 
         let mut root = self.spawn((
@@ -805,7 +802,7 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
                             ..default()
                          },
                          TextColor(Color::WHITE),
-                         InputText::new(text),
+                         InputText::default(),
                     )),
                 )).id();
 
