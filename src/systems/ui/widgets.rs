@@ -1,8 +1,6 @@
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::{HoverLight, HoverLightColor};
-use crate::components::ui::{
-    Dropdown, Selector, SelectorButton, SelectorText, SourceHandle, UIOptionProvider,
-};
+use crate::components::ui::{Dropdown, Input, InputText, Selector, SelectorButton, SelectorText, SourceHandle, UIOptionProvider};
 use crate::events::widgets::{ButtonPressed, OptionChanged};
 use crate::resources::MenuAction;
 use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT, MODERN_THEME};
@@ -494,6 +492,14 @@ pub struct SelectorEntities<'a> {
     pub bar: Entity,
 }
 
+#[derive(Deref)]
+pub struct InputEntities<'a> {
+    #[deref]
+    pub root: EntityCommands<'a>,
+    pub title: Entity,
+    pub bar: Entity,
+}
+
 pub trait WidgetsExtCommands {
     fn spawn_slider_custom(
         &mut self,
@@ -503,6 +509,7 @@ pub trait WidgetsExtCommands {
         size: Val2,
     ) -> SliderEntities<'_>;
 
+    #[inline]
     fn spawn_slider_interactable(
         &mut self,
         min: f32,
@@ -517,6 +524,7 @@ pub trait WidgetsExtCommands {
         slider
     }
 
+    #[inline]
     fn spawn_slider(&mut self, min: f32, max: f32, cur: f32) -> SliderEntities<'_> {
         const SIZE: Val2 = Val2::new(Val::Percent(100.0), Val::Px(50.0));
 
@@ -544,6 +552,8 @@ pub trait WidgetsExtCommands {
         label: impl Into<String>,
         size: Val2,
     ) -> SelectorEntities<'_>;
+
+    #[inline]
     fn spawn_selector(
         &mut self,
         options_provider: SourceHandle<dyn UIOptionProvider>,
@@ -554,6 +564,24 @@ pub trait WidgetsExtCommands {
 
         self.spawn_selector_custom(options_provider, selected, label, SIZE)
     }
+
+    #[inline]
+    fn spawn_input(
+        &mut self,
+        label: impl Into<String>,
+        placeholder: impl Into<String>
+    ) -> InputEntities<'_> {
+        const SIZE: Val2 = Val2::new(Val::Px(460.0), Val::Px(30.0));
+
+        self.spawn_input_custom(label, text, SIZE)
+    }
+
+    fn spawn_input_custom(
+        &mut self,
+        label: impl Into<String>,
+        input: impl Into<String>,
+        size: Val2,
+    ) -> InputEntities<'_>;
 }
 
 impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
@@ -662,8 +690,7 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
                 .insert(SelectorButton(false))
                 .id();
 
-            bar = commands
-                .spawn((
+            bar = commands.spawn((
                     Node {
                         width: size.x,
                         height: size.y,
@@ -722,6 +749,74 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
             bar,
             left_button: l_but,
             right_button: r_but,
+        }
+    }
+
+    fn spawn_input_custom(
+        &mut self,
+        label: impl Into<String>,
+        text: impl Into<String>,
+        size: Val2) -> InputEntities<'_> {
+
+        let mut root = self.spawn((
+            Input,
+            Node {
+                flex_wrap: FlexWrap::Wrap,
+                flex_direction: FlexDirection::Row,
+                row_gap: Val::Px(20.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                justify_items: JustifyItems::Center,
+                ..default()
+            },
+        ));
+
+        let mut commands = root.commands();
+
+        commands.spawn(());
+
+        let title: Entity;
+        let bar: Entity;
+
+        {
+            title = commands.spawn(LabelBundle::button_label(label)).id();
+
+            bar = commands.spawn((
+                     Node {
+                         width: size.x,
+                         height: size.y,
+                         margin: UiRect::all(Val::Px(10.0)),
+                         justify_content: JustifyContent::SpaceBetween,
+                         justify_items: JustifyItems::Center,
+                         align_items: AlignItems::Center,
+                         padding: UiRect::all(Val::Px(15.0)),
+                         border: PIXEL_BORDER,
+                         ..default()
+                     },
+                     SelectorBar,
+                     AutoFocus,
+                     BackgroundColor(MODERN_THEME.panel_bg),
+                     BorderColor::from(MODERN_THEME.border),
+                     BorderRadius::ZERO,
+                     Children::spawn_one((
+                         TextFont {
+                            font_size: 32.0,
+                            font_smoothing: FontSmoothing::None,
+                            ..default()
+                         },
+                         TextColor(Color::WHITE),
+                         InputText::new(text),
+                    )),
+                )).id();
+
+            root.add_children(&[title, bar]);
+        }
+
+
+        InputEntities{
+            root,
+            title,
+            bar
         }
     }
 }

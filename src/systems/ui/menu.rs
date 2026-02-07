@@ -1,10 +1,6 @@
 use crate::bundles::area::AreaBundle;
 use crate::bundles::widgets::LabelBundle;
-use crate::components::ui::{
-    MainMenu, MonitorSelector, OfflinePlayMenu, OnlinePlayMenu, PlayerJoinInMenu,
-    RefreshRateSelector, ResolutionSelector, Selector, SettingsMenu, SourceHandle,
-    UIOptionProvider, UIOptionString, VSyncSelector, WindowModeSelector,
-};
+use crate::components::ui::{InputText, MainMenu, MonitorSelector, OfflinePlayMenu, OnlineCreateMenu, OnlinePlayMenu, PlayerJoinInMenu, RefreshRateSelector, ResolutionSelector, Selector, SettingsMenu, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector, WindowModeSelector};
 use crate::components::Player;
 use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged};
 use crate::models::game::gameplay::GameMode;
@@ -334,9 +330,12 @@ pub fn spawn_m_online<'a>(
 
     fn on_create_room(
         _press: On<ButtonPressed>,
-        commands: Commands,
+        menu: Single<Entity, With<OnlinePlayMenu>>,
+        mut commands: Commands,
+        mut nav_map: ResMut<DirectionalNavigationMap>,
     ) {
-        start_server(commands);
+        commands.entity(*menu).despawn();
+        spawn_m_online_create(&mut commands, &mut nav_map);
     }
 
     fn on_join_room(_press: On<ButtonPressed>) {
@@ -719,11 +718,16 @@ pub fn spawn_m_settings(
 
 fn spawn_m_online_create<'a>(
     commands: &'a mut Commands,
-    nav_map: &mut DirectionalNavigationMap,
-    menu_type: impl Component) -> EntityCommands<'a> {
+    nav_map: &mut DirectionalNavigationMap) -> EntityCommands<'a> {
     
-    
-    
+    let mut base = spawn_m_base(commands, nav_map, OnlineCreateMenu);
+
+    base.with_children(|parent| {
+
+        parent.spawn_input("Server Name: ", );
+    });
+
+    base
 }
 
 

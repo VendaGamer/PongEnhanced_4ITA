@@ -108,24 +108,35 @@ pub trait UIOptionString {
 
 #[derive(Component)]
 pub struct MonitorSelector;
-
 #[derive(Component)]
 pub struct WindowModeSelector;
-
 #[derive(Component)]
 pub struct ResolutionSelector;
-
 #[derive(Component)]
 pub struct RefreshRateSelector;
-
 #[derive(Component)]
 pub struct VSyncSelector;
-
 #[derive(Component)]
 pub struct FPSLockSelector;
-
 #[derive(Component)]
 pub struct ShowFPSSelector;
+
+#[derive(Component)]
+pub struct Input;
+#[derive(Component, Default)]
+pub struct InputText(pub String, pub usize);
+#[derive(Component)]
+pub struct InputTextPlaceholder(pub String);
+
+impl InputText{
+    pub const fn new(text: impl Into<String>) -> Self {
+        
+        let str = text.into();
+        let cur = str.len();
+        
+        Self(str, cur)
+    }
+}
 
 impl Selector {
     pub fn current<T: Any + UIOptionString>(&self) -> Option<&T> {

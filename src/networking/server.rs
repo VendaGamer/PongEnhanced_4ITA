@@ -15,7 +15,7 @@ impl Plugin for GameServerPlugin {
     }
 }
 
-pub fn start_server(mut commands: Commands) {
+pub fn start_server(commands: &mut Commands) {
     let server = commands
         .spawn((
             NetcodeServer::new(NetcodeConfig::default()),

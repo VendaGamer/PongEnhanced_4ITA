@@ -12,6 +12,7 @@ pub struct OnlinePlayMenu;
 pub struct PauseMenu;
 #[derive(Component)]
 pub struct PlayerJoinInMenu(pub u8);
-
+#[derive(Component)]
+pub struct OnlineCreateMenu;
 #[derive(Component)]
 pub struct Menu;
