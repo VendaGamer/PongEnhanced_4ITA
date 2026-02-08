@@ -20,3 +20,9 @@ pub struct CheckboxChanged {
     pub entity: Entity,
     pub state: bool,
 }
+
+#[derive(EntityEvent)]
+pub struct TextInputSubmitted {
+    pub entity: Entity,
+    pub value: String,
+}

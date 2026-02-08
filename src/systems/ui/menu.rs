@@ -3,7 +3,7 @@ use crate::bundles::area::AreaBundle;
 use crate::bundles::widgets::LabelBundle;
 use crate::components::ui::{MainMenu, MonitorSelector, OfflinePlayMenu, OnlineCreateMenu, OnlinePlayMenu, PlayerJoinInMenu, RefreshRateSelector, ResolutionSelector, Selector, SettingsMenu, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector, WindowModeSelector};
 use crate::components::Player;
-use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged};
+use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged, TextInputSubmitted};
 use crate::models::game::gameplay::GameMode;
 use crate::models::ui::option::{VSYNC_OPTIONS, VSYNC_OPTIONS_RAW};
 use crate::resources::{
@@ -20,6 +20,7 @@ use bevy::prelude::*;
 use bevy::reflect::Array;
 use bevy::render::render_resource::encase::private::RuntimeSizedArray;
 use bevy::window::{PresentMode, PrimaryWindow, VideoMode, WindowMode};
+use bevy_simple_text_input::TextInputSubmitMessage;
 use leafwing_input_manager::action_state::ActionState;
 use crate::networking::server::start_server;
 
@@ -310,6 +311,7 @@ pub fn spawn_m_online<'a>(
                 w_menu_button(Color::srgb(0.4, 0.7, 0.4), "Friends List")
             ).observe(on_friends_list)
              .id());
+
 
         });
 
@@ -724,20 +726,11 @@ fn spawn_m_online_create<'a>(
     let mut base = spawn_m_base(commands, nav_map, OnlineCreateMenu);
 
     base.with_children(|parent| {
+        let mut input = parent.spawn_input("Server Name: ");
 
-        let i1: Entity;
-        let i2: Entity;
-        {
-            let mut input = parent.spawn_input("Server Name: ");
-            i1 = input.input;
-        }
-
-        {
-            let mut input = parent.spawn_input("Password: ");
-            i2 = input.input;
-        }
-
-        nav_map.add_looping_edges(&[i1, i2], CompassOctant::South);
+        input.input.observe(| submit: On<TextInputSubmitted> | {
+            println!("Submitted with: {}", submit.value);
+        });
     });
 
     base

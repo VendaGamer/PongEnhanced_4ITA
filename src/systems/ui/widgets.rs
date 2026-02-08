@@ -21,7 +21,7 @@ use bevy_tween::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
 use std::sync::Arc;
 use std::time::Duration;
-use bevy_simple_text_input::{TextInput, TextInputTextColor, TextInputTextFont};
+use bevy_simple_text_input::{TextInput, TextInputSubmitMessage, TextInputTextColor, TextInputTextFont};
 use crate::events::gameplay::UINavigated;
 
 pub const BUTTON_PADDING: Val = Val::Px(20.0);
@@ -495,10 +495,10 @@ pub struct SelectorEntities<'a> {
 
 #[derive(Deref)]
 pub struct InputEntities<'a> {
-    #[deref]
-    pub root: EntityCommands<'a>,
+    pub root: Entity,
     pub title: Entity,
-    pub input: Entity,
+    #[deref]
+    pub input: EntityCommands<'a>,
 }
 
 pub trait WidgetsExtCommands {
@@ -756,20 +756,21 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
         &mut self,
         label: impl Into<String>,
         size: Val2) -> InputEntities<'_> {
+        let target = self.target_entity();
+        let commands = self.commands_mut();
 
-        let mut root = self.spawn((
+        let root = commands.spawn((
+            R::from(target),
             Node {
-                flex_wrap: FlexWrap::Wrap,
-                flex_direction: FlexDirection::Row,
-                row_gap: Val::Px(20.0),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                justify_items: JustifyItems::Center,
-                ..default()
-            },
-        ));
+            flex_wrap: FlexWrap::Wrap,
+            flex_direction: FlexDirection::Row,
+            row_gap: Val::Px(20.0),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            justify_items: JustifyItems::Center,
+            ..default()
+        })).id();
 
-        let mut commands = root.commands();
 
         let title: Entity;
         let input: Entity;
@@ -801,14 +802,13 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
                      TextInputTextColor(TextColor(MODERN_THEME.text_normal)),
                 )).id();
 
-            root.add_children(&[title, input]);
+            commands.entity(root).add_children(&[title, input]);
         }
-
 
         InputEntities{
             root,
             title,
-            input
+            input: commands.entity(input),
         }
     }
 }

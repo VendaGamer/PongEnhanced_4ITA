@@ -1,6 +1,6 @@
 ﻿use crate::bundles::{App, Commands, MessageReader, On, Plugin, ResMut, UiScale, Update};
 use crate::events::gameplay::UINavigated;
-use crate::events::widgets::SliderValueChanged;
+use crate::events::widgets::{SliderValueChanged, TextInputSubmitted};
 use crate::systems::widgets::*;
 use crate::utils::FIXED_DIMENSIONS;
 use bevy::ecs::relationship::Relationship;
@@ -8,6 +8,7 @@ use bevy::input_focus::directional_navigation::DirectionalNavigation;
 use bevy::prelude::{ChildOf, Display, Entity, Node, Query};
 use bevy::ui_widgets::{SliderValue, ValueChange};
 use bevy::window::WindowResized;
+use bevy_simple_text_input::TextInputSubmitMessage;
 
 pub struct GameUIPlugin;
 
@@ -23,6 +24,7 @@ impl Plugin for GameUIPlugin {
                 u_highlight_focused_element,
                 t_navigate_element,
                 u_button_press,
+                t_input_submit,
             ),
         )
         .add_observer(handle_invisible_nav)
@@ -38,6 +40,18 @@ fn handle_invisible_nav(
     nav: DirectionalNavigation
 ) {
     handle_invisible_nav_core(*event, nodes, nav);
+}
+#[inline]
+fn t_input_submit(
+    mut messages: MessageReader<TextInputSubmitMessage>,
+    mut commands: Commands,
+) {
+    for message in messages.read() {
+        commands.trigger(TextInputSubmitted{
+            entity: message.entity,
+            value: message.value.clone(),
+        })
+    }
 }
 
 fn handle_invisible_nav_core(
