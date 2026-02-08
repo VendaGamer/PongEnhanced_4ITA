@@ -1,6 +1,7 @@
+use avian2d::parry::na::DimAdd;
 use crate::bundles::area::AreaBundle;
 use crate::bundles::widgets::LabelBundle;
-use crate::components::ui::{InputText, MainMenu, MonitorSelector, OfflinePlayMenu, OnlineCreateMenu, OnlinePlayMenu, PlayerJoinInMenu, RefreshRateSelector, ResolutionSelector, Selector, SettingsMenu, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector, WindowModeSelector};
+use crate::components::ui::{MainMenu, MonitorSelector, OfflinePlayMenu, OnlineCreateMenu, OnlinePlayMenu, PlayerJoinInMenu, RefreshRateSelector, ResolutionSelector, Selector, SettingsMenu, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector, WindowModeSelector};
 use crate::components::Player;
 use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged};
 use crate::models::game::gameplay::GameMode;
@@ -724,7 +725,19 @@ fn spawn_m_online_create<'a>(
 
     base.with_children(|parent| {
 
-        parent.spawn_input("Server Name: ", );
+        let i1: Entity;
+        let i2: Entity;
+        {
+            let mut input = parent.spawn_input("Server Name: ");
+            i1 = input.input;
+        }
+
+        {
+            let mut input = parent.spawn_input("Password: ");
+            i2 = input.input;
+        }
+
+        nav_map.add_looping_edges(&[i1, i2], CompassOctant::South);
     });
 
     base

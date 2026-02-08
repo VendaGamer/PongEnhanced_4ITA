@@ -1,6 +1,6 @@
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::{HoverLight, HoverLightColor};
-use crate::components::ui::{Dropdown, Input, InputText, Selector, SelectorButton, SelectorText, SourceHandle, UIOptionProvider};
+use crate::components::ui::{Dropdown, Selector, SelectorButton, SelectorText, SourceHandle, UIOptionProvider};
 use crate::events::widgets::{ButtonPressed, OptionChanged};
 use crate::resources::MenuAction;
 use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT, MODERN_THEME};
@@ -21,6 +21,7 @@ use bevy_tween::prelude::*;
 use leafwing_input_manager::action_state::ActionState;
 use std::sync::Arc;
 use std::time::Duration;
+use bevy_simple_text_input::{TextInput, TextInputTextColor, TextInputTextFont};
 use crate::events::gameplay::UINavigated;
 
 pub const BUTTON_PADDING: Val = Val::Px(20.0);
@@ -497,7 +498,7 @@ pub struct InputEntities<'a> {
     #[deref]
     pub root: EntityCommands<'a>,
     pub title: Entity,
-    pub bar: Entity,
+    pub input: Entity,
 }
 
 pub trait WidgetsExtCommands {
@@ -531,6 +532,7 @@ pub trait WidgetsExtCommands {
         self.spawn_slider_custom(min, max, cur, SIZE)
     }
 
+    #[inline]
     fn spawn_selector_interactable(
         &mut self,
         options_provider: SourceHandle<dyn UIOptionProvider>,
@@ -756,7 +758,6 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
         size: Val2) -> InputEntities<'_> {
 
         let mut root = self.spawn((
-            Input,
             Node {
                 flex_wrap: FlexWrap::Wrap,
                 flex_direction: FlexDirection::Row,
@@ -770,15 +771,13 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
 
         let mut commands = root.commands();
 
-        commands.spawn(());
-
         let title: Entity;
-        let bar: Entity;
+        let input: Entity;
 
         {
             title = commands.spawn(LabelBundle::button_label(label)).id();
 
-            bar = commands.spawn((
+            input = commands.spawn((
                      Node {
                          width: size.x,
                          height: size.y,
@@ -790,30 +789,26 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
                          border: PIXEL_BORDER,
                          ..default()
                      },
-                     SelectorBar,
                      AutoFocus,
+                     BorderColor::all(MODERN_THEME.border),
                      BackgroundColor(MODERN_THEME.panel_bg),
-                     BorderColor::from(MODERN_THEME.border),
                      BorderRadius::ZERO,
-                     Children::spawn_one((
-                         TextFont {
-                            font_size: 32.0,
-                            font_smoothing: FontSmoothing::None,
-                            ..default()
-                         },
-                         TextColor(Color::WHITE),
-                         InputText::default(),
-                    )),
+                     TextInput,
+                     TextInputTextFont(TextFont {
+                         font_size: 34.0,
+                         ..default()
+                     }),
+                     TextInputTextColor(TextColor(MODERN_THEME.text_normal)),
                 )).id();
 
-            root.add_children(&[title, bar]);
+            root.add_children(&[title, input]);
         }
 
 
         InputEntities{
             root,
             title,
-            bar
+            input
         }
     }
 }

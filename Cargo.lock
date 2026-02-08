@@ -9,6 +9,7 @@ dependencies = [
  "avian2d",
  "bevy",
  "bevy_light_2d",
+ "bevy_simple_text_input",
  "bevy_tween",
  "derive_more",
  "erased-serde",
@@ -1403,6 +1404,15 @@ dependencies = [
  "thiserror 2.0.17",
  "tracing",
  "wgpu-types",
+]
+
+[[package]]
+name = "bevy_simple_text_input"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1f8709040643f0b7b24991193fcc7a348b54b0465dcbb3fec55e96ecdfa97f2"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]

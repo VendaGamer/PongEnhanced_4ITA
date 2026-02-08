@@ -121,23 +121,6 @@ pub struct FPSLockSelector;
 #[derive(Component)]
 pub struct ShowFPSSelector;
 
-#[derive(Component)]
-pub struct Input;
-#[derive(Component, Default)]
-pub struct InputText(pub String, pub usize);
-#[derive(Component)]
-pub struct InputTextPlaceholder(pub String);
-
-impl InputText{
-    pub fn new(text: impl Into<String>) -> Self {
-
-        let str = text.into();
-        let cur = str.len();
-
-        Self(str, cur)
-    }
-}
-
 impl Selector {
     pub fn current<T: Any + UIOptionString>(&self) -> Option<&T> {
         self.options_provider
