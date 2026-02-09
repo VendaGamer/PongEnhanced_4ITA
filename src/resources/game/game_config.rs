@@ -33,10 +33,16 @@ impl From<&GameSettings> for PendingSettings {
     }
 }
 
-#[derive(Resource, Clone, Default, Debug)]
+#[derive(Resource, Debug)]
 pub struct Monitors {
     pub monitors: Arc<Vec<MonitorInfo>>,
     pub selected_monitor: usize,
+}
+
+#[derive(Resource, Debug, Default)]
+pub struct OnlineGameConfig {
+    pub server_name: String,
+    pub pass: Option<String>,
 }
 
 impl UIOptionString for MonitorInfo {

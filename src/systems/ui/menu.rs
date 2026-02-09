@@ -6,10 +6,7 @@ use crate::components::Player;
 use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged, TextInputSubmitted};
 use crate::models::game::gameplay::GameMode;
 use crate::models::ui::option::{VSYNC_OPTIONS, VSYNC_OPTIONS_RAW};
-use crate::resources::{
-    GameModeConfig, GameSettings, MonitorInfo, Monitors, PendingSettings, PlayerAction,
-    RefreshRate, Resolution,
-};
+use crate::resources::{GameModeConfig, GameSettings, MonitorInfo, Monitors, OnlineGameConfig, PendingSettings, PlayerAction, RefreshRate, Resolution};
 use crate::systems::settings::persistence::save_settings;
 use crate::systems::widgets::*;
 use crate::utils::MODERN_THEME;
@@ -293,11 +290,6 @@ pub fn spawn_m_online<'a>(
         parent.spawn(w_menu_section()).with_children(|parent| {
 
             entities.push(parent.spawn(
-                w_menu_button(Color::srgb(0.3, 0.6, 0.9), "Quick Match")
-            ).observe(on_quick_match)
-             .id());
-
-            entities.push(parent.spawn(
                 w_menu_button(Color::srgb(0.5, 0.4, 0.9), "Create Room")
             ).observe(on_create_room)
              .id());
@@ -306,12 +298,6 @@ pub fn spawn_m_online<'a>(
                 w_menu_button(Color::srgb(0.9, 0.5, 0.3), "Join Room")
             ).observe(on_join_room)
              .id());
-
-            entities.push(parent.spawn(
-                w_menu_button(Color::srgb(0.4, 0.7, 0.4), "Friends List")
-            ).observe(on_friends_list)
-             .id());
-
 
         });
 
@@ -338,7 +324,7 @@ pub fn spawn_m_online<'a>(
         mut nav_map: ResMut<DirectionalNavigationMap>,
     ) {
         commands.entity(*menu).despawn();
-        spawn_m_online_create(&mut commands, &mut nav_map);
+        spawn_m_online_create_name(&mut commands, &mut nav_map);
     }
 
     fn on_join_room(_press: On<ButtonPressed>) {
@@ -719,21 +705,57 @@ pub fn spawn_m_settings(
 }
 
 
-fn spawn_m_online_create<'a>(
+fn spawn_m_online_create_name<'a>(
     commands: &'a mut Commands,
     nav_map: &mut DirectionalNavigationMap) -> EntityCommands<'a> {
     
     let mut base = spawn_m_base(commands, nav_map, OnlineCreateMenu);
 
     base.with_children(|parent| {
-        let mut input = parent.spawn_input("Server Name: ");
-
-        input.input.observe(| submit: On<TextInputSubmitted> | {
-            println!("Submitted with: {}", submit.value);
-        });
+        parent.spawn_input("Server Name: ")
+              .input.observe(on_submit);
     });
 
-    base
+    return base;
+    
+    fn on_submit(
+        submit: On<TextInputSubmitted>,
+        menu: Single<Entity, With<OnlineCreateMenu>>,
+        mut commands: Commands,
+        mut nav_map: ResMut<DirectionalNavigationMap>,
+        mut config: ResMut<OnlineGameConfig>
+    ){
+        config.server_name.clear();
+        config.server_name.push_str(&submit.value);
+        
+        commands.entity(*menu).despawn();
+        spawn_m_online_create_pass(&mut commands, &mut nav_map);
+    }
+}
+
+fn spawn_m_online_create_pass<'a>(
+    commands: &'a mut Commands,
+    nav_map: &mut DirectionalNavigationMap) -> EntityCommands<'a> {
+
+    let mut base = spawn_m_base(commands, nav_map, OnlineCreateMenu);
+
+    base.with_children(|parent| {
+        parent.spawn_input("Password: ")
+            .input.observe(on_submit);
+    });
+
+    return base;
+
+    fn on_submit(
+        submit: On<TextInputSubmitted>,
+        menu: Single<Entity, With<OnlineCreateMenu>>,
+        mut commands: Commands,
+        mut config: ResMut<OnlineGameConfig>
+    ){
+        config.pass = Some(submit.value.clone());
+
+        commands.entity(*menu).despawn();
+    }
 }
 
 

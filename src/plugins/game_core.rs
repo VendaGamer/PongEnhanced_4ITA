@@ -3,7 +3,7 @@ use crate::bundles::*;
 use crate::components::Player;
 use crate::models::game::area::LocalPlayerID;
 use crate::resources::controls::MenuAction;
-use crate::resources::GameModeConfig;
+use crate::resources::{GameModeConfig, OnlineGameConfig};
 use crate::systems::menu::{spawn_m_main, u_join_in, u_settings_visibility};
 use crate::systems::selectors::update_selector_text;
 use crate::systems::settings::monitor::on_spawn_monitors;
@@ -28,7 +28,7 @@ impl Plugin for GameCorePlugin {
                 u_join_in,
                 u_spawned_gamepads,
                 u_tilt_i,
-                u_settings_visibility
+                u_settings_visibility,
             ),
         )
         .add_systems(Startup, (setup_common,))
@@ -37,7 +37,8 @@ impl Plugin for GameCorePlugin {
         .add_observer(t_ball_events)
         .insert_resource(GameModeConfig::default())
         .insert_resource(Gravity::ZERO)
-        .insert_resource(InputFocusVisible(false));
+        .insert_resource(InputFocusVisible(false))
+        .insert_resource(OnlineGameConfig::default());
     }
 }
 

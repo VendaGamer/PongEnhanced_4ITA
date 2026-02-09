@@ -69,7 +69,7 @@ fn main() {
         GameNetworking,
     ))
     .insert_resource(settings);
-
+    
     let world = app.world_mut();
 
     world

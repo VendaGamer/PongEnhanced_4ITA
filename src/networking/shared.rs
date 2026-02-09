@@ -1,8 +1,7 @@
 use crate::networking::protocol::GameProtocolPlugin;
+use crate::networking::server::GameServerPlugin;
 use bevy::prelude::*;
 use lightyear::prelude::client::ClientPlugins;
-use lightyear::prelude::server::ServerPlugins;
-use crate::networking::server::GameServerPlugin;
 
 pub struct GameNetworking;
 
@@ -12,7 +11,6 @@ impl Plugin for GameNetworking {
             ClientPlugins::default(),
             GameProtocolPlugin,
             GameServerPlugin,
-
         ));
     }
 }
