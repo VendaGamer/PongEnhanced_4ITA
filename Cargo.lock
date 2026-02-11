@@ -3684,6 +3684,7 @@ dependencies = [
  "lightyear_avian3d",
  "lightyear_connection",
  "lightyear_core",
+ "lightyear_deterministic_replication",
  "lightyear_frame_interpolation",
  "lightyear_inputs",
  "lightyear_inputs_bei",
@@ -3744,6 +3745,7 @@ dependencies = [
  "lightyear_link",
  "lightyear_prediction",
  "lightyear_replication",
+ "seahash",
  "tracing",
 ]
 
@@ -3766,6 +3768,7 @@ dependencies = [
  "lightyear_link",
  "lightyear_prediction",
  "lightyear_replication",
+ "seahash",
  "tracing",
 ]
 
@@ -3804,6 +3807,28 @@ dependencies = [
  "chrono",
  "lightyear_serde",
  "lightyear_utils",
+ "serde",
+ "tracing",
+]
+
+[[package]]
+name = "lightyear_deterministic_replication"
+version = "0.25.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8930af88f8022a40b5ce2603ade07120d9b7dbca19d3871c4ae7a48542aa0f9"
+dependencies = [
+ "bevy_app",
+ "bevy_ecs",
+ "lightyear_connection",
+ "lightyear_core",
+ "lightyear_inputs",
+ "lightyear_link",
+ "lightyear_messages",
+ "lightyear_prediction",
+ "lightyear_replication",
+ "lightyear_sync",
+ "lightyear_utils",
+ "seahash",
  "serde",
  "tracing",
 ]

@@ -756,6 +756,7 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
         &mut self,
         label: impl Into<String>,
         size: Val2) -> InputEntities<'_> {
+
         let target = self.target_entity();
         let commands = self.commands_mut();
 

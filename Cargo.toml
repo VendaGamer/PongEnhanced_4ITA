@@ -38,7 +38,8 @@ lightyear = { version = "0.25.5", default-features = false, features = [
     "replication",
     "prediction",
     "netcode",
-    "udp"
+    "udp",
+    "deterministic",
 ]}
 
 derive_more = "2.1.1"

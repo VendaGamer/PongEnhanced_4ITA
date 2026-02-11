@@ -1,3 +1,4 @@
+use std::net::UdpSocket;
 use crate::bundles::App;
 use crate::models::game::area::LocalPlayerID;
 use crate::resources::PlayerAction;
@@ -9,6 +10,8 @@ use lightyear::input::config::InputConfig;
 use lightyear::prelude::input::leafwing;
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
+use crate::networking::client::DiscoverySocket;
+use crate::networking::server::DISCOVERY_PORT;
 
 #[derive(Component, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Reflect, Eq, Hash)]
 pub struct RemotePlayerId(pub PeerId, pub LocalPlayerID);
@@ -38,6 +41,14 @@ impl Plugin for GameProtocolPlugin {
 
         app.register_component::<LinearVelocity>().add_prediction();
         app.register_component::<AngularVelocity>().add_prediction();
+
+        let socket = UdpSocket::bind(("0.0.0.0", DISCOVERY_PORT))
+            .expect("Failed to bind discovery socket");
+
+        socket.set_nonblocking(true).unwrap();
+        socket.set_broadcast(true).unwrap();
+
+        app.insert_resource(DiscoverySocket { socket });
     }
 }
 
@@ -48,3 +59,6 @@ fn position_should_rollback(this: &Position, that: &Position) -> bool {
 fn rotation_should_rollback(this: &Rotation, that: &Rotation) -> bool {
     this.angle_between(*that) >= 0.01
 }
+
+#[derive(Message, Serialize, Deserialize)]
+pub struct ServerAnnouncement;
