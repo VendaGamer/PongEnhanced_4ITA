@@ -9,6 +9,7 @@ use bevy::prelude::{ChildOf, Display, Entity, Node, Query};
 use bevy::ui_widgets::{SliderValue, ValueChange};
 use bevy::window::WindowResized;
 use bevy_simple_text_input::TextInputSubmitMessage;
+use crate::systems::menu::u_server_list;
 
 pub struct GameUIPlugin;
 
@@ -25,6 +26,7 @@ impl Plugin for GameUIPlugin {
                 t_navigate_element,
                 u_button_press,
                 t_input_submit,
+                u_server_list
             ),
         )
         .add_observer(handle_invisible_nav)

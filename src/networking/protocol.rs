@@ -1,17 +1,16 @@
-use std::net::UdpSocket;
-use crate::bundles::App;
+use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
+use socket2::{Domain, Protocol, Socket, Type};
+use crate::networking::client::{DiscoveredServers, DiscoverySocket};
+use crate::networking::server::DISCOVERY_PORT;
 use crate::models::game::area::LocalPlayerID;
 use crate::resources::PlayerAction;
 use avian2d::prelude::*;
-use bevy::color::palettes::css;
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::*;
 use lightyear::input::config::InputConfig;
 use lightyear::prelude::input::leafwing;
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
-use crate::networking::client::DiscoverySocket;
-use crate::networking::server::DISCOVERY_PORT;
 
 #[derive(Component, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Reflect, Eq, Hash)]
 pub struct RemotePlayerId(pub PeerId, pub LocalPlayerID);
@@ -42,14 +41,32 @@ impl Plugin for GameProtocolPlugin {
         app.register_component::<LinearVelocity>().add_prediction();
         app.register_component::<AngularVelocity>().add_prediction();
 
-        let socket = UdpSocket::bind(("0.0.0.0", DISCOVERY_PORT))
-            .expect("Failed to bind discovery socket");
+        app.insert_resource(DiscoveredServers::default());
 
-        socket.set_nonblocking(true).unwrap();
-        socket.set_broadcast(true).unwrap();
-
-        app.insert_resource(DiscoverySocket { socket });
+        match make_reusable_udp_socket(DISCOVERY_PORT) {
+            Ok(socket) => {
+                app.insert_resource(DiscoverySocket { socket });
+            }
+            Err(e) => {
+                warn!(
+                    "Could not bind discovery listener on port {DISCOVERY_PORT}: {e}. \
+                     LAN server discovery will be unavailable."
+                );
+            }
+        }
     }
+}
+
+fn make_reusable_udp_socket(port: u16) -> std::io::Result<UdpSocket> {
+    let socket = Socket::new(Domain::IPV4, Type::DGRAM, Some(Protocol::UDP))?;
+
+    socket.set_reuse_address(true)?;
+    socket.set_nonblocking(true)?;
+
+    let addr = SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, port);
+    socket.bind(&SocketAddr::V4(addr).into())?;
+
+    Ok(socket.into())
 }
 
 fn position_should_rollback(this: &Position, that: &Position) -> bool {

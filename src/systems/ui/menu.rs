@@ -1,7 +1,6 @@
-use avian2d::parry::na::DimAdd;
 use crate::bundles::area::AreaBundle;
 use crate::bundles::widgets::LabelBundle;
-use crate::components::ui::{MainMenu, MonitorSelector, OfflinePlayMenu, OnlineCreateMenu, OnlinePlayMenu, PlayerJoinInMenu, RefreshRateSelector, ResolutionSelector, Selector, SettingsMenu, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector, WindowModeSelector};
+use crate::components::ui::{MainMenu, MonitorSelector, OfflinePlayMenu, OnlineCreateMenu, OnlinePlayMenu, PlayerJoinInMenu, RefreshRateSelector, ResolutionSelector, Selector, ServerEntry, ServerList, SettingsMenu, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector, WindowModeSelector};
 use crate::components::Player;
 use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged, TextInputSubmitted};
 use crate::models::game::gameplay::GameMode;
@@ -17,9 +16,8 @@ use bevy::prelude::*;
 use bevy::reflect::Array;
 use bevy::render::render_resource::encase::private::RuntimeSizedArray;
 use bevy::window::{PresentMode, PrimaryWindow, VideoMode, WindowMode};
-use bevy_simple_text_input::TextInputSubmitMessage;
 use leafwing_input_manager::action_state::ActionState;
-use crate::networking::server::start_server;
+use crate::networking::client::DiscoveredServers;
 
 pub const GAMEMODE_OPTIONS: SourceHandle<dyn UIOptionProvider> = SourceHandle::Static(&GAMEMODE_OPTIONS_RAW);
 
@@ -327,8 +325,13 @@ pub fn spawn_m_online<'a>(
         spawn_m_online_create_name(&mut commands, &mut nav_map);
     }
 
-    fn on_join_room(_press: On<ButtonPressed>) {
-        println!("Join room menu...");
+    fn on_join_room(
+        _press: On<ButtonPressed>,
+        menu: Single<Entity, With<OnlinePlayMenu>>,
+        mut commands: Commands,
+        mut nav_map: ResMut<DirectionalNavigationMap>,
+    ) {
+        spawn_m_join(&mut commands, &mut nav_map);
     }
 
     fn on_friends_list(_press: On<ButtonPressed>) {
@@ -345,6 +348,78 @@ pub fn spawn_m_online<'a>(
         spawn_m_main(&mut commands, &mut map);
     }
 
+}
+
+fn spawn_m_join<'a>(commands: &'a mut Commands, nav_map: &'a mut DirectionalNavigationMap) -> EntityCommands<'a> {
+    let mut base = spawn_m_base(commands, nav_map, OnlinePlayMenu);
+
+    base.with_children(|parent| {
+        parent.spawn(w_menu_title("Join Room"));
+        parent.spawn(w_menu_section()).with_children(|parent| {
+            parent.spawn((
+                ServerList,
+                Node {
+                    flex_direction: FlexDirection::Column,
+                    ..default()
+                },
+            ));
+        });
+
+        parent.spawn(w_menu_button(Color::srgb(0.6, 0.6, 0.6), "Back"))
+            .observe(on_back);
+    });
+
+    return base;
+
+    fn on_back(
+        _: On<ButtonPressed>,
+        mut commands: Commands,
+        mut nav_map: ResMut<DirectionalNavigationMap>,
+        menu: Single<Entity, With<OnlinePlayMenu>>,
+    ) {
+        commands.entity(*menu).despawn();
+        spawn_m_online(&mut commands, &mut nav_map);
+    }
+}
+
+pub fn u_server_list(
+    mut commands: Commands,
+    servers: Res<DiscoveredServers>,
+    list: Option<Single<Entity, With<ServerList>>>,
+    added_list: Query<(), Added<ServerList>>,
+) {
+    let list_just_opened = !added_list.is_empty();
+    if !servers.is_changed() && !list_just_opened { return; }
+
+    let Some(list_entity) = list else { return };
+
+
+    commands.entity(*list_entity).despawn_related::<Children>();
+    commands.entity(*list_entity).with_children(|parent| {
+        if servers.servers.is_empty() {
+            parent.spawn(LabelBundle::button_label("Searching for servers..."));
+            return;
+        }
+
+        for &addr in &servers.servers {
+            parent.spawn((
+                ServerEntry(addr),
+                w_menu_button(Color::srgb(0.3, 0.7, 0.5), &*addr.to_string()),
+            )).observe(on_server_selected);
+        }
+    });
+
+    fn on_server_selected(
+        press: On<ButtonPressed>,
+        entries: Query<&ServerEntry>,
+        mut config: ResMut<OnlineGameConfig>,
+    ) {
+        if let Ok(entry) = entries.get(press.event_target()) {
+            config.server_addr = Some(entry.0);
+            println!("Selected server: {}", entry.0);
+            // TODO: trigger connection here
+        }
+    }
 }
 
 

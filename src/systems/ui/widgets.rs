@@ -93,7 +93,7 @@ pub fn u_ui_hover_light(
     }
 }
 
-pub fn w_button(color: Color, text: &str, size: Val2) -> impl Bundle {
+pub fn w_button(color: Color, text: impl Into<String>, size: Val2) -> impl Bundle {
     (
         Button,
         Node {
@@ -218,7 +218,7 @@ pub fn w_checkbox(state: bool) -> impl Bundle {
     (Checkbox, Checked::default())
 }
 
-pub fn w_menu_button(color: Color, text: &str) -> impl Bundle {
+pub fn w_menu_button(color: Color, text: impl Into<String>) -> impl Bundle {
     w_button(color, text, Val2::new(Val::Px(350.0), Val::Px(70.0)))
 }
 

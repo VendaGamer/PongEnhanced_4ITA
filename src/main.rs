@@ -39,19 +39,18 @@ fn main() {
     let video_mode = settings.window_mode;
 
     app.add_plugins((
-        DefaultPlugins
-            .set(WindowPlugin {
-                primary_window: Some(Window {
-                    title: "Pong Enhanced".into(),
-                    present_mode: settings.vsync,
-                    resizable: false,
-                    mode: video_mode,
-                    resolution: window_resolution,
-                    ..default()
-                }),
+        DefaultPlugins.set(
+        WindowPlugin {
+            primary_window: Some(Window {
+                title: "Pong Enhanced".into(),
+                present_mode: settings.vsync,
+                resizable: false,
+                mode: video_mode,
+                resolution: window_resolution,
                 ..default()
-            })
-            .set(ImagePlugin::default_nearest()),
+            }),
+            ..default()
+        }).set(ImagePlugin::default_nearest()),
         PhysicsPlugins::default()
             .build()
             .disable::<PhysicsTransformPlugin>()

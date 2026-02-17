@@ -1,3 +1,4 @@
+use std::net::SocketAddrV4;
 use crate::components::ui::UIOptionString;
 use crate::models::game::area::AreaShape;
 use crate::models::game::gameplay::GameMode;
@@ -39,12 +40,12 @@ pub struct Monitors {
     pub selected_monitor: usize,
 }
 
-#[derive(Resource, Debug, Default)]
+#[derive(Resource, Default, Debug)]
 pub struct OnlineGameConfig {
     pub server_name: String,
     pub pass: Option<String>,
+    pub server_addr: Option<SocketAddrV4>,
 }
-
 impl UIOptionString for MonitorInfo {
     fn push_ui_option_string(&self, string: &mut String) {
         string.push_str(&*self.name);

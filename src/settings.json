@@ -1,9 +1,9 @@
 {
-  "master_volume": 54.0,
-  "sfx_volume": 41.0,
+  "master_volume": 50.0,
+  "sfx_volume": 50.0,
   "window_mode": {
     "BorderlessFullscreen": {
-      "Entity": 4294967099
+      "Entity": 4294967098
     }
   },
   "window_resolution": null,

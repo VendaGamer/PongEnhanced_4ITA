@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use derive_more::{From, Into};
 use std::any::Any;
 use std::fmt::Debug;
+use std::net::SocketAddrV4;
 use std::sync::Arc;
 
 pub enum SourceHandle<T: 'static + ?Sized> {
@@ -120,6 +121,12 @@ pub struct VSyncSelector;
 pub struct FPSLockSelector;
 #[derive(Component)]
 pub struct ShowFPSSelector;
+
+#[derive(Component)]
+pub struct ServerList;
+
+#[derive(Component)]
+pub struct ServerEntry(pub(crate) SocketAddrV4);
 
 impl Selector {
     pub fn current<T: Any + UIOptionString>(&self) -> Option<&T> {

@@ -1,5 +1,5 @@
 use std::net::{SocketAddrV4, UdpSocket};
-use crate::bundles::Resource;
+use bevy::prelude::*;
 
 #[derive(Resource, Default)]
 pub struct DiscoveredServers {
