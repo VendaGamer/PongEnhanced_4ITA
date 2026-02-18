@@ -1,6 +1,6 @@
 use crate::bundles::area::AreaBundle;
 use crate::bundles::widgets::LabelBundle;
-use crate::components::ui::{MainMenu, MonitorSelector, OfflinePlayMenu, OnlineCreateMenu, OnlinePlayMenu, PlayerJoinInMenu, RefreshRateSelector, ResolutionSelector, Selector, ServerEntry, ServerList, SettingsMenu, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector, WindowModeSelector};
+use crate::components::ui::{MainMenu, MonitorSelector, OfflinePlayMenu, OnlineCreateMenu, OnlinePlayMenu, PlayerJoinInMenu, RefreshRateSelector, RemoveInteractionDisabledTimer, ResolutionSelector, Selector, ServerEntry, ServerList, SettingsMenu, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector, WindowModeSelector};
 use crate::components::Player;
 use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged, TextInputSubmitted};
 use crate::models::game::gameplay::GameMode;
@@ -15,6 +15,7 @@ use bevy::math::CompassOctant;
 use bevy::prelude::*;
 use bevy::reflect::Array;
 use bevy::render::render_resource::encase::private::RuntimeSizedArray;
+use bevy::ui::InteractionDisabled;
 use bevy::window::{PresentMode, PrimaryWindow, VideoMode, WindowMode};
 use leafwing_input_manager::action_state::ActionState;
 use crate::networking::client::{send_discovery_message, DiscoveredServers, ClientDiscoverySocket};
@@ -391,9 +392,16 @@ fn spawn_m_online_join<'a>(commands: &'a mut Commands, nav_map: &'a mut Directio
     }
     
     fn on_refresh(
-        _: On<ButtonPressed>,
+        press: On<ButtonPressed>,
         socket: Res<ClientDiscoverySocket>,
+        mut commands: Commands,
     ) {
+        commands.entity(press.0)
+            .insert(InteractionDisabled)
+            .insert(RemoveInteractionDisabledTimer(
+                Timer::from_seconds(5.0, TimerMode::Once)
+            ));
+
         send_discovery_message(&socket);
     }
 }
@@ -431,7 +439,6 @@ pub fn u_server_list(
         mut config: ResMut<OnlineGameConfig>,
     ) {
         if let Ok(entry) = entries.get(press.event_target()) {
-            config.server_addr = Some(entry.0);
             println!("Selected server: {}", entry.0);
             
         }
@@ -847,7 +854,7 @@ fn spawn_m_online_create_pass<'a>(
 
         commands.entity(*menu).despawn();
 
-        start_server(&mut commands);
+        start_server(&mut commands, &config);
     }
 }
 

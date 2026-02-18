@@ -18,6 +18,7 @@ use crate::utils::DEFAULT_FONT;
 use avian2d::prelude::*;
 use bevy::input_focus::directional_navigation::DirectionalNavigationPlugin;
 use bevy::input_focus::InputDispatchPlugin;
+use bevy::picking::PickingSystems;
 use bevy::prelude::*;
 use bevy::ui_widgets::UiWidgetsPlugins;
 use bevy::window::WindowResolution;

@@ -1,12 +1,20 @@
+use std::collections::HashSet;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
 use bevy::prelude::*;
 use lightyear::prelude::client::ClientPlugins;
-use crate::networking::protocol::make_reusable_udp_socket;
-use crate::networking::server::{BroadcastTimer, DISCOVERY_PORT, DISCOVERY_SERVER_MAGIC, GAME_PORT};
+use socket2::{Domain, Protocol, Socket, Type};
+use crate::networking::protocol::{make_reusable_udp_socket, UNSPECIFIED, DISCOVERY_ADDR, DISCOVERY_CLIENT_MAGIC};
+use crate::networking::server::{BroadcastTimer};
 
-#[derive(Resource, Default)]
+#[derive(Resource, Default, Deref)]
 pub struct DiscoveredServers {
-    pub servers: Vec<SocketAddrV4>,
+    pub servers: HashSet<SocketAddrV4>,
+}
+
+#[derive(Hash, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct DiscoveredServer {
+    pub address: SocketAddrV4,
+    pub name: String
 }
 
 #[derive(Resource)]
@@ -27,13 +35,18 @@ impl Plugin for GameClientPlugin {
 
         app.insert_resource(DiscoveredServers::default());
 
-        match make_reusable_udp_socket(DISCOVERY_PORT) {
+        let socket = Socket::new(Domain::IPV4, Type::DGRAM, Some(Protocol::UDP));
+
+        match socket {
             Ok(socket) => {
-                app.insert_resource(ClientDiscoverySocket { socket });
+                _ = socket.set_nonblocking(true);
+                _ = socket.set_broadcast(true);
+
+                app.insert_resource(ClientDiscoverySocket { socket: socket.into() });
             }
             Err(e) => {
                 error!(
-                    "Could not bind discovery listener on port {DISCOVERY_PORT}: {e}. \
+                    "Could not bind client discovery socket: {e}. \
                      LAN server discovery will be unavailable."
                 );
             }
@@ -49,12 +62,8 @@ pub fn lan_discovery_receiver(
 
     loop {
         match socket.socket.recv_from(&mut buf) {
-            Ok((len, SocketAddr::V4(addr))) if &buf[..len] == DISCOVERY_SERVER_MAGIC => {
-                let game_addr = SocketAddrV4::new(*addr.ip(), GAME_PORT);
-                if !servers.servers.contains(&game_addr) {
-                    info!("Discovered server at {game_addr}");
-                    servers.servers.push(game_addr);
-                }
+            Ok((len, SocketAddr::V4(addr))) => {
+
             }
             _ => break,
         }
@@ -77,9 +86,7 @@ pub fn lan_discovery_sender(
 
 #[inline]
 pub fn send_discovery_message(disc_soc: &ClientDiscoverySocket) {
-    const BROADCAST_ADDR: SocketAddrV4 = SocketAddrV4::new(Ipv4Addr::BROADCAST, DISCOVERY_PORT);
-
-    if let Err(e) = disc_soc.socket.send_to(crate::networking::server::DISCOVERY_CLIENT_MAGIC, BROADCAST_ADDR) {
+    if let Err(e) = disc_soc.socket.send_to(DISCOVERY_CLIENT_MAGIC, DISCOVERY_ADDR) {
         warn!("Failed to send discovery broadcast: {e}");
     } else {
         info!("Sent discovery broadcast");

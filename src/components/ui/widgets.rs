@@ -126,7 +126,9 @@ pub struct ShowFPSSelector;
 pub struct ServerList;
 
 #[derive(Component)]
-pub struct ServerEntry(pub(crate) SocketAddrV4);
+pub struct ServerEntry(pub SocketAddrV4);
+#[derive(Component)]
+pub struct RemoveInteractionDisabledTimer(pub Timer);
 
 impl Selector {
     pub fn current<T: Any + UIOptionString>(&self) -> Option<&T> {

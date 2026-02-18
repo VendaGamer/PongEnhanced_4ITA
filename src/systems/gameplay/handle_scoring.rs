@@ -36,7 +36,7 @@ pub fn handle_scoring(
     }
 }
 
-pub fn update_score_ui(
+pub fn u_score_ui(
     mut game_config: ResMut<GameModeConfig>,
     mut score_texts: Query<(&mut Text, &ScoreText)>,
 ) {

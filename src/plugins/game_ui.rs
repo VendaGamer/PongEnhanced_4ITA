@@ -21,12 +21,13 @@ impl Plugin for GameUIPlugin {
                 u_ui_hover_light,
                 u_slider_visuals,
                 t_button_press,
-                handle_ui_scaling,
+                u_ui_scale,
                 u_highlight_focused_element,
                 t_navigate_element,
                 u_button_press,
                 t_input_submit,
-                u_server_list
+                u_server_list,
+                u_disabled_timeout
             ),
         )
         .add_observer(handle_invisible_nav)
@@ -98,7 +99,7 @@ fn is_display_none(
     false
 }
 
-fn handle_ui_scaling(mut ui_scale: ResMut<UiScale>, mut resized: MessageReader<WindowResized>) {
+fn u_ui_scale(mut ui_scale: ResMut<UiScale>, mut resized: MessageReader<WindowResized>) {
     for event in resized.read() {
         let scale_x = event.width / FIXED_DIMENSIONS.x;
         let scale_y = event.height / FIXED_DIMENSIONS.y;

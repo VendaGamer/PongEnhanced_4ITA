@@ -5,7 +5,7 @@ use crate::models::game::area::LocalPlayerID;
 use crate::resources::controls::MenuAction;
 use crate::resources::{GameModeConfig, OnlineGameConfig};
 use crate::systems::menu::{spawn_m_main, u_join_in, u_settings_visibility};
-use crate::systems::selectors::update_selector_text;
+use crate::systems::selectors::u_selector_text;
 use crate::systems::settings::monitor::on_spawn_monitors;
 use crate::systems::*;
 use avian2d::prelude::Gravity;
@@ -23,8 +23,8 @@ impl Plugin for GameCorePlugin {
                 u_move_paddle_i,
                 check_connection,
                 maintain_ball_speed,
-                update_score_ui,
-                update_selector_text,
+                u_score_ui,
+                u_selector_text,
                 u_join_in,
                 u_spawned_gamepads,
                 u_tilt_i,

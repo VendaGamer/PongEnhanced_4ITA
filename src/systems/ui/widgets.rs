@@ -1,6 +1,6 @@
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::{HoverLight, HoverLightColor};
-use crate::components::ui::{Dropdown, Selector, SelectorButton, SelectorText, SourceHandle, UIOptionProvider};
+use crate::components::ui::{Dropdown, RemoveInteractionDisabledTimer, Selector, SelectorButton, SelectorText, SourceHandle, UIOptionProvider};
 use crate::events::widgets::{ButtonPressed, OptionChanged};
 use crate::resources::MenuAction;
 use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT, MODERN_THEME};
@@ -12,7 +12,7 @@ use bevy::math::{CompassOctant, CompassQuadrant};
 use bevy::picking::hover::Hovered;
 use bevy::prelude::*;
 use bevy::text::FontSmoothing;
-use bevy::ui::Checked;
+use bevy::ui::{Checked, InteractionDisabled};
 use bevy::ui_widgets::{
     Checkbox, Slider, SliderPrecision, SliderRange, SliderThumb, SliderValue, TrackClick,
 };
@@ -810,6 +810,23 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
             root,
             title,
             input: commands.entity(input),
+        }
+    }
+}
+
+
+pub fn u_disabled_timeout(
+    time: Res<Time>,
+    mut commands: Commands,
+    mut q: Query<(Entity, &mut RemoveInteractionDisabledTimer)>,
+) {
+    for (entity, mut timer) in &mut q {
+        timer.0.tick(time.delta());
+
+        if timer.0.just_finished() {
+            commands.entity(entity)
+                .remove::<InteractionDisabled>()
+                .remove::<RemoveInteractionDisabledTimer>();
         }
     }
 }

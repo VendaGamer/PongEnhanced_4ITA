@@ -44,7 +44,6 @@ pub struct Monitors {
 pub struct OnlineGameConfig {
     pub server_name: String,
     pub pass: Option<String>,
-    pub server_addr: Option<SocketAddrV4>,
 }
 impl UIOptionString for MonitorInfo {
     fn push_ui_option_string(&self, string: &mut String) {

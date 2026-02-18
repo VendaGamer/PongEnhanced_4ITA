@@ -1,7 +1,6 @@
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
 use socket2::{Domain, Protocol, Socket, Type};
 use crate::networking::client::{DiscoveredServers, ClientDiscoverySocket};
-use crate::networking::server::DISCOVERY_PORT;
 use crate::models::game::area::LocalPlayerID;
 use crate::resources::PlayerAction;
 use avian2d::prelude::*;
@@ -11,6 +10,13 @@ use lightyear::input::config::InputConfig;
 use lightyear::prelude::input::leafwing;
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
+
+pub const UNSPECIFIED: SocketAddrV4 = SocketAddrV4::new(Ipv4Addr::BROADCAST, 0);
+pub const DISCOVERY_ADDR: SocketAddrV4 =
+    SocketAddrV4::new(Ipv4Addr::BROADCAST, DISCOVERY_PORT);
+pub const DISCOVERY_PORT: u16 = 6000;
+
+pub const DISCOVERY_CLIENT_MAGIC: &[u8] = b"SENDNUDES";
 
 #[derive(Component, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Reflect, Eq, Hash)]
 pub struct RemotePlayerId(pub PeerId, pub LocalPlayerID);
