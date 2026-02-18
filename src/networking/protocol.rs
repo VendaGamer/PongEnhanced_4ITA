@@ -1,6 +1,6 @@
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
 use socket2::{Domain, Protocol, Socket, Type};
-use crate::networking::client::{DiscoveredServers, DiscoverySocket};
+use crate::networking::client::{DiscoveredServers, ClientDiscoverySocket};
 use crate::networking::server::DISCOVERY_PORT;
 use crate::models::game::area::LocalPlayerID;
 use crate::resources::PlayerAction;
@@ -40,39 +40,31 @@ impl Plugin for GameProtocolPlugin {
 
         app.register_component::<LinearVelocity>().add_prediction();
         app.register_component::<AngularVelocity>().add_prediction();
-
-        app.insert_resource(DiscoveredServers::default());
-
-        match make_reusable_udp_socket(DISCOVERY_PORT) {
-            Ok(socket) => {
-                app.insert_resource(DiscoverySocket { socket });
-            }
-            Err(e) => {
-                warn!(
-                    "Could not bind discovery listener on port {DISCOVERY_PORT}: {e}. \
-                     LAN server discovery will be unavailable."
-                );
-            }
-        }
     }
 }
 
-fn make_reusable_udp_socket(port: u16) -> std::io::Result<UdpSocket> {
+pub fn make_reusable_udp_socket(port: u16) -> std::io::Result<UdpSocket> {
     let socket = Socket::new(Domain::IPV4, Type::DGRAM, Some(Protocol::UDP))?;
 
     socket.set_reuse_address(true)?;
     socket.set_nonblocking(true)?;
+    socket.set_broadcast(true)?;
+    
+    #[cfg(unix)]
+    socket.set_reuse_port(true)?;
 
     let addr = SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, port);
     socket.bind(&SocketAddr::V4(addr).into())?;
-
+    
     Ok(socket.into())
 }
 
+#[inline]
 fn position_should_rollback(this: &Position, that: &Position) -> bool {
     (this.0 - that.0).length() >= 0.01
 }
 
+#[inline]
 fn rotation_should_rollback(this: &Rotation, that: &Rotation) -> bool {
     this.angle_between(*that) >= 0.01
 }

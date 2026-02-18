@@ -17,7 +17,8 @@ use bevy::reflect::Array;
 use bevy::render::render_resource::encase::private::RuntimeSizedArray;
 use bevy::window::{PresentMode, PrimaryWindow, VideoMode, WindowMode};
 use leafwing_input_manager::action_state::ActionState;
-use crate::networking::client::DiscoveredServers;
+use crate::networking::client::{send_discovery_message, DiscoveredServers, ClientDiscoverySocket};
+use crate::networking::server::{start_server};
 
 pub const GAMEMODE_OPTIONS: SourceHandle<dyn UIOptionProvider> = SourceHandle::Static(&GAMEMODE_OPTIONS_RAW);
 
@@ -331,7 +332,8 @@ pub fn spawn_m_online<'a>(
         mut commands: Commands,
         mut nav_map: ResMut<DirectionalNavigationMap>,
     ) {
-        spawn_m_join(&mut commands, &mut nav_map);
+        commands.entity(*menu).despawn();
+        spawn_m_online_join(&mut commands, &mut nav_map);
     }
 
     fn on_friends_list(_press: On<ButtonPressed>) {
@@ -350,7 +352,7 @@ pub fn spawn_m_online<'a>(
 
 }
 
-fn spawn_m_join<'a>(commands: &'a mut Commands, nav_map: &'a mut DirectionalNavigationMap) -> EntityCommands<'a> {
+fn spawn_m_online_join<'a>(commands: &'a mut Commands, nav_map: &'a mut DirectionalNavigationMap) -> EntityCommands<'a> {
     let mut base = spawn_m_base(commands, nav_map, OnlinePlayMenu);
 
     base.with_children(|parent| {
@@ -364,9 +366,16 @@ fn spawn_m_join<'a>(commands: &'a mut Commands, nav_map: &'a mut DirectionalNavi
                 },
             ));
         });
-
-        parent.spawn(w_menu_button(Color::srgb(0.6, 0.6, 0.6), "Back"))
-            .observe(on_back);
+        
+        parent.spawn(w_row_container(Val::Px(10.0)))
+              .with_children(| parent |{
+                  
+              parent.spawn(w_menu_button(Color::srgb(0.6, 0.6, 0.6), "Back"))
+                  .observe(on_back);
+              
+              parent.spawn(w_menu_button(Color::srgb(0.1,0.1, 0.7), "Refresh"))
+                    .observe(on_refresh);
+          });
     });
 
     return base;
@@ -379,6 +388,13 @@ fn spawn_m_join<'a>(commands: &'a mut Commands, nav_map: &'a mut DirectionalNavi
     ) {
         commands.entity(*menu).despawn();
         spawn_m_online(&mut commands, &mut nav_map);
+    }
+    
+    fn on_refresh(
+        _: On<ButtonPressed>,
+        socket: Res<ClientDiscoverySocket>,
+    ) {
+        send_discovery_message(&socket);
     }
 }
 
@@ -417,7 +433,7 @@ pub fn u_server_list(
         if let Ok(entry) = entries.get(press.event_target()) {
             config.server_addr = Some(entry.0);
             println!("Selected server: {}", entry.0);
-            // TODO: trigger connection here
+            
         }
     }
 }
@@ -830,6 +846,8 @@ fn spawn_m_online_create_pass<'a>(
         config.pass = Some(submit.value.clone());
 
         commands.entity(*menu).despawn();
+
+        start_server(&mut commands);
     }
 }
 
