@@ -425,10 +425,10 @@ pub fn u_server_list(
             return;
         }
 
-        for &addr in &servers.servers {
+        for server in &servers.servers {
             parent.spawn((
-                ServerEntry(addr),
-                w_menu_button(Color::srgb(0.3, 0.7, 0.5), &*addr.to_string()),
+                ServerEntry(server.address),
+                w_menu_button(Color::srgb(0.3, 0.7, 0.5), server.address.to_string()),
             )).observe(on_server_selected);
         }
     });

@@ -1,5 +1,8 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
+use std::hash::{Hash, Hasher};
+use std::io::BufRead;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
+use std::str::FromStr;
 use bevy::prelude::*;
 use lightyear::prelude::client::ClientPlugins;
 use socket2::{Domain, Protocol, Socket, Type};
@@ -8,13 +11,20 @@ use crate::networking::server::{BroadcastTimer};
 
 #[derive(Resource, Default, Deref)]
 pub struct DiscoveredServers {
-    pub servers: HashSet<SocketAddrV4>,
+    pub servers: HashSet<DiscoveredServer>,
 }
 
-#[derive(Hash, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct DiscoveredServer {
     pub address: SocketAddrV4,
     pub name: String
+}
+
+impl Hash for DiscoveredServer {
+    #[inline]
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.address.hash(state);
+    }
 }
 
 #[derive(Resource)]
@@ -63,7 +73,29 @@ pub fn lan_discovery_receiver(
     loop {
         match socket.socket.recv_from(&mut buf) {
             Ok((len, SocketAddr::V4(addr))) => {
+                let mut read = &buf[..(len - 3)]; // - 3 cause 3 new lines at the end
 
+                let map: HashMap<String, String> = read
+                    .split(|b| *b == b'\n')
+                    .filter_map(|line| {
+                        let mut parts = line.splitn(2, |b| *b == b' ');
+                        Some((
+                            String::from_utf8_lossy(parts.next()?).into_owned(),
+                            String::from_utf8_lossy(parts.next()?).into_owned(),
+                        ))
+                    })
+                    .collect();
+
+                if let Some(name) = map.get("NAME"){
+                    if let Some(addr) = map.get("IP"){
+                        if let Ok(addr) = SocketAddrV4::from_str(addr.as_str()) {
+                            servers.servers.insert(DiscoveredServer {
+                                name: name.clone(),
+                                address: addr,
+                            });
+                        }
+                    }
+                }
             }
             _ => break,
         }

@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-bevy = { version = "0.17.3" , default-features = false, features = [
+bevy = { version = "0.18.0", default-features = false, features = [
     "bevy_dev_tools",
     "experimental_bevy_ui_widgets",
     "bevy_ui",
-    "bevy_ui_picking_backend",
+    "ui_picking",
     "wayland",
     "bevy_ui_render",
     "serialize",
@@ -21,15 +21,15 @@ bevy = { version = "0.17.3" , default-features = false, features = [
     "multi_threaded",
 ]}
 
-avian2d = { version = "0.4.1", default-features = false, features = [
+avian2d = { version = "0.5.0", default-features = false, features = [
     "2d",
     "serialize",
     "parallel"
 ]}
 
-leafwing-input-manager = "0.19.0"
+leafwing-input-manager = "0.20.0"
 
-lightyear = { version = "0.25.5", default-features = false, features = [
+lightyear = { version = "0.26.4", default-features = false, features = [
     "avian2d",
     "leafwing",
     "interpolation",
@@ -43,13 +43,12 @@ lightyear = { version = "0.25.5", default-features = false, features = [
 ]}
 
 derive_more = "2.1.1"
-erased-serde = "0.4.9"
-bevy_simple_text_input = "0.12.0"
-bevy_tween = "0.11.0"
+bevy_simple_text_input = "0.14.1"
+bevy_tweening = "0.15.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 bevy_light_2d = "0.8.0"
-socket2 = {version = "0.6.2", features = ["all"]}
+socket2 = { version = "0.6.2", features = ["all"] }
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.62.2", features = ["Win32_Graphics_Gdi"] }

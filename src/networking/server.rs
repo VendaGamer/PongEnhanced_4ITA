@@ -25,7 +25,7 @@ pub struct GameServerPlugin;
 impl Plugin for GameServerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(ServerPlugins::default());
-        
+
         app.insert_resource(BroadcastTimer(Timer::from_seconds(
             BROADCAST_INTERVAL_SECS,
             TimerMode::Repeating,
@@ -39,14 +39,13 @@ impl Plugin for GameServerPlugin {
 
 pub fn lan_discovery_responder(
     socket: Single<&ServerDiscoverySocket>,
-    server: Single<(&LocalAddr, &ServerName), With<NetcodeServer>>
+    server: Single<(&LocalAddr, &ServerName), (With<NetcodeServer>, With<ServerUdpIo>)>
 ) {
     let mut buf = [0u8; 256];
 
     loop {
         match socket.socket.recv_from(&mut buf) {
             Ok((len, SocketAddr::V4(addr))) => {
-
                 if &buf[..len] == DISCOVERY_CLIENT_MAGIC {
                     info!("Responding to discovery");
 
@@ -64,7 +63,7 @@ pub fn lan_discovery_responder(
                         info!("Received non discovery client magic message: {str}")
                     }
                 }
-                
+
             },
             _ => break,
         }
@@ -75,7 +74,7 @@ pub fn start_server(
     commands: &mut Commands,
     config: &OnlineGameConfig
 ) {
-    
+
     if let Ok(socket) = make_reusable_udp_socket(DISCOVERY_PORT) {
 
         let server = commands.spawn((
@@ -86,7 +85,7 @@ pub fn start_server(
                 ServerName(config.server_name.clone()),
             ))
             .id();
-
+        
         commands.trigger(Start { entity: server });
 
     } else {
