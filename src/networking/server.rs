@@ -31,9 +31,7 @@ impl Plugin for GameServerPlugin {
             TimerMode::Repeating,
         )));
 
-        app.add_systems(Update, (
-            lan_discovery_responder
-        ));
+        app.add_systems(Update, lan_discovery_responder);
     }
 }
 
@@ -74,9 +72,7 @@ pub fn start_server(
     commands: &mut Commands,
     config: &OnlineGameConfig
 ) {
-
     if let Ok(socket) = make_reusable_udp_socket(DISCOVERY_PORT) {
-
         let server = commands.spawn((
                 NetcodeServer::new(NetcodeConfig::default()),
                 LocalAddr(SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 0).into()),
@@ -87,7 +83,6 @@ pub fn start_server(
             .id();
         
         commands.trigger(Start { entity: server });
-
     } else {
         error!("Could not start server");
     }

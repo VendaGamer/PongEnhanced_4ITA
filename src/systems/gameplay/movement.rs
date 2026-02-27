@@ -6,10 +6,6 @@ use crate::utils::screen::PADDLE_SIZE;
 use crate::utils::HALF_HEIGHT;
 use avian2d::prelude::*;
 use bevy::prelude::*;
-use bevy_tween::interpolate::rotation_delta_by;
-use bevy_tween::interpolation::EaseKind;
-use bevy_tween::prelude::AnimationBuilderExt;
-use bevy_tween::tween::IntoTarget;
 use leafwing_input_manager::prelude::*;
 use std::time::Duration;
 
@@ -45,17 +41,8 @@ pub fn u_tilt_i(
         for (action_state, player) in player_query {
             if player.id.eq(&paddle.id) {
                 if let Some(data) = action_state.axis_data(&PlayerAction::Tilt) {
-                    let target = paddle_e.into_target();
-
-                    commands.animation().insert_tween_here(
-                        Duration::from_secs_f32(0.3),
-                        EaseKind::CubicInOut,
-                        target
-                            .state(Quat::from_rotation_z(0.0))
-                            .with(rotation_delta_by(Quat::from_rotation_z(
-                                data.value.signum() * MAX_ABS_TILT,
-                            ))),
-                    );
+                    
+                    //TODO: TILT
                 }
             }
             break;

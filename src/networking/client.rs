@@ -4,10 +4,11 @@ use std::io::BufRead;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
 use std::str::FromStr;
 use bevy::prelude::*;
+use lightyear::netcode::NetcodeServer;
 use lightyear::prelude::client::ClientPlugins;
 use socket2::{Domain, Protocol, Socket, Type};
 use crate::networking::protocol::{make_reusable_udp_socket, UNSPECIFIED, DISCOVERY_ADDR, DISCOVERY_CLIENT_MAGIC};
-use crate::networking::server::{BroadcastTimer};
+use crate::networking::server::{BroadcastTimer, ServerName};
 
 #[derive(Resource, Default, Deref)]
 pub struct DiscoveredServers {
@@ -40,7 +41,7 @@ impl Plugin for GameClientPlugin {
         
         app.add_systems(Update, (
             lan_discovery_sender,
-            lan_discovery_receiver
+            lan_discovery_receiver.run_if(|exists: Single<Has<ServerName>, With<NetcodeServer>>| !*exists)
         ));
 
         app.insert_resource(DiscoveredServers::default());
@@ -69,10 +70,13 @@ pub fn lan_discovery_receiver(
     mut servers: ResMut<DiscoveredServers>,
 ) {
     let mut buf = [0u8; 256];
-
+    
     loop {
         match socket.socket.recv_from(&mut buf) {
             Ok((len, SocketAddr::V4(addr))) => {
+                
+                info!("Received Discovery response {:?}", str::from_utf8(&buf[..(len - 3)]));
+                
                 let mut read = &buf[..(len - 3)]; // - 3 cause 3 new lines at the end
 
                 let map: HashMap<String, String> = read
@@ -96,7 +100,7 @@ pub fn lan_discovery_receiver(
                         }
                     }
                 }
-            }
+            },
             _ => break,
         }
     }

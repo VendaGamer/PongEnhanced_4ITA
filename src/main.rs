@@ -23,7 +23,7 @@ use bevy::prelude::*;
 use bevy::ui_widgets::UiWidgetsPlugins;
 use bevy::window::WindowResolution;
 use bevy_simple_text_input::TextInputPlugin;
-use bevy_tween::DefaultTweenPlugins;
+use bevy_tweening::TweeningPlugin;
 use components::*;
 use leafwing_input_manager::plugin::InputManagerPlugin;
 
@@ -59,7 +59,7 @@ fn main() {
         InputManagerPlugin::<MenuAction>::default(),
         UiWidgetsPlugins,
         InputDispatchPlugin,
-        DefaultTweenPlugins,
+        TweeningPlugin,
         DirectionalNavigationPlugin,
         TextInputPlugin,
         

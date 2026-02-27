@@ -1,6 +1,7 @@
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::{HoverLight, HoverLightColor};
 use crate::components::ui::{Dropdown, RemoveInteractionDisabledTimer, Selector, SelectorButton, SelectorText, SourceHandle, UIOptionProvider};
+use crate::events::gameplay::UINavigated;
 use crate::events::widgets::{ButtonPressed, OptionChanged};
 use crate::resources::MenuAction;
 use crate::utils::{lighten_color, DEFAULT_LIGHTEN_AMOUNT, MODERN_THEME};
@@ -16,17 +17,17 @@ use bevy::ui::{Checked, InteractionDisabled};
 use bevy::ui_widgets::{
     Checkbox, Slider, SliderPrecision, SliderRange, SliderThumb, SliderValue, TrackClick,
 };
-use bevy_tween::interpolate::background_color_to;
-use bevy_tween::prelude::*;
+use bevy_simple_text_input::{TextInput, TextInputTextColor, TextInputTextFont};
+use bevy_tweening::lens::UiBackgroundColorLens;
+use bevy_tweening::{Tween, TweenAnim};
 use leafwing_input_manager::action_state::ActionState;
 use std::sync::Arc;
 use std::time::Duration;
-use bevy_simple_text_input::{TextInput, TextInputSubmitMessage, TextInputTextColor, TextInputTextFont};
-use crate::events::gameplay::UINavigated;
 
 pub const BUTTON_PADDING: Val = Val::Px(20.0);
 pub const PIXEL_BORDER: UiRect = UiRect::all(Val::Px(3.0));
 pub const BUTTON_OUTLINE: Outline = Outline::new(PIXEL_BORDER.bottom, Val::ZERO, Color::BLACK);
+
 
 pub fn u_slider_visuals(
     sliders: Query<(Entity, &SliderValue, &SliderRange), Changed<SliderValue>>,
@@ -66,30 +67,27 @@ pub fn u_ui_hover_light(
         } else {
             lighten_color(base_color, DEFAULT_LIGHTEN_AMOUNT)
         };
-
-        let target = entity.into_target();
-
-        match *interaction {
-            Interaction::Hovered => {
-                commands.entity(entity).animation().insert_tween_here(
-                    Duration::from_millis(250),
-                    EaseKind::CubicInOut,
-                    target
-                        .state(base_color)
-                        .with(background_color_to(hover_color)),
-                );
-            }
-            Interaction::None => {
-                commands.entity(entity).animation().insert_tween_here(
-                    Duration::from_millis(250),
-                    EaseKind::CubicInOut,
-                    target
-                        .state(hover_color)
-                        .with(background_color_to(base_color)),
-                );
-            }
-            _ => {}
+        
+        let lens = match *interaction {
+            Interaction::Hovered => UiBackgroundColorLens {
+                start: hover_color,
+                end: base_color,
+            },
+            Interaction::None => UiBackgroundColorLens {
+                start: hover_color,
+                end: base_color,
+            },
+            _ => {continue;}
         };
+
+
+        commands.entity(entity)
+            .insert(TweenAnim::new(
+                Tween::new(
+                    EaseFunction::CubicIn,
+                    Duration::from_millis(200),
+                    lens,
+                )));
     }
 }
 
@@ -618,8 +616,7 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
         let track: Entity;
 
         {
-            track = commands
-                .spawn((
+            track = commands.spawn((
                     Node {
                         height: px(12),
                         border: PIXEL_BORDER,
@@ -627,9 +624,8 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
                     },
                     BackgroundColor(MODERN_THEME.slider_track),
                     BorderColor::from(MODERN_THEME.border),
-                    BorderRadius::ZERO,
-                ))
-                .id();
+                    BorderRadius::ZERO
+                )).id();
 
             let thumb_root = commands
                 .spawn((Node {
@@ -794,8 +790,8 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
                      AutoFocus,
                      BorderColor::all(MODERN_THEME.border),
                      BackgroundColor(MODERN_THEME.panel_bg),
-                     BorderRadius::ZERO,
                      TextInput,
+                     BorderRadius::ZERO,
                      TextInputTextFont(TextFont {
                          font_size: 34.0,
                          ..default()
