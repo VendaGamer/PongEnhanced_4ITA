@@ -14,9 +14,11 @@ use serde::{Deserialize, Serialize};
 pub const UNSPECIFIED: SocketAddrV4 = SocketAddrV4::new(Ipv4Addr::BROADCAST, 0);
 pub const DISCOVERY_ADDR: SocketAddrV4 =
     SocketAddrV4::new(Ipv4Addr::BROADCAST, DISCOVERY_PORT);
-pub const DISCOVERY_PORT: u16 = 6000;
 
+pub const DISCOVERY_ADDR_LOCAL: SocketAddrV4 = SocketAddrV4::new(Ipv4Addr::LOCALHOST, DISCOVERY_PORT);
+pub const DISCOVERY_PORT: u16 = 6000;
 pub const DISCOVERY_CLIENT_MAGIC: &[u8] = b"SENDNUDES";
+
 
 #[derive(Component, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Reflect, Eq, Hash)]
 pub struct RemotePlayerId(pub PeerId, pub LocalPlayerID);
@@ -31,7 +33,7 @@ impl Plugin for GameProtocolPlugin {
                 ..default()
             },
         });
-
+        
         app.register_component::<Position>()
             .add_prediction()
             .add_should_rollback(position_should_rollback)

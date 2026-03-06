@@ -6,8 +6,9 @@ use std::str::FromStr;
 use bevy::prelude::*;
 use lightyear::netcode::NetcodeServer;
 use lightyear::prelude::client::ClientPlugins;
+use lightyear::prelude::server::NetcodeConfig;
 use socket2::{Domain, Protocol, Socket, Type};
-use crate::networking::protocol::{make_reusable_udp_socket, UNSPECIFIED, DISCOVERY_ADDR, DISCOVERY_CLIENT_MAGIC};
+use crate::networking::protocol::{make_reusable_udp_socket, UNSPECIFIED, DISCOVERY_ADDR, DISCOVERY_CLIENT_MAGIC, DISCOVERY_ADDR_LOCAL};
 use crate::networking::server::{BroadcastTimer, ServerName};
 
 #[derive(Resource, Default, Deref)]
@@ -41,7 +42,7 @@ impl Plugin for GameClientPlugin {
         
         app.add_systems(Update, (
             lan_discovery_sender,
-            lan_discovery_receiver.run_if(|exists: Single<Has<ServerName>, With<NetcodeServer>>| !*exists)
+            lan_discovery_receiver.run_if(|server: Option<Single<&ServerName>>| server.is_none())
         ));
 
         app.insert_resource(DiscoveredServers::default());
@@ -90,8 +91,8 @@ pub fn lan_discovery_receiver(
                     })
                     .collect();
 
-                if let Some(name) = map.get("NAME"){
-                    if let Some(addr) = map.get("IP"){
+                if let Some(name) = map.get("NAME") {
+                    if let Some(addr) = map.get("IP") {
                         if let Ok(addr) = SocketAddrV4::from_str(addr.as_str()) {
                             servers.servers.insert(DiscoveredServer {
                                 name: name.clone(),
@@ -116,13 +117,23 @@ pub fn lan_discovery_sender(
     if !timer.0.tick(time.delta()).just_finished() {
         return;
     }
-
+    
     send_discovery_message(&socket);
 }
 
 #[inline]
 pub fn send_discovery_message(disc_soc: &ClientDiscoverySocket) {
     if let Err(e) = disc_soc.socket.send_to(DISCOVERY_CLIENT_MAGIC, DISCOVERY_ADDR) {
+        send_discovery_message_local(disc_soc);
+    } else {
+        info!("Sent discovery broadcast");
+    }
+}
+
+#[inline]
+pub fn send_discovery_message_local(disc_soc: &ClientDiscoverySocket){
+    info!("Network unavailable sending discovery message to loopback");
+    if let Err(e) = disc_soc.socket.send_to(DISCOVERY_CLIENT_MAGIC, DISCOVERY_ADDR_LOCAL) {
         warn!("Failed to send discovery broadcast: {e}");
     } else {
         info!("Sent discovery broadcast");

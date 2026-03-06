@@ -428,7 +428,7 @@ pub fn u_server_list(
         for server in &servers.servers {
             parent.spawn((
                 ServerEntry(server.address),
-                w_menu_button(Color::srgb(0.3, 0.7, 0.5), server.address.to_string()),
+                w_menu_button(Color::srgb(0.3, 0.7, 0.5), format!("Name {} | {}", server.name, server.address.to_string())),
             )).observe(on_server_selected);
         }
     });
