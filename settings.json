@@ -1,23 +1,10 @@
 {
   "master_volume": 60.0,
   "sfx_volume": 41.0,
-  "window_mode": {
-    "Fullscreen": [
-      {
-        "Entity": 4294967099
-      },
-      {
-        "Specific": {
-          "physical_size": [
-            1920,
-            1080
-          ],
-          "bit_depth": 32,
-          "refresh_rate_millihertz": 67000
-        }
-      }
-    ]
-  },
-  "window_resolution": null,
+  "window_mode": "Windowed",
+  "window_resolution": [
+    1920,
+    1080
+  ],
   "vsync": "AutoVsync"
 }

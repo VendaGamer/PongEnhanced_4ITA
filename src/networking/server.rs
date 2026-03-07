@@ -48,7 +48,7 @@ pub fn lan_discovery_responder(
             Ok((len, SocketAddr::V4(addr))) => {
                 if &buf[..len] == DISCOVERY_CLIENT_MAGIC {
                     info!("Responding to discovery");
-                    socket.socket.connect(server.1.0).expect("Could not connect to server");
+                    socket.socket.connect(addr).expect("Could not connect to client");
                     
                     let server_addr = socket.socket.local_addr().expect("Could not get local addr");
                     

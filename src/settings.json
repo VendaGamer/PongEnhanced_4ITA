@@ -1,0 +1,10 @@
+{
+  "master_volume": 50.0,
+  "sfx_volume": 50.0,
+  "window_mode": "Windowed",
+  "window_resolution": [
+    1920,
+    1080
+  ],
+  "vsync": "AutoVsync"
+}
