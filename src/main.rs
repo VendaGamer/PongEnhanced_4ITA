@@ -19,6 +19,8 @@ use avian2d::prelude::*;
 use bevy::input_focus::directional_navigation::DirectionalNavigationPlugin;
 use bevy::input_focus::InputDispatchPlugin;
 use bevy::prelude::*;
+use bevy::render::RenderPlugin;
+use bevy::render::settings::{Backends, Gles3MinorVersion, RenderCreation, WgpuSettings};
 use bevy::ui_widgets::UiWidgetsPlugins;
 use bevy::window::WindowResolution;
 use bevy_simple_text_input::TextInputPlugin;
@@ -50,7 +52,15 @@ fn main() {
                 ..default()
             }),
             ..default()
-        }).set(ImagePlugin::default_nearest()),
+        }).set(ImagePlugin::default_nearest())
+          .set(RenderPlugin{
+              render_creation: RenderCreation::Automatic(WgpuSettings{
+                  backends: Some(Backends::all()),
+                  gles3_minor_version: Gles3MinorVersion::Version2,
+                  ..default()
+              }),
+              ..default()
+          }),
         PhysicsPlugins::default()
             .build()
             .disable::<PhysicsTransformPlugin>()
