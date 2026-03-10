@@ -476,11 +476,11 @@ pub fn spawn_m_settings(
                 margin: UiRect::all(Val::Px(10.0)),
                 width: Val::Px(800.0),
                 border: PIXEL_BORDER,
+                border_radius: BorderRadius::ZERO,
                 ..default()
             },
             BackgroundColor(MODERN_THEME.section_bg),
             BorderColor::all(MODERN_THEME.border_dark),
-            BorderRadius::ZERO,
         )).with_children(| section | {
 
             {

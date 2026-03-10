@@ -101,11 +101,11 @@ pub fn w_button(color: Color, text: impl Into<String>, size: Val2) -> impl Bundl
             align_items: AlignItems::Center,
             margin: UiRect::bottom(BUTTON_PADDING),
             border: PIXEL_BORDER,
+            border_radius: BorderRadius::ZERO,
             ..default()
         },
         AutoFocus,
         BackgroundColor(color),
-        BorderRadius::ZERO,
         BorderColor::from(MODERN_THEME.border),
         Outline::new(PIXEL_BORDER.bottom, Val::ZERO, MODERN_THEME.outline),
         HoverLight(color),
@@ -143,11 +143,11 @@ pub fn w_menu_section() -> impl Bundle {
             padding: UiRect::all(Val::Px(30.0)),
             margin: UiRect::all(Val::Px(10.0)),
             border: PIXEL_BORDER,
+            border_radius: BorderRadius::ZERO,
             ..default()
         },
         BackgroundColor(MODERN_THEME.section_bg),
         BorderColor::all(MODERN_THEME.border_dark),
-        BorderRadius::ZERO,
     )
 }
 
@@ -161,10 +161,10 @@ pub fn w_slider_thumb(size: Vec2) -> impl Bundle {
             position_type: PositionType::Absolute,
             left: percent(0),
             border: PIXEL_BORDER,
+            border_radius: BorderRadius::ZERO,
             ..default()
         },
         AutoFocus,
-        BorderRadius::ZERO,
         BorderColor::from(MODERN_THEME.border),
         BackgroundColor(MODERN_THEME.slider_thumb),
     )
@@ -184,11 +184,11 @@ pub fn w_dropdown(
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
             border: PIXEL_BORDER,
+            border_radius: BorderRadius::ZERO,
             ..default()
         },
         BackgroundColor(MODERN_THEME.panel_bg),
         BorderColor::from(MODERN_THEME.border),
-        BorderRadius::ZERO,
         HoverLight(MODERN_THEME.panel_bg),
         TabIndex(tab_index),
     )
@@ -620,11 +620,11 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
                     Node {
                         height: px(12),
                         border: PIXEL_BORDER,
+                        border_radius: BorderRadius::ZERO,
                         ..default()
                     },
                     BackgroundColor(MODERN_THEME.slider_track),
                     BorderColor::from(MODERN_THEME.border),
-                    BorderRadius::ZERO
                 )).id();
 
             let thumb_root = commands
@@ -696,13 +696,13 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
                         align_items: AlignItems::Center,
                         padding: UiRect::all(Val::Px(15.0)),
                         border: PIXEL_BORDER,
+                        border_radius: BorderRadius::ZERO,
                         ..default()
                     },
                     SelectorBar,
                     AutoFocus,
                     BackgroundColor(MODERN_THEME.panel_bg),
                     BorderColor::from(MODERN_THEME.border),
-                    BorderRadius::ZERO,
                     Children::spawn_one((
                         Node {
                             display: Display::Flex,
@@ -785,13 +785,13 @@ impl<'w, R: Relationship> WidgetsExtCommands for RelatedSpawnerCommands<'w, R> {
                          align_items: AlignItems::Center,
                          padding: UiRect::all(Val::Px(15.0)),
                          border: PIXEL_BORDER,
+                         border_radius: BorderRadius::ZERO,
                          ..default()
                      },
                      AutoFocus,
                      BorderColor::all(MODERN_THEME.border),
                      BackgroundColor(MODERN_THEME.panel_bg),
                      TextInput,
-                     BorderRadius::ZERO,
                      TextInputTextFont(TextFont {
                          font_size: 34.0,
                          ..default()

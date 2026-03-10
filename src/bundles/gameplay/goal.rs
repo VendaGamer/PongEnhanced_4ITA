@@ -1,6 +1,7 @@
 use crate::components::Goal;
 use crate::models::game::area::TeamInfo;
-use avian2d::prelude::{Collider, RigidBody};
+use avian2d::prelude::{RigidBody};
+use avian2d::collision::collider::Collider;
 use bevy::prelude::{Bundle, Transform};
 
 #[derive(Bundle)]
