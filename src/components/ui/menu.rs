@@ -16,3 +16,6 @@ pub struct PlayerJoinInMenu(pub u8);
 pub struct OnlineCreateMenu;
 #[derive(Component)]
 pub struct Menu;
+
+#[derive(Component)]
+pub struct SelectorBar;

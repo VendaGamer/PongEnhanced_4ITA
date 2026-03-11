@@ -4,11 +4,12 @@ use std::io::BufRead;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
 use std::str::FromStr;
 use bevy::prelude::*;
-use lightyear::netcode::NetcodeServer;
-use lightyear::prelude::client::ClientPlugins;
-use lightyear::prelude::server::NetcodeConfig;
+use lightyear::link::Link;
+use lightyear::netcode::{Key, NetcodeClient, NetcodeServer};
+use lightyear::prelude::{Authentication, Client, Connect, LocalAddr, PeerAddr, ReplicationReceiver, UdpIo};
+use lightyear::prelude::client::{ClientPlugins, NetcodeConfig};
 use socket2::{Domain, Protocol, Socket, Type};
-use crate::networking::protocol::{make_reusable_udp_socket, UNSPECIFIED, DISCOVERY_ADDR, DISCOVERY_CLIENT_MAGIC, DISCOVERY_ADDR_LOCAL};
+use crate::networking::protocol::{make_reusable_udp_socket, DISCOVERY_ADDR, DISCOVERY_CLIENT_MAGIC, DISCOVERY_ADDR_LOCAL, UNSPECIFIED_ADDR};
 use crate::networking::server::{BroadcastTimer, ServerName};
 
 #[derive(Resource, Default, Deref)]
@@ -105,6 +106,34 @@ pub fn lan_discovery_receiver(
             _ => break,
         }
     }
+}
+
+pub fn connect_to_server(
+    server_addr: SocketAddrV4,
+    commands: &mut Commands) {
+    
+    let auth = Authentication::Manual {
+        server_addr: SocketAddr::V4(server_addr),
+        client_id: 42,
+        private_key: Key::default(),
+        protocol_id: 0,
+    };
+
+    let client = commands
+        .spawn((
+            Client::default(),
+            LocalAddr(UNSPECIFIED_ADDR.into()),
+            PeerAddr(SocketAddr::V4(server_addr)),
+            Link::new(None),
+            ReplicationReceiver::default(),
+            NetcodeClient::new(auth, NetcodeConfig::default()).unwrap(),
+            UdpIo::default(),
+        ))
+        .id();
+
+    commands.trigger(Connect {
+        entity: client
+    })
 }
 
 pub fn lan_discovery_sender(

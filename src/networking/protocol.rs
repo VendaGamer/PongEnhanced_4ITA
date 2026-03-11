@@ -11,13 +11,13 @@ use lightyear::prelude::input::leafwing;
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
-pub const UNSPECIFIED: SocketAddrV4 = SocketAddrV4::new(Ipv4Addr::BROADCAST, 0);
 pub const DISCOVERY_ADDR: SocketAddrV4 =
     SocketAddrV4::new(Ipv4Addr::BROADCAST, DISCOVERY_PORT);
 
 pub const DISCOVERY_ADDR_LOCAL: SocketAddrV4 = SocketAddrV4::new(Ipv4Addr::LOCALHOST, DISCOVERY_PORT);
 pub const DISCOVERY_PORT: u16 = 6000;
-pub const DISCOVERY_CLIENT_MAGIC: &[u8] = b"SENDNUDES";
+pub const DISCOVERY_CLIENT_MAGIC: &[u8] = b"SEND_NUDESI";
+pub const UNSPECIFIED_ADDR: SocketAddrV4 = SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 0);
 
 
 #[derive(Component, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Reflect, Eq, Hash)]

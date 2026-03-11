@@ -1,6 +1,6 @@
 use crate::bundles::widgets::*;
 use crate::components::ui::effects::{HoverLight, HoverLightColor};
-use crate::components::ui::{Dropdown, RemoveInteractionDisabledTimer, Selector, SelectorButton, SelectorText, SourceHandle, UIOptionProvider};
+use crate::components::ui::{Dropdown, RemoveInteractionDisabledTimer, Selector, SelectorBar, SelectorButton, SelectorText, SourceHandle, UIOptionProvider};
 use crate::events::gameplay::UINavigated;
 use crate::events::widgets::{ButtonPressed, OptionChanged};
 use crate::resources::MenuAction;
@@ -194,9 +194,6 @@ pub fn w_dropdown(
     )
 }
 
-#[derive(Component)]
-pub struct SelectorBar;
-
 pub fn w_section_header(text: &'static str) -> impl Bundle {
     (
         Node {
@@ -370,7 +367,6 @@ fn get_quadrant(input: Vec2) -> Option<CompassQuadrant> {
     }
 }
 
-#[inline]
 fn try_navigate(
     dir: Option<CompassQuadrant>,
     navigation: &mut DirectionalNavigation,

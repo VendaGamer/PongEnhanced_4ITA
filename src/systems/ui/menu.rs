@@ -1,10 +1,12 @@
 use crate::bundles::area::AreaBundle;
 use crate::bundles::widgets::LabelBundle;
-use crate::components::ui::{MainMenu, MonitorSelector, OfflinePlayMenu, OnlineCreateMenu, OnlinePlayMenu, PlayerJoinInMenu, RefreshRateSelector, RemoveInteractionDisabledTimer, ResolutionSelector, Selector, ServerEntry, ServerList, SettingsMenu, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector, WindowModeSelector};
+use crate::components::ui::{MainMenu, Menu, MonitorSelector, OfflinePlayMenu, OnlineCreateMenu, OnlinePlayMenu, PlayerJoinInMenu, RefreshRateSelector, RemoveInteractionDisabledTimer, ResolutionSelector, Selector, ServerEntry, ServerList, SettingsMenu, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector, WindowModeSelector};
 use crate::components::Player;
 use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged, TextInputSubmitted};
 use crate::models::game::gameplay::GameMode;
 use crate::models::ui::option::{VSYNC_OPTIONS, VSYNC_OPTIONS_RAW};
+use crate::networking::client::{connect_to_server, send_discovery_message, ClientDiscoverySocket, DiscoveredServers};
+use crate::networking::server::start_server;
 use crate::resources::{GameModeConfig, GameSettings, MonitorInfo, Monitors, OnlineGameConfig, PendingSettings, PlayerAction, RefreshRate, Resolution};
 use crate::systems::settings::persistence::save_settings;
 use crate::systems::widgets::*;
@@ -18,8 +20,6 @@ use bevy::render::render_resource::encase::private::RuntimeSizedArray;
 use bevy::ui::InteractionDisabled;
 use bevy::window::{PresentMode, PrimaryWindow, VideoMode, WindowMode};
 use leafwing_input_manager::action_state::ActionState;
-use crate::networking::client::{send_discovery_message, DiscoveredServers, ClientDiscoverySocket};
-use crate::networking::server::{start_server};
 
 pub const GAMEMODE_OPTIONS: SourceHandle<dyn UIOptionProvider> = SourceHandle::Static(&GAMEMODE_OPTIONS_RAW);
 
@@ -436,11 +436,11 @@ pub fn u_server_list(
     fn on_server_selected(
         press: On<ButtonPressed>,
         entries: Query<&ServerEntry>,
-        mut config: ResMut<OnlineGameConfig>,
+        mut commands: Commands
     ) {
         if let Ok(entry) = entries.get(press.event_target()) {
             println!("Selected server: {}", entry.0);
-            
+            connect_to_server(entry.0, &mut commands);
         }
     }
 }
@@ -866,6 +866,7 @@ fn spawn_m_base<'a>(commands: &'a mut Commands, nav_map: &mut DirectionalNavigat
 
     commands.spawn((
         menu_type,
+        Menu,
         Node {
             width: Val::Percent(100.0),
             height: Val::Percent(100.0),

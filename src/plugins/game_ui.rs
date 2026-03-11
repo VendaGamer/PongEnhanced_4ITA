@@ -1,15 +1,16 @@
 ﻿use crate::bundles::{App, Commands, MessageReader, On, Plugin, ResMut, UiScale, Update};
+use crate::components::ui::Menu;
 use crate::events::gameplay::UINavigated;
 use crate::events::widgets::{SliderValueChanged, TextInputSubmitted};
+use crate::systems::menu::u_server_list;
 use crate::systems::widgets::*;
 use crate::utils::FIXED_DIMENSIONS;
 use bevy::ecs::relationship::Relationship;
 use bevy::input_focus::directional_navigation::DirectionalNavigation;
-use bevy::prelude::{ChildOf, Display, Entity, Node, Query};
+use bevy::prelude::{ChildOf, Display, IntoScheduleConfigs, Node, Query, Single};
 use bevy::ui_widgets::{SliderValue, ValueChange};
 use bevy::window::WindowResized;
 use bevy_simple_text_input::TextInputSubmitMessage;
-use crate::systems::menu::u_server_list;
 
 pub struct GameUIPlugin;
 
@@ -23,7 +24,7 @@ impl Plugin for GameUIPlugin {
                 t_button_press,
                 u_ui_scale,
                 u_highlight_focused_element,
-                t_navigate_element,
+                t_navigate_element.run_if( | menu: Option<Single<&Menu>>| menu.is_some()),
                 u_button_press,
                 t_input_submit,
                 u_server_list,
