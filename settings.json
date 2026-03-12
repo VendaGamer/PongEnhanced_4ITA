@@ -1,10 +1,11 @@
 {
   "master_volume": 100.0,
   "sfx_volume": 50.0,
-  "window_mode": "Windowed",
-  "window_resolution": [
-    1600,
-    900
-  ],
+  "window_mode": {
+    "BorderlessFullscreen": {
+      "Entity": 4294967085
+    }
+  },
+  "window_resolution": null,
   "vsync": "AutoVsync"
 }

@@ -122,7 +122,7 @@ pub fn connect_to_server(
     let client = commands
         .spawn((
             Client::default(),
-            LocalAddr(UNSPECIFIED_ADDR.into()),
+            LocalAddr(UNSPECIFIED_ADDR),
             PeerAddr(SocketAddr::V4(server_addr)),
             Link::new(None),
             ReplicationReceiver::default(),

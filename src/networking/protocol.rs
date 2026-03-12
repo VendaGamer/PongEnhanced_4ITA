@@ -2,7 +2,7 @@ use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
 use socket2::{Domain, Protocol, Socket, Type};
 use crate::networking::client::{DiscoveredServers, ClientDiscoverySocket};
 use crate::models::game::area::LocalPlayerID;
-use crate::resources::PlayerAction;
+use crate::resources::{OnlineGameConfig, PlayerAction};
 use avian2d::prelude::*;
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::*;
@@ -10,6 +10,7 @@ use lightyear::input::config::InputConfig;
 use lightyear::prelude::input::leafwing;
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
+use crate::models::game::gameplay::GameMode;
 
 pub const DISCOVERY_ADDR: SocketAddrV4 =
     SocketAddrV4::new(Ipv4Addr::BROADCAST, DISCOVERY_PORT);
@@ -17,8 +18,37 @@ pub const DISCOVERY_ADDR: SocketAddrV4 =
 pub const DISCOVERY_ADDR_LOCAL: SocketAddrV4 = SocketAddrV4::new(Ipv4Addr::LOCALHOST, DISCOVERY_PORT);
 pub const DISCOVERY_PORT: u16 = 6000;
 pub const DISCOVERY_CLIENT_MAGIC: &[u8] = b"SEND_NUDESI";
-pub const UNSPECIFIED_ADDR: SocketAddrV4 = SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 0);
+pub const UNSPECIFIED_ADDR: SocketAddr = SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 0));
 
+
+#[derive(Component, Message, Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct LobbyConfig {
+    pub game_mode: GameMode,
+    pub points_to_win: u32,
+    pub max_players: u8,
+}
+
+impl Default for LobbyConfig {
+    fn default() -> Self {
+        Self {
+            game_mode: GameMode::Classic,
+            points_to_win: 10,
+            max_players: 4,
+        }
+    }
+}
+
+
+#[derive(Message, Serialize, Deserialize, Clone, Debug)]
+pub struct ChangeLobbySettings {
+    pub game_mode: GameMode,
+    pub points_to_win: u32,
+}
+
+#[derive(Message, Serialize, Deserialize, Clone, Debug)]
+pub struct LobbyPlayerList {
+    pub players: Vec<(PeerId, String)>
+}
 
 #[derive(Component, Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Reflect, Eq, Hash)]
 pub struct RemotePlayerId(pub PeerId, pub LocalPlayerID);
@@ -48,6 +78,14 @@ impl Plugin for GameProtocolPlugin {
 
         app.register_component::<LinearVelocity>().add_prediction();
         app.register_component::<AngularVelocity>().add_prediction();
+
+        app.register_component::<LobbyConfig>();
+
+        app.register_message::<ChangeLobbySettings>()
+            .add_direction(NetworkDirection::ClientToServer);
+
+        app.register_message::<LobbyPlayerList>()
+            .add_direction(NetworkDirection::ServerToClient);
     }
 }
 

@@ -1,13 +1,13 @@
 use crate::bundles::area::AreaBundle;
 use crate::bundles::widgets::LabelBundle;
-use crate::components::ui::{MainMenu, Menu, MonitorSelector, OfflinePlayMenu, OnlineCreateMenu, OnlinePlayMenu, PlayerJoinInMenu, RefreshRateSelector, RemoveInteractionDisabledTimer, ResolutionSelector, Selector, ServerEntry, ServerList, SettingsMenu, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector, WindowModeSelector};
+use crate::components::ui::{LobbyMenu, LobbyPlayerListNode, LobbySettingsDisplay, MainMenu, Menu, MonitorSelector, OfflinePlayMenu, OnlineCreateMenu, OnlinePlayMenu, PlayerJoinInMenu, RefreshRateSelector, RemoveInteractionDisabledTimer, ResolutionSelector, Selector, ServerEntry, ServerList, SettingsMenu, SourceHandle, UIOptionProvider, UIOptionString, VSyncSelector, WindowModeSelector};
 use crate::components::Player;
 use crate::events::widgets::{ButtonPressed, OptionChanged, SliderValueChanged, TextInputSubmitted};
 use crate::models::game::gameplay::GameMode;
 use crate::models::ui::option::{VSYNC_OPTIONS, VSYNC_OPTIONS_RAW};
 use crate::networking::client::{connect_to_server, send_discovery_message, ClientDiscoverySocket, DiscoveredServers};
 use crate::networking::server::start_server;
-use crate::resources::{GameModeConfig, GameSettings, MonitorInfo, Monitors, OnlineGameConfig, PendingSettings, PlayerAction, RefreshRate, Resolution};
+use crate::resources::{GameModeConfig, GameSettings, MonitorInfo, Monitors, OnlineGameConfig, PendingLobbySettings, PendingSettings, PlayerAction, RefreshRate, Resolution};
 use crate::systems::settings::persistence::save_settings;
 use crate::systems::widgets::*;
 use crate::utils::MODERN_THEME;
@@ -949,6 +949,111 @@ pub fn u_join_in(
                 );
             }
         }
+    }
+}
+
+
+pub fn spawn_m_lobby(
+    commands: &mut Commands,
+    nav_map: &mut DirectionalNavigationMap,
+    is_host: bool,
+) {
+    let mut entities: Vec<Entity> = Vec::new();
+
+    spawn_m_base(commands, nav_map, LobbyMenu).with_children(|base| {
+        base.spawn(w_menu_title("Lobby"));
+
+        base.spawn(w_menu_section()).with_children(|sec| {
+            sec.spawn(LabelBundle::button_label("Players"));
+            sec.spawn((
+                LobbyPlayerListNode,
+                Node {
+                    flex_direction: FlexDirection::Column,
+                    ..default()
+                },
+            ));
+        });
+
+        base.spawn(w_menu_section()).with_children(|sec| {
+            sec.spawn(LabelBundle::button_label("Game Settings"));
+
+            if is_host {
+                let mut g_sel = sec.spawn_selector(
+                    GAMEMODE_OPTIONS,
+                    0,
+                    "Game Mode",
+                );
+                g_sel.root.observe(on_gamemode_changed);
+                entities.push(g_sel.bar);
+
+                let mut pts = sec.spawn_slider(1.0, 50.0, 10.0);
+                pts.root.observe(on_points_changed);
+                entities.push(pts.thumb);
+
+            } else {
+                sec.spawn((
+                    LabelBundle::button_label("Waiting for host..."),
+                    LobbySettingsDisplay,
+                ));
+            }
+        });
+
+        base.spawn(w_row_container(Val::Px(10.0))).with_children(|row| {
+            if is_host {
+                entities.push(
+                    row.spawn(w_menu_button(Color::srgb(0.2, 0.7, 0.3), "Start Game"))
+                        .observe(on_host_start)
+                        .id(),
+                );
+            }
+            entities.push(
+                row.spawn(w_menu_button(Color::srgb(0.6, 0.6, 0.6), "Leave"))
+                    .observe(on_leave)
+                    .id(),
+            );
+        });
+    });
+
+    if is_host {
+        nav_map.add_looping_edges(&entities, CompassOctant::South);
+    }
+
+    fn on_gamemode_changed(
+        change: On<OptionChanged>,
+        selectors: Query<(Entity, &Selector)>,
+        mut pending: ResMut<PendingLobbySettings>,
+    ) {
+        for (entity, selector) in &selectors {
+            if change.entity == entity {
+                if let Some(gm) = selector.current::<GameMode>() {
+                    pending.game_mode = *gm;
+                    pending.dirty = true;
+                }
+                break;
+            }
+        }
+    }
+
+    fn on_points_changed(
+        change: On<SliderValueChanged>,
+        mut pending: ResMut<PendingLobbySettings>,
+    ) {
+        pending.points_to_win = change.value as u32;
+        pending.dirty = true;
+    }
+
+    fn on_host_start(_: On<ButtonPressed>, mut commands: Commands) {
+
+    }
+
+    fn on_leave(
+        _: On<ButtonPressed>,
+        menu: Single<Entity, With<LobbyMenu>>,
+        mut commands: Commands,
+        mut nav_map: ResMut<DirectionalNavigationMap>,
+    ) {
+        commands.entity(*menu).despawn();
+        spawn_m_main(&mut commands, &mut nav_map);
     }
 }
 

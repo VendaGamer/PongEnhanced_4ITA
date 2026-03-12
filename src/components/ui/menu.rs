@@ -19,3 +19,12 @@ pub struct Menu;
 
 #[derive(Component)]
 pub struct SelectorBar;
+
+#[derive(Component)]
+pub struct LobbyMenu;
+
+#[derive(Component)]
+pub struct LobbyPlayerListNode;
+
+#[derive(Component)]
+pub struct LobbySettingsDisplay;

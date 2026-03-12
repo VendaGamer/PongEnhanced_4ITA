@@ -4,13 +4,14 @@ use lightyear::prelude::server::{NetcodeConfig, NetcodeServer, ServerPlugins, Se
 use lightyear::prelude::*;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
 use bevy::log::tracing::Instrument;
+use lightyear::connection::host::HostClient;
 use lightyear::link::LinkStart;
 use lightyear::netcode::client::ClientConfig;
 use lightyear::netcode::{Key, NetcodeClient, ServerConfig};
 use socket2::{Domain, Protocol, SockAddr, SockAddrStorage, Socket, Type};
 use crate::components::ui::ServerList;
 use crate::networking::client::{DiscoveredServers, ClientDiscoverySocket};
-use crate::networking::protocol::{make_reusable_udp_socket, DISCOVERY_ADDR, DISCOVERY_CLIENT_MAGIC, DISCOVERY_PORT, UNSPECIFIED_ADDR};
+use crate::networking::protocol::{make_reusable_udp_socket, ChangeLobbySettings, LobbyConfig, LobbyPlayerList, DISCOVERY_ADDR, DISCOVERY_CLIENT_MAGIC, DISCOVERY_PORT, UNSPECIFIED_ADDR};
 use crate::resources::OnlineGameConfig;
 const BROADCAST_INTERVAL_SECS: f32 = 30.0;
 
@@ -24,6 +25,9 @@ pub struct BroadcastTimer(pub Timer);
 
 #[derive(Component)]
 pub struct ServerName(pub String);
+
+#[derive(Component)]
+pub struct LobbyEntity;
 
 pub struct GameServerPlugin;
 
@@ -95,7 +99,7 @@ pub fn start_server(
 ) {
     if let Ok(socket) = make_reusable_udp_socket(DISCOVERY_PORT) {
 
-        let mut local_addr: LocalAddr = LocalAddr(UNSPECIFIED_ADDR.into());
+        let mut local_addr: LocalAddr = LocalAddr(UNSPECIFIED_ADDR);
         {
             let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
             local_addr = LocalAddr(socket.local_addr().unwrap());
@@ -113,7 +117,38 @@ pub fn start_server(
         
         
         commands.trigger(Start { entity: server });
+
+        commands.spawn((
+            LobbyEntity,
+            LobbyConfig::default(),
+            Replicate::default(),
+        ));
+
     } else {
         error!("Could not start server");
     }
+}
+
+pub fn s_apply_lobby_changes(
+    mut reader: MessageReader<ChangeLobbySettings>,
+    mut lobby: Single<&mut LobbyConfig, With<LobbyEntity>>,
+    server: Single<&NetcodeServer>,
+) {
+    for event in reader.read() {
+        lobby.game_mode = event.game_mode.clone();
+        lobby.points_to_win = event.points_to_win;
+        info!("Lobby config updated: {:?}", **lobby);
+    }
+}
+
+pub fn s_broadcast_player_list(
+    mut writer: MessageSender<LobbyPlayerList>,
+    connected_clients: Res<HostClient>,
+) {
+    let players = connected_clients
+        .iter()
+        .map(|peer_id| (*peer_id, format!("Player {}", peer_id)))
+        .collect();
+
+    writer.send(LobbyPlayerList { players });
 }
