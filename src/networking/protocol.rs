@@ -11,6 +11,7 @@ use lightyear::prelude::input::leafwing;
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 use crate::models::game::gameplay::GameMode;
+use crate::networking::server::LobbyEntity;
 
 pub const DISCOVERY_ADDR: SocketAddrV4 =
     SocketAddrV4::new(Ipv4Addr::BROADCAST, DISCOVERY_PORT);
@@ -57,6 +58,8 @@ pub struct GameProtocolPlugin;
 
 impl Plugin for GameProtocolPlugin {
     fn build(&self, app: &mut App) {
+
+
         app.add_plugins(leafwing::InputPlugin::<PlayerAction> {
             config: InputConfig {
                 rebroadcast_inputs: true,
@@ -76,16 +79,20 @@ impl Plugin for GameProtocolPlugin {
             .add_linear_interpolation()
             .add_linear_correction_fn();
 
-        app.register_component::<LinearVelocity>().add_prediction();
-        app.register_component::<AngularVelocity>().add_prediction();
+        app.register_component::<LinearVelocity>()
+           .add_prediction();
+
+        app.register_component::<AngularVelocity>()
+           .add_prediction();
 
         app.register_component::<LobbyConfig>();
+        app.register_component::<LobbyEntity>();
 
         app.register_message::<ChangeLobbySettings>()
-            .add_direction(NetworkDirection::ClientToServer);
+           .add_direction(NetworkDirection::ClientToServer);
 
         app.register_message::<LobbyPlayerList>()
-            .add_direction(NetworkDirection::ServerToClient);
+           .add_direction(NetworkDirection::ServerToClient);
     }
 }
 

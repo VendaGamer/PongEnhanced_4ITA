@@ -8,6 +8,7 @@ use lightyear::connection::host::HostClient;
 use lightyear::link::LinkStart;
 use lightyear::netcode::client::ClientConfig;
 use lightyear::netcode::{Key, NetcodeClient, ServerConfig};
+use serde::{Deserialize, Serialize};
 use socket2::{Domain, Protocol, SockAddr, SockAddrStorage, Socket, Type};
 use crate::components::ui::ServerList;
 use crate::networking::client::{DiscoveredServers, ClientDiscoverySocket};
@@ -26,7 +27,7 @@ pub struct BroadcastTimer(pub Timer);
 #[derive(Component)]
 pub struct ServerName(pub String);
 
-#[derive(Component)]
+#[derive(Component, Serialize, Deserialize, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct LobbyEntity;
 
 pub struct GameServerPlugin;
@@ -114,15 +115,9 @@ pub fn start_server(
                 ServerName(config.server_name.clone()),
             ))
             .id();
-        
+
         
         commands.trigger(Start { entity: server });
-
-        commands.spawn((
-            LobbyEntity,
-            LobbyConfig::default(),
-            Replicate::default(),
-        ));
 
     } else {
         error!("Could not start server");
@@ -139,16 +134,4 @@ pub fn s_apply_lobby_changes(
         lobby.points_to_win = event.points_to_win;
         info!("Lobby config updated: {:?}", **lobby);
     }
-}
-
-pub fn s_broadcast_player_list(
-    mut writer: MessageSender<LobbyPlayerList>,
-    connected_clients: Res<HostClient>,
-) {
-    let players = connected_clients
-        .iter()
-        .map(|peer_id| (*peer_id, format!("Player {}", peer_id)))
-        .collect();
-
-    writer.send(LobbyPlayerList { players });
 }

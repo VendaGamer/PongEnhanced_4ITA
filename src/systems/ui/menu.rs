@@ -436,11 +436,14 @@ pub fn u_server_list(
     fn on_server_selected(
         press: On<ButtonPressed>,
         entries: Query<&ServerEntry>,
+        mut nav_map: ResMut<DirectionalNavigationMap>,
         mut commands: Commands
     ) {
         if let Ok(entry) = entries.get(press.event_target()) {
             println!("Selected server: {}", entry.0);
+
             connect_to_server(entry.0, &mut commands);
+            spawn_m_lobby(&mut commands, &mut nav_map, false);
         }
     }
 }
@@ -848,17 +851,17 @@ fn spawn_m_online_create_pass<'a>(
         submit: On<TextInputSubmitted>,
         menu: Single<Entity, With<OnlineCreateMenu>>,
         mut commands: Commands,
-        mut config: ResMut<OnlineGameConfig>
-    ){
+        mut config: ResMut<OnlineGameConfig>,
+        mut nav_map: ResMut<DirectionalNavigationMap>,
+    ) {
         config.pass = Some(submit.value.clone());
 
         commands.entity(*menu).despawn();
-
         start_server(&mut commands, &config);
+        commands.insert_resource(PendingLobbySettings::default());
+        spawn_m_lobby(&mut commands, &mut nav_map, true);
     }
 }
-
-
 
 fn spawn_m_base<'a>(commands: &'a mut Commands, nav_map: &mut DirectionalNavigationMap, menu_type: impl Component) -> EntityCommands<'a> {
 
@@ -951,7 +954,6 @@ pub fn u_join_in(
         }
     }
 }
-
 
 pub fn spawn_m_lobby(
     commands: &mut Commands,
