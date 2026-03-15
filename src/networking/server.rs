@@ -96,7 +96,8 @@ pub fn lan_discovery_responder(
 
 pub fn start_server(
     commands: &mut Commands,
-    config: &OnlineGameConfig
+    config: &OnlineGameConfig,
+    lobby_config: &Option<Single<&LobbyConfig>>,
 ) {
     if let Ok(socket) = make_reusable_udp_socket(DISCOVERY_PORT) {
 
@@ -115,6 +116,10 @@ pub fn start_server(
                 ServerName(config.server_name.clone()),
             ))
             .id();
+
+        if lobby_config.is_none(){
+            commands.spawn(LobbyConfig::default());
+        }
 
         
         commands.trigger(Start { entity: server });

@@ -7,7 +7,7 @@ use crate::models::game::gameplay::GameMode;
 use crate::models::ui::option::{VSYNC_OPTIONS, VSYNC_OPTIONS_RAW};
 use crate::networking::client::{connect_to_server, send_discovery_message, ClientDiscoverySocket, DiscoveredServers};
 use crate::networking::server::start_server;
-use crate::resources::{GameModeConfig, GameSettings, MonitorInfo, Monitors, OnlineGameConfig, PendingLobbySettings, PendingSettings, PlayerAction, RefreshRate, Resolution};
+use crate::resources::{GameModeConfig, GameSettings, MonitorInfo, Monitors, OnlineGameConfig, PendingSettings, PlayerAction, RefreshRate, Resolution};
 use crate::systems::settings::persistence::save_settings;
 use crate::systems::widgets::*;
 use crate::utils::MODERN_THEME;
@@ -20,6 +20,7 @@ use bevy::render::render_resource::encase::private::RuntimeSizedArray;
 use bevy::ui::InteractionDisabled;
 use bevy::window::{PresentMode, PrimaryWindow, VideoMode, WindowMode};
 use leafwing_input_manager::action_state::ActionState;
+use crate::networking::protocol::LobbyConfig;
 
 pub const GAMEMODE_OPTIONS: SourceHandle<dyn UIOptionProvider> = SourceHandle::Static(&GAMEMODE_OPTIONS_RAW);
 
@@ -853,12 +854,12 @@ fn spawn_m_online_create_pass<'a>(
         mut commands: Commands,
         mut config: ResMut<OnlineGameConfig>,
         mut nav_map: ResMut<DirectionalNavigationMap>,
+        lobby_config: Option<Single<&LobbyConfig>>,
     ) {
         config.pass = Some(submit.value.clone());
 
         commands.entity(*menu).despawn();
-        start_server(&mut commands, &config);
-        commands.insert_resource(PendingLobbySettings::default());
+        start_server(&mut commands, &config, &lobby_config);
         spawn_m_lobby(&mut commands, &mut nav_map, true);
     }
 }
@@ -1023,13 +1024,12 @@ pub fn spawn_m_lobby(
     fn on_gamemode_changed(
         change: On<OptionChanged>,
         selectors: Query<(Entity, &Selector)>,
-        mut pending: ResMut<PendingLobbySettings>,
+        mut config: Single<&mut LobbyConfig>,
     ) {
         for (entity, selector) in &selectors {
             if change.entity == entity {
                 if let Some(gm) = selector.current::<GameMode>() {
-                    pending.game_mode = *gm;
-                    pending.dirty = true;
+                    config.game_mode = *gm;
                 }
                 break;
             }
@@ -1038,10 +1038,9 @@ pub fn spawn_m_lobby(
 
     fn on_points_changed(
         change: On<SliderValueChanged>,
-        mut pending: ResMut<PendingLobbySettings>,
+        mut config: Single<&mut LobbyConfig>,
     ) {
-        pending.points_to_win = change.value as u32;
-        pending.dirty = true;
+        config.points_to_win = change.value as u32;
     }
 
     fn on_host_start(_: On<ButtonPressed>, mut commands: Commands) {

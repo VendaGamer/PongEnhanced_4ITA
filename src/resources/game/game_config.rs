@@ -17,13 +17,6 @@ pub struct GameSettings {
     pub vsync: PresentMode,
 }
 
-#[derive(Resource, Default)]
-pub struct PendingLobbySettings {
-    pub game_mode: GameMode,
-    pub points_to_win: u32,
-    pub dirty: bool,
-}
-
 #[derive(Resource, Clone, Eq, PartialEq, Debug)]
 pub struct PendingSettings {
     pub window_mode: WindowMode,

@@ -111,7 +111,7 @@ pub fn lan_discovery_receiver(
 pub fn connect_to_server(
     server_addr: SocketAddrV4,
     commands: &mut Commands) {
-    
+
     let auth = Authentication::Manual {
         server_addr: SocketAddr::V4(server_addr),
         client_id: 42,
